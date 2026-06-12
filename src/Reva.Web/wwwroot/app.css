@@ -1,0 +1,27 @@
+@import url('css/cockpit.css');
+
+h1:focus {
+    outline: none;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid var(--green-600);
+}
+
+.invalid {
+    outline: 1px solid var(--red-600);
+}
+
+.validation-message {
+    color: var(--red-600);
+}
+
+.blazor-error-boundary {
+    background: var(--red-600);
+    padding: 1rem;
+    color: var(--text-on-accent);
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred.";
+}

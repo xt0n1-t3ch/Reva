@@ -1,0 +1,371 @@
+@page "/review/{Id:guid}"
+@rendermode @(new InteractiveServerRenderMode(false))
+@inject NavigationManager Nav
+
+<PageTitle>@(_detail is null ? "Document review" : $"Review · {_detail.FileName}")</PageTitle>
+
+<header class="cockpit-topbar">
+    <div class="topbar-titles">
+        <a class="back-link" href="/"><Icon Name="arrow-left" Size="16" /> Back to cockpit</a>
+        <h1>@(_detail?.FileName ?? "Document review")</h1>
+        @if (_detail is not null)
+        {
+            <p>@CockpitFormat.DocumentTypeLabel(_detail.DocumentType) · @_detail.ParserProfile</p>
+        }
+    </div>
+    @if (_detail is not null)
+    {
+        <div class="topbar-tools">
+            <a class="btn btn-ghost" href="@_api.ExportUrl(Id, "json")" download
+               aria-label="Export as JSON"><Icon Name="download" Size="16" /> JSON</a>
+            <a class="btn btn-ghost" href="@_api.ExportUrl(Id, "csv")" download
+               aria-label="Export as CSV"><Icon Name="download" Size="16" /> CSV</a>
+            <button class="btn btn-teal" type="button" @onclick="ApproveAsync" disabled="@_submitting">
+                <Icon Name="check" Size="16" /> Approve
+            </button>
+        </div>
+    }
+</header>
+
+<div class="cockpit-content">
+    @if (_toast is not null)
+    {
+        <div class="toast @_toast.Value.Kind" role="status">
+            <Icon Name="@(_toast.Value.Kind == "ok" ? "check-circle" : "alert")" Size="18" />
+            <span>@_toast.Value.Message</span>
+        </div>
+    }
+
+    @if (_loading)
+    {
+        <div class="loading-pane"><span class="spinner"></span> Loading document…</div>
+    }
+    else if (_detail is null)
+    {
+        <div class="card">
+            <div class="empty-state">
+                <span class="empty-ic"><Icon Name="x-circle" Size="40" /></span>
+                <h3>Document not found</h3>
+                <p>This document may have been removed. Return to the cockpit to pick another.</p>
+                <a class="btn btn-primary" href="/"><Icon Name="arrow-left" Size="16" /> Back to cockpit</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <section class="card">
+            <div class="card-body">
+                <div class="meta-strip">
+                    <div class="meta-item"><span class="k">Status</span><span class="v"><StatusPill Status="_detail.Status" /></span></div>
+                    <div class="meta-item"><span class="k">Review</span><span class="v"><ReviewPill State="_detail.ReviewState" /></span></div>
+                    <div class="meta-item"><span class="k">Confidence</span><span class="v"><ConfidenceBadge Value="_detail.Confidence" /></span></div>
+                    <div class="meta-item"><span class="k">Exceptions</span><span class="v"><span class="pill @CockpitFormat.ExceptionTone(_detail.Exceptions.Count)">@_detail.Exceptions.Count</span></span></div>
+                    <div class="meta-item"><span class="k">Document hash</span><span class="v hash-value">@ShortHash(_detail.Sha256Hash)</span></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="review-grid">
+            <section class="card card-pad-0">
+                <div class="card-head">
+                    <Icon Name="file" Size="20" />
+                    <h2>Document Preview</h2>
+                </div>
+                <div class="card-body">
+                    <div class="preview-frame">
+                        <pre>@_detail.ParsedMarkdown</pre>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card card-pad-0">
+                <div class="card-head">
+                    <Icon Name="sparkle" Size="20" />
+                    <h2>Extracted Fields</h2>
+                    <div class="head-tools">
+                        <span class="pill tone-teal">AI confidence @CockpitFormat.Percent(_detail.Confidence)</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (_fields.Count == 0)
+                    {
+                        <div class="empty-state"><p>No structured fields were extracted from this document.</p></div>
+                    }
+                    else
+                    {
+                        <div class="field-list">
+                            @for (var i = 0; i < _fields.Count; i++)
+                            {
+                                var index = i;
+                                var field = _fields[index];
+                                <div class="field-row">
+                                    <label class="field-label" for="@($"field-{index}")">@field.Name</label>
+                                    <input id="@($"field-{index}")" class="field-input @(field.IsEdited ? "is-edited" : null)"
+                                           value="@field.Value"
+                                           @oninput="e => OnFieldInput(index, e.Value?.ToString())"
+                                           aria-label="@($"{field.Name} value")" />
+                                    <ConfidenceBadge Value="field.Confidence" />
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="card card-pad-0 review-exceptions">
+                <div class="card-head">
+                    <Icon Name="alert" Size="20" />
+                    <h2>Exceptions</h2>
+                    <div class="head-tools">
+                        <span class="pill @CockpitFormat.ExceptionTone(_detail.Exceptions.Count)">@_detail.Exceptions.Count</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (_detail.Exceptions.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <span class="empty-ic"><Icon Name="check-circle" Size="36" /></span>
+                            <h3>No exceptions</h3>
+                            <p>Every extracted value passed validation.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="exception-list">
+                            @foreach (var issue in _detail.Exceptions)
+                            {
+                                <div class="exception-item">
+                                    <span class="exc-ic @CockpitFormat.SeverityClass(issue.Severity)"><Icon Name="alert" Size="22" /></span>
+                                    <div class="exc-body">
+                                        <div class="exc-title">
+                                            @issue.Severity
+                                            <span class="pill @CockpitFormat.SeverityTone(issue.Severity)">@issue.Severity</span>
+                                        </div>
+                                        <div class="exc-msg">@issue.Message</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+
+        @if (_detail.Tables.Count > 0)
+        {
+            @foreach (var table in _detail.Tables)
+            {
+                <section class="card card-pad-0">
+                    <div class="card-head">
+                        <Icon Name="table" Size="20" />
+                        <h2>@table.Name</h2>
+                        <div class="head-tools">
+                            <span class="pill tone-slate">@table.Rows.Count rows</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-scroll">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        @foreach (var header in table.Headers)
+                                        {
+                                            <th scope="col">@header</th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in table.Rows)
+                                    {
+                                        <tr>
+                                            @foreach (var header in table.Headers)
+                                            {
+                                                <td>@(row.TryGetValue(header, out var cell) ? cell : string.Empty)</td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            }
+        }
+
+        <section class="card">
+            <div class="card-head">
+                <Icon Name="check-circle" Size="20" />
+                <h2>Review Decision</h2>
+                <div class="head-tools">
+                    @if (EditedCount > 0)
+                    {
+                        <span class="pill tone-violet">@EditedCount field correction(s)</span>
+                    }
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="meta-strip review-form-strip">
+                    <div class="meta-item review-form-item-short">
+                        <label class="k" for="reviewer">Reviewer</label>
+                        <input id="reviewer" class="field-input review-input-bordered" @bind="_reviewer" aria-label="Reviewer name" />
+                    </div>
+                    <div class="meta-item review-form-item-wide">
+                        <label class="k" for="notes">Notes</label>
+                        <input id="notes" class="field-input review-input-bordered" @bind="_notes"
+                               placeholder="Optional review notes" aria-label="Review notes" />
+                    </div>
+                </div>
+                <div class="row-actions review-decision-actions">
+                    <button class="btn btn-teal" type="button" @onclick="ApproveAsync" disabled="@(_submitting || !CanSubmit)">
+                        @if (_submitting) { <span class="spinner"></span> } else { <Icon Name="check" Size="16" /> }
+                        Approve
+                    </button>
+                    <button class="btn btn-ghost" type="button" @onclick="RequestCorrectionAsync" disabled="@(_submitting || !CanSubmit)">
+                        <Icon Name="edit" Size="16" /> Request correction
+                    </button>
+                    <button class="btn btn-ghost" type="button" @onclick="RejectAsync" disabled="@(_submitting || !CanSubmit)">
+                        <Icon Name="x-circle" Size="16" /> Reject
+                    </button>
+                </div>
+                @if (!CanSubmit)
+                {
+                    <p class="review-help">Enter a reviewer name to record a decision.</p>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private readonly record struct Toast(string Kind, string Message);
+
+    private sealed class FieldEdit
+    {
+        public string Name { get; init; } = "";
+        public string Original { get; init; } = "";
+        public string Value { get; set; } = "";
+        public double Confidence { get; init; }
+        public bool IsEdited => !string.Equals(Value, Original, StringComparison.Ordinal);
+    }
+
+    private DocumentApiClient _api = default!;
+    private DocumentDetail? _detail;
+    private List<FieldEdit> _fields = [];
+    private string _reviewer = "Underwriting Team";
+    private string _notes = string.Empty;
+    private bool _loading = true;
+    private bool _submitting;
+    private Toast? _toast;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _api = new DocumentApiClient(Nav.BaseUri);
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            _detail = await _api.GetAsync(Id);
+            BindFields();
+        }
+        catch (Exception ex)
+        {
+            _toast = new Toast("err", $"Could not load document: {ex.Message}");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void BindFields()
+    {
+        _fields = _detail is null
+            ? []
+            : [.. _detail.Fields.Select(f => new FieldEdit
+            {
+                Name = f.Name,
+                Original = f.Value,
+                Value = f.Value,
+                Confidence = f.Confidence
+            })];
+    }
+
+    private void OnFieldInput(int index, string? value)
+    {
+        if (index >= 0 && index < _fields.Count)
+        {
+            _fields[index].Value = value ?? string.Empty;
+        }
+    }
+
+    private int EditedCount => _fields.Count(f => f.IsEdited);
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(_reviewer);
+
+    private Task ApproveAsync() => SubmitAsync("Approve");
+
+    private Task RequestCorrectionAsync() => SubmitAsync("RequestCorrection");
+
+    private Task RejectAsync() => SubmitAsync("Reject");
+
+    private async Task SubmitAsync(string decision)
+    {
+        if (_detail is null || !CanSubmit)
+        {
+            return;
+        }
+
+        _submitting = true;
+        _toast = null;
+        StateHasChanged();
+        try
+        {
+            var corrections = _fields
+                .Where(f => f.IsEdited)
+                .Select(f => new FieldCorrection(f.Name, f.Value))
+                .ToList();
+
+            var payload = new ReviewDecision(decision, _reviewer.Trim(),
+                string.IsNullOrWhiteSpace(_notes) ? null : _notes.Trim(), corrections);
+
+            var updated = await _api.ReviewAsync(Id, payload);
+            if (updated is null)
+            {
+                _toast = new Toast("err", "The review could not be saved.");
+            }
+            else
+            {
+                _detail = updated;
+                BindFields();
+                _toast = new Toast("ok", $"Decision recorded: {DecisionLabel(decision)}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _toast = new Toast("err", $"Review failed: {ex.Message}");
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private static string DecisionLabel(string decision) => decision switch
+    {
+        "RequestCorrection" => "correction requested",
+        "Reject" => "rejected",
+        _ => "approved"
+    };
+
+    private static string ShortHash(string hash) =>
+        string.IsNullOrEmpty(hash) ? "—" : hash.Length <= 12 ? hash : hash[..12];
+}
+
+

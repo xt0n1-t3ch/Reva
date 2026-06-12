@@ -1,0 +1,11 @@
+name: Bug report
+description: Report a defect with reproduction steps
+labels: [bug]
+body:
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Expected versus actual behavior
+    validations:
+      required: true

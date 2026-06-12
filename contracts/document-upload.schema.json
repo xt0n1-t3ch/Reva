@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reva.local/contracts/document-upload.schema.json",
+  "title": "DocumentUpload",
+  "type": "object",
+  "required": ["id", "fileName", "sha256Hash", "status", "createdAt"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "fileName": { "type": "string", "minLength": 1 },
+    "sha256Hash": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+    "status": { "type": "string", "enum": ["Uploaded", "Parsed", "Extracted", "Failed"] },
+    "createdAt": { "type": "string", "format": "date-time" }
+  }
+}

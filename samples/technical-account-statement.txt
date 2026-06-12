@@ -1,0 +1,14 @@
+Cedent: Andes Mutual Insurance
+Broker: Meridian Re Brokers
+Reinsurer: Active Capital Reinsurance
+Contract Ref: AR-TREATY-2026-0042
+Line of Business: Property & Engineering
+Period: 2026-01-01 to 2026-03-31
+Currency: USD
+Premium: 1200000
+Claims: 245000
+Commission: 180000
+Cession: 35%
+Retention: 500000
+Limit: 5000000
+Technical Account Statement

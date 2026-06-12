@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reva.local/contracts/review-decision.schema.json",
+  "title": "ReviewDecision",
+  "type": "object",
+  "required": ["decision", "reviewer", "fieldCorrections"],
+  "properties": {
+    "decision": { "type": "string", "enum": ["Approve", "Reject", "RequestCorrection"] },
+    "reviewer": { "type": "string", "minLength": 1 },
+    "notes": { "type": "string" },
+    "fieldCorrections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "value"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "value": { "type": "string" }
+        }
+      }
+    }
+  }
+}

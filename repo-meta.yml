@@ -1,0 +1,11 @@
+description: Local-first reinsurance document intelligence cockpit for analyst review workflows.
+homepage: https://github.com/xt0n1-t3ch/Reva
+topics:
+  - reinsurance
+  - document-ai
+  - blazor
+  - dotnet
+  - ocr
+  - technical-accounting
+  - sql-server
+social_preview: docs/visual-references/reva-intelligence-cockpit-reference.png

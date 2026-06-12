@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reva.local/contracts/export-record.schema.json",
+  "title": "ExportRecord",
+  "type": "object",
+  "required": ["documentId", "documentType", "reviewState", "fields"],
+  "properties": {
+    "documentId": { "type": "string", "format": "uuid" },
+    "documentType": { "type": "string" },
+    "reviewState": { "type": "string" },
+    "fields": { "type": "object", "additionalProperties": { "type": "string" } },
+    "exportedAt": { "type": "string", "format": "date-time" }
+  }
+}

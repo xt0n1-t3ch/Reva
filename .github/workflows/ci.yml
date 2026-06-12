@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  dotnet:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore Reva.slnx
+      - run: dotnet format Reva.slnx --verify-no-changes
+      - run: dotnet build Reva.slnx --no-restore
+      - run: dotnet test Reva.slnx --no-build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m unittest discover tools/docling-worker/tests

@@ -1,0 +1,14 @@
+# Reva
+
+> Local-first reinsurance document intelligence MVP using .NET, Blazor, EF Core, SQLite, SQL Server-ready persistence, and a Python document parser worker.
+
+## Docs
+
+- [README](README.md) — overview and quick start
+- [Documentation](docs/index.md) — full docs index
+- [Changelog](CHANGELOG.md) — release history
+
+## Optional
+
+- [Contributing](CONTRIBUTING.md) — development workflow
+- [Security](SECURITY.md) — vulnerability reporting

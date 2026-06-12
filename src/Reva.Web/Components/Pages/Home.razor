@@ -1,0 +1,319 @@
+@page "/"
+@rendermode @(new InteractiveServerRenderMode(false))
+@inject NavigationManager Nav
+
+<PageTitle>Reva Intelligence Cockpit</PageTitle>
+
+<header class="cockpit-topbar">
+    <div class="topbar-titles">
+        <h1>Reva Intelligence Cockpit</h1>
+        <p>Transforming reinsurance data into trusted intelligence</p>
+    </div>
+    <div class="topbar-tools">
+        <div class="searchbox">
+            <Icon Name="search" Size="18" />
+            <input type="search" placeholder="Search documents, contracts, cedents…"
+                   aria-label="Search documents" @bind="_search" @bind:event="oninput" />
+            <span class="kbd">⌘K</span>
+        </div>
+        <label class="btn btn-primary upload-control">
+            <Icon Name="plus" Size="18" />
+            <span>@(_uploading ? "Uploading…" : "Upload Documents")</span>
+            <InputFile OnChange="OnUpload" disabled="@_uploading"
+                       accept=".txt,.csv,.pdf,.png,.jpg,.jpeg,.tif,.tiff,.md" aria-label="Upload reinsurance document" />
+        </label>
+        <button class="icon-btn" type="button" title="Refresh queue" aria-label="Refresh queue" @onclick="ReloadAsync">
+            <Icon Name="sparkle" Size="18" />
+        </button>
+    </div>
+</header>
+
+<div class="cockpit-content">
+    @if (_toast is not null)
+    {
+        <div class="toast @_toast.Value.Kind" role="status">
+            <Icon Name="@(_toast.Value.Kind == "ok" ? "check-circle" : "alert")" Size="18" />
+            <span>@_toast.Value.Message</span>
+        </div>
+    }
+
+    <section class="kpi-grid" aria-label="Key metrics">
+        <KpiCard Tone="blue" IconName="file" Label="Documents Processed"
+                 Value="@_metrics.Total.ToString()" Foot="@($"{_metrics.Extracted} fully extracted")" />
+        <KpiCard Tone="teal" IconName="shield" Label="AI Confidence"
+                 Value="@CockpitFormat.Percent(_metrics.AvgConfidence)"
+                 Foot="@($"across {_metrics.Total} documents")" />
+        <KpiCard Tone="amber" IconName="alert" Label="Exceptions"
+                 Value="@_metrics.TotalExceptions.ToString()"
+                 Foot="@($"{_metrics.Flagged} documents flagged")" />
+        <KpiCard Tone="violet" IconName="clock" Label="Pending Review"
+                 Value="@_metrics.Pending.ToString()" Foot="@($"{_metrics.Approved} approved")" />
+    </section>
+
+    <div class="dash-grid">
+        <div class="section-stack">
+            <section class="card" id="intake">
+                <div class="card-head">
+                    <Icon Name="intake" Size="20" />
+                    <h2>Intake</h2>
+                </div>
+                <div class="card-body">
+                    <label class="upload-control upload-drop">
+                        <span class="kpi-icon tone-teal"><Icon Name="export" Size="22" /></span>
+                        <span class="upload-copy">
+                            <strong>Drop a document or browse to upload</strong>
+                            <span>Technical account statements, bordereaux, treaties — TXT, CSV, PDF, images up to 15 MB.</span>
+                        </span>
+                        <InputFile OnChange="OnUpload" disabled="@_uploading"
+                                   accept=".txt,.csv,.pdf,.png,.jpg,.jpeg,.tif,.tiff,.md" aria-label="Upload reinsurance document into intake" />
+                    </label>
+                </div>
+            </section>
+
+            <section class="card card-pad-0" id="review-queue">
+                <div class="card-head">
+                    <Icon Name="queue" Size="20" />
+                    <h2>Review Queue</h2>
+                    <div class="head-tools">
+                        <span class="pill tone-slate">@Filtered.Count of @_documents.Count</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (_loading)
+                    {
+                        <div class="loading-pane"><span class="spinner"></span> Loading documents…</div>
+                    }
+                    else if (_documents.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <span class="empty-ic"><Icon Name="inbox" Size="40" /></span>
+                            <h3>No documents yet</h3>
+                            <p>Upload a reinsurance document to start extracting and reviewing intelligence.</p>
+                        </div>
+                    }
+                    else if (Filtered.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <span class="empty-ic"><Icon Name="search" Size="36" /></span>
+                            <h3>No matches</h3>
+                            <p>No documents match “@_search”.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-scroll">
+                            <table class="data-table">
+                                <caption class="visually-hidden">Document review queue</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Document</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Review</th>
+                                        <th scope="col">Confidence</th>
+                                        <th scope="col">Exceptions</th>
+                                        <th scope="col">Updated</th>
+                                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var doc in Filtered)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="cell-file">
+                                                    <span class="file-ic"><Icon Name="file" Size="18" /></span>
+                                                    <div class="cell-stack">
+                                                        <a class="cell-strong" href="@ReviewHref(doc.Id)">@doc.FileName</a>
+                                                        <span class="cell-sub">@CockpitFormat.DocumentTypeLabel(doc.DocumentType)</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><StatusPill Status="doc.Status" /></td>
+                                            <td><ReviewPill State="doc.ReviewState" /></td>
+                                            <td><ConfidenceBadge Value="doc.Confidence" /></td>
+                                            <td>
+                                                <span class="pill @CockpitFormat.ExceptionTone(doc.ExceptionCount)">@doc.ExceptionCount</span>
+                                            </td>
+                                            <td class="cell-sub">@CockpitFormat.RelativeTime(doc.UpdatedAt, _now)</td>
+                                            <td>
+                                                <div class="row-actions">
+                                                    <a class="btn btn-subtle" href="@ReviewHref(doc.Id)"
+                                                       aria-label="@($"Open review for {doc.FileName}")">
+                                                        Open <Icon Name="arrow-right" Size="16" />
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+
+        <section class="card card-pad-0" id="exceptions">
+            <div class="card-head">
+                <Icon Name="alert" Size="20" />
+                <h2>Exceptions</h2>
+                <div class="head-tools">
+                    <span class="pill tone-red">@_metrics.TotalExceptions total</span>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (_loading)
+                {
+                    <div class="loading-pane"><span class="spinner"></span></div>
+                }
+                else if (Flagged.Count == 0)
+                {
+                    <div class="empty-state">
+                        <span class="empty-ic"><Icon Name="check-circle" Size="38" /></span>
+                        <h3>All clear</h3>
+                        <p>No outstanding extraction exceptions across the workspace.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="exception-list">
+                        @foreach (var doc in Flagged)
+                        {
+                            <a class="exception-item" href="@ReviewHref(doc.Id)">
+                                <span class="exc-ic @ExceptionSeverityClass(doc.ExceptionCount)"><Icon Name="alert" Size="22" /></span>
+                                <div class="exc-body">
+                                    <div class="exc-title">
+                                        <span class="exc-title-file">@doc.FileName</span>
+                                        <span class="pill @CockpitFormat.ExceptionTone(doc.ExceptionCount)">@doc.ExceptionCount</span>
+                                    </div>
+                                    <div class="exc-msg">@CockpitFormat.DocumentTypeLabel(doc.DocumentType) · confidence @CockpitFormat.PercentWhole(doc.Confidence)</div>
+                                </div>
+                                <span class="cell-sub"><Icon Name="chevron-right" Size="18" /></span>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+</div>
+
+@code {
+    private readonly record struct Toast(string Kind, string Message);
+
+    private DocumentApiClient _api = default!;
+    private List<DocumentSummary> _documents = [];
+    private Metrics _metrics = Metrics.Empty;
+    private string _search = string.Empty;
+    private bool _loading = true;
+    private bool _uploading;
+    private Toast? _toast;
+    private DateTimeOffset _now = DateTimeOffset.UtcNow;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _api = new DocumentApiClient(Nav.BaseUri);
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            _documents = [.. (await _api.ListAsync())
+                .OrderByDescending(d => d.UpdatedAt)];
+            _metrics = Metrics.From(_documents);
+            _now = DateTimeOffset.UtcNow;
+        }
+        catch (Exception ex)
+        {
+            _toast = new Toast("err", $"Could not load documents: {ex.Message}");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file is null)
+        {
+            return;
+        }
+
+        _uploading = true;
+        _toast = null;
+        StateHasChanged();
+        try
+        {
+            await using var source = file.OpenReadStream(DocumentApiClient.MaxUpload);
+            using var buffer = new MemoryStream();
+            await source.CopyToAsync(buffer);
+            buffer.Position = 0;
+
+            var outcome = await _api.UploadAsync(file.Name, file.ContentType, buffer);
+            _toast = new Toast(outcome.Ok ? "ok" : "err", outcome.Message);
+            if (outcome.Ok)
+            {
+                await ReloadAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _toast = new Toast("err", $"Upload failed: {ex.Message}");
+        }
+        finally
+        {
+            _uploading = false;
+        }
+    }
+
+    private List<DocumentSummary> Filtered =>
+        string.IsNullOrWhiteSpace(_search)
+            ? _documents
+            : [.. _documents.Where(d =>
+                d.FileName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                CockpitFormat.DocumentTypeLabel(d.DocumentType).Contains(_search, StringComparison.OrdinalIgnoreCase))];
+
+    private List<DocumentSummary> Flagged =>
+        [.. _documents.Where(d => d.ExceptionCount > 0)
+            .OrderByDescending(d => d.ExceptionCount)
+            .Take(8)];
+
+    private string ReviewHref(Guid id) => $"review/{id}";
+
+    private static string ExceptionSeverityClass(int count) => count switch
+    {
+        >= 3 => "sev-critical",
+        >= 1 => "sev-warning",
+        _ => "sev-info"
+    };
+
+    private readonly record struct Metrics(int Total, int Extracted, double AvgConfidence, int TotalExceptions, int Flagged, int Pending, int Approved)
+    {
+        public static Metrics Empty => new(0, 0, 0, 0, 0, 0, 0);
+
+        public static Metrics From(IReadOnlyList<DocumentSummary> docs)
+        {
+            if (docs.Count == 0)
+            {
+                return Empty;
+            }
+
+            return new Metrics(
+                docs.Count,
+                docs.Count(d => d.Status == DocumentStatus.Extracted),
+                docs.Average(d => d.Confidence),
+                docs.Sum(d => d.ExceptionCount),
+                docs.Count(d => d.ExceptionCount > 0),
+                docs.Count(d => d.ReviewState == ReviewState.Pending),
+                docs.Count(d => d.ReviewState == ReviewState.Approved));
+        }
+    }
+}
+
+

@@ -1,0 +1,12 @@
+[project]
+name = "reva-docling-worker"
+version = "0.1.0"
+description = "Local parser worker for Reva document intelligence."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+docling = ["docling>=2.58"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

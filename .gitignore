@@ -1,0 +1,56 @@
+# Build output
+bin/
+obj/
+dist/
+build/
+TestResults/
+playwright-report/
+
+# Runtime data
+artifacts/
+data/
+uploads/
+*.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Agent context and state
+CLAUDE.md
+claude.md
+AGENTS.md
+GEMINI.md
+.claude/
+.claude-quality/
+.codex/
+.cursor/
+.specify/
+specs/
+tasks/
+evidence/
+reports/
+handoff-*.md
+plan.md
+PLAN.md
+spec.md
+PRD.md
+progress.md
+state.md
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

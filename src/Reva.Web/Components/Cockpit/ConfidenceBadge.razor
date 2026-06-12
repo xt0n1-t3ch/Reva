@@ -1,0 +1,7 @@
+<span class="confidence @CockpitFormat.ConfidenceLevel(Value)" title="@($"AI confidence {CockpitFormat.Percent(Value)}")">
+    @CockpitFormat.PercentWhole(Value)
+</span>
+
+@code {
+    [Parameter] public double Value { get; set; }
+}

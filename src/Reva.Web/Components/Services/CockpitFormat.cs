@@ -1,0 +1,106 @@
+using System.Globalization;
+using Reva.Core.Documents;
+using Reva.Core.Reinsurance;
+
+namespace Reva.Web.Components.Services;
+
+public static class CockpitFormat
+{
+    public static string Percent(double confidence) =>
+        (confidence * 100).ToString("0.#", CultureInfo.InvariantCulture) + "%";
+
+    public static string PercentWhole(double confidence) =>
+        Math.Round(confidence * 100).ToString("0", CultureInfo.InvariantCulture) + "%";
+
+    public static string ConfidenceLevel(double confidence) => confidence switch
+    {
+        >= 0.9 => "lvl-high",
+        >= 0.75 => "lvl-mid",
+        _ => "lvl-low"
+    };
+
+    public static string StatusTone(DocumentStatus status) => status switch
+    {
+        DocumentStatus.Extracted => "tone-green",
+        DocumentStatus.Parsed => "tone-blue",
+        DocumentStatus.Uploaded => "tone-slate",
+        DocumentStatus.Failed => "tone-red",
+        _ => "tone-slate"
+    };
+
+    public static string ReviewTone(ReviewState state) => state switch
+    {
+        ReviewState.Approved => "tone-green",
+        ReviewState.Pending => "tone-amber",
+        ReviewState.Rejected => "tone-red",
+        ReviewState.NeedsCorrection => "tone-violet",
+        _ => "tone-slate"
+    };
+
+    public static string ReviewLabel(ReviewState state) => state switch
+    {
+        ReviewState.NeedsCorrection => "Needs correction",
+        _ => state.ToString()
+    };
+
+    public static string DocumentTypeLabel(ReinsuranceDocumentType type) => type switch
+    {
+        ReinsuranceDocumentType.FacultativeSlip => "Facultative slip",
+        ReinsuranceDocumentType.StatementOfAccount => "Statement of account",
+        ReinsuranceDocumentType.LossRun => "Loss run",
+        ReinsuranceDocumentType.ClaimNotice => "Claim notice",
+        _ => type.ToString()
+    };
+
+    public static string SeverityClass(ExceptionSeverity severity) => severity switch
+    {
+        ExceptionSeverity.Critical => "sev-critical",
+        ExceptionSeverity.Warning => "sev-warning",
+        _ => "sev-info"
+    };
+
+    public static string SeverityTone(ExceptionSeverity severity) => severity switch
+    {
+        ExceptionSeverity.Critical => "tone-red",
+        ExceptionSeverity.Warning => "tone-amber",
+        _ => "tone-blue"
+    };
+
+    public static string ExceptionTone(int count) => count switch
+    {
+        0 => "tone-green",
+        <= 2 => "tone-amber",
+        _ => "tone-red"
+    };
+
+    public static string RelativeTime(DateTimeOffset moment, DateTimeOffset now)
+    {
+        var delta = now - moment;
+        if (delta < TimeSpan.Zero)
+        {
+            delta = TimeSpan.Zero;
+        }
+
+        if (delta.TotalMinutes < 1)
+        {
+            return "just now";
+        }
+
+        if (delta.TotalMinutes < 60)
+        {
+            return $"{(int)delta.TotalMinutes}m ago";
+        }
+
+        if (delta.TotalHours < 24)
+        {
+            return $"{(int)delta.TotalHours}h ago";
+        }
+
+        if (delta.TotalDays < 30)
+        {
+            return $"{(int)delta.TotalDays}d ago";
+        }
+
+        return moment.ToString("dd MMM yyyy", CultureInfo.InvariantCulture);
+    }
+}
