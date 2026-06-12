@@ -20,6 +20,20 @@ Reva is a local-first document intelligence cockpit that turns messy reinsurance
 
 ## Quick start
 
+### Windows executable
+
+Download the latest `Reva-v*-win-x64.zip` from [Releases](https://github.com/xt0n1-t3ch/Reva/releases), extract it, then double-click `Start-Reva.cmd`.
+
+Reva will start at:
+
+```text
+http://localhost:5187
+```
+
+The Windows package is self-contained: .NET is bundled, and Python is optional for the advanced Docling parser path.
+
+### From source
+
 ```powershell
 dotnet restore Reva.slnx
 dotnet test Reva.slnx
@@ -40,6 +54,7 @@ Open the URL printed by ASP.NET Core, upload one of the files in `samples/`, rev
 - [Documentation index](docs/index.md)
 - [Architecture](docs/architecture.md)
 - [AI pipeline](docs/ai-pipeline.md)
+- [Packaging](docs/packaging.md)
 - [Demo script](docs/demo-script.md)
 - [Visual reference](docs/visual-references/reva-intelligence-cockpit-reference.png)
 

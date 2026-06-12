@@ -22,3 +22,5 @@ jobs:
         with:
           python-version: "3.13"
       - run: python -m unittest discover tools/docling-worker/tests
+      - shell: pwsh
+        run: ./tests/package-smoke.ps1

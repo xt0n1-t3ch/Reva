@@ -26,7 +26,7 @@ public sealed class RevaWebApplicationFactory : WebApplicationFactory<Program>
                 ["Reva:Database:Provider"] = "Sqlite",
                 ["Reva:Database:ConnectionString"] = $"Data Source={databasePath}",
                 ["Reva:Storage:UploadRoot"] = uploadRoot,
-                ["Reva:Parser:PythonExecutable"] = "python",
+                ["Reva:Parser:PythonExecutable"] = "python-not-available-for-reva-test",
                 ["Reva:Parser:WorkerScriptPath"] = Path.Combine(root, "tools", "docling-worker", "reva_docling_worker", "main.py")
             });
         });
@@ -64,6 +64,30 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
     }
 
     [Fact]
+    public async Task HealthEndpointReturnsServiceIdentity()
+    {
+        using var client = factory.CreateClient();
+
+        var health = await client.GetFromJsonAsync<HealthPayload>("/health", SerializerOptions);
+
+        Assert.NotNull(health);
+        Assert.Equal("ok", health.Status);
+        Assert.Equal("Reva", health.Service);
+    }
+
+    [Fact]
+    public async Task ListEndpointUsesSqliteWithoutDateTimeOffsetOrderingFailure()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/documents/");
+
+        response.EnsureSuccessStatusCode();
+        var documents = await response.Content.ReadFromJsonAsync<IReadOnlyList<DocumentSummary>>(SerializerOptions);
+        Assert.NotNull(documents);
+    }
+
+    [Fact]
     public async Task UploadReviewAndExportFlowUsesRealApiAndSqlite()
     {
         using var client = factory.CreateClient();
@@ -76,6 +100,10 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
         var upload = await uploadResponse.Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
         Assert.NotNull(upload);
         Assert.Equal(DocumentStatus.Extracted, upload.Status);
+
+        var documents = await client.GetFromJsonAsync<IReadOnlyList<DocumentSummary>>("/api/documents/", SerializerOptions);
+        Assert.NotNull(documents);
+        Assert.Contains(documents, document => document.Id == upload.Id);
 
         var detail = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{upload.Id}", SerializerOptions);
         Assert.NotNull(detail);
@@ -95,6 +123,24 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
         Assert.Equal("Andes Mutual Insurance", export.Fields[ReinsuranceFieldNames.Cedent]);
     }
 
+    [Fact]
+    public async Task CsvBordereauUploadExtractsTableWithoutPythonRuntime()
+    {
+        using var client = factory.CreateClient();
+        using var multipart = new MultipartFormDataContent();
+        var content = new ByteArrayContent(File.ReadAllBytes(SamplePath("bordereau.csv")));
+        multipart.Add(content, "file", "bordereau.csv");
+
+        var uploadResponse = await client.PostAsync("/api/documents/", multipart);
+        uploadResponse.EnsureSuccessStatusCode();
+        var upload = await uploadResponse.Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(upload);
+
+        var detail = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{upload.Id}", SerializerOptions);
+        Assert.NotNull(detail);
+        Assert.Contains(detail.Tables, table => table.Headers.Contains("Cedent") && table.Rows.Count > 0);
+    }
+
     private static string SamplePath(string name)
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);
@@ -111,5 +157,6 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
 
         throw new FileNotFoundException($"Sample file was not found: {name}.");
     }
-}
 
+    private sealed record HealthPayload(string Status, string Service);
+}

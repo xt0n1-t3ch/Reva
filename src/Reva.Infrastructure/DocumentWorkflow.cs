@@ -63,9 +63,11 @@ public sealed class DocumentWorkflow(
         var documents = await dbContext.Documents
             .AsNoTracking()
             .Include(document => document.Exceptions)
-            .OrderByDescending(document => document.CreatedAt)
             .ToListAsync(cancellationToken);
-        return documents.Select(ToSummary).ToList();
+        return documents
+            .OrderByDescending(document => document.CreatedAt)
+            .Select(ToSummary)
+            .ToList();
     }
 
     public async Task<DocumentDetail?> GetAsync(Guid id, CancellationToken cancellationToken)
@@ -256,5 +258,4 @@ public sealed class DocumentWorkflow(
         return new ExtractedTable(table.Name, headers, rows.Select(row => (IReadOnlyDictionary<string, string>)row).ToList());
     }
 }
-
 

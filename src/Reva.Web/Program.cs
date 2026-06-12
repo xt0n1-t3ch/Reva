@@ -31,6 +31,7 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "Reva" }));
 app.MapDocumentEndpoints();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
@@ -38,4 +39,3 @@ app.MapRazorComponents<App>()
 app.Run();
 
 public partial class Program;
-

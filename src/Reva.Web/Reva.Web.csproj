@@ -6,10 +6,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\..\tools\docling-worker\**\*"
+             LinkBase="tools\docling-worker"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
   </ItemGroup>
 
   <PropertyGroup>
+    <AssemblyName>Reva</AssemblyName>
+    <Product>Reva</Product>
+    <Description>AI-powered document review for reinsurance workflows.</Description>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

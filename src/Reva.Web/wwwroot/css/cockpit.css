@@ -127,12 +127,16 @@ a {
     line-height: 1;
 }
 
-.brand-mark .brand-re {
+.brand-mark .brand-reva {
     color: var(--navy-800);
 }
 
-.brand-mark .brand-active {
+.brand-mark .brand-spark {
     color: var(--teal-500);
+    display: inline-block;
+    font-size: 0.48em;
+    margin-left: 0.18em;
+    transform: translateY(-0.45em);
 }
 
 .brand-sub {
@@ -1027,8 +1031,17 @@ a {
 
     .rail-nav {
         flex-direction: row;
-        flex-wrap: wrap;
-        flex: 1 1 auto;
+        flex-wrap: nowrap;
+        flex: 1 1 100%;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: thin;
+    }
+
+    .rail-link {
+        width: auto;
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
 
     .rail-spacer {

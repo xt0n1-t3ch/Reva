@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +33,7 @@ public static class RevaInfrastructureRegistration
                 return;
             }
 
+            EnsureSqliteDirectory(connectionString);
             options.UseSqlite(connectionString);
         });
 
@@ -44,6 +46,20 @@ public static class RevaInfrastructureRegistration
 
         return services;
     }
-}
 
+    private static void EnsureSqliteDirectory(string connectionString)
+    {
+        var dataSource = new SqliteConnectionStringBuilder(connectionString).DataSource;
+        if (string.IsNullOrWhiteSpace(dataSource) || string.Equals(dataSource, ":memory:", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var directory = Path.GetDirectoryName(Path.GetFullPath(dataSource));
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+}
 
