@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-The latest unreleased version receives fixes during the interview project lifecycle.
+The latest unreleased version receives fixes during active development.
 
 ## Reporting a vulnerability
 

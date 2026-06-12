@@ -1,8 +1,22 @@
-# Reva
+<p align="center">
+  <img src="docs/assets/reva-banner.png" alt="Reva AI document intelligence cockpit banner">
+</p>
 
-> Reinsurance document intelligence cockpit for technical accounting, bordereaux, statements of account, and analyst review workflows.
+<h1 align="center">Reva</h1>
 
-Reva is a local-first .NET and document-AI MVP built for a Programmer Analyst interview scenario. It demonstrates how an internal reinsurance operations team can upload documents, parse text and tables, classify the document type, extract canonical financial fields, review exceptions, and export approved records.
+<p align="center">
+  <strong>AI-powered document review for reinsurance workflows.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/xt0n1-t3ch/Reva/actions/workflows/ci.yml"><img src="https://github.com/xt0n1-t3ch/Reva/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10">
+  <img src="https://img.shields.io/badge/Blazor-Web%20App-512BD4?logo=blazor&logoColor=white" alt="Blazor Web App">
+  <img src="https://img.shields.io/badge/Document%20AI-OCR%20%2B%20Extraction-00B3A4" alt="Document AI">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License"></a>
+</p>
+
+Reva is a local-first document intelligence cockpit that turns messy reinsurance documents into structured, reviewable, export-ready data. It combines a Blazor analyst UI, an ASP.NET Core API, SQLite-backed workflow state, and a Python parser worker so teams can ingest technical accounts, bordereaux, statements of account, and scanned or semi-structured files; extract financial fields and tables; flag exceptions; capture review decisions; and export approved records.
 
 ## Quick start
 

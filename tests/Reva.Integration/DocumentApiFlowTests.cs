@@ -82,7 +82,7 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
         Assert.Equal(ReinsuranceDocumentType.StatementOfAccount, detail.DocumentType);
         Assert.Contains(detail.Fields, field => field.Name == ReinsuranceFieldNames.Cedent && field.Value == "Andes Mutual Insurance");
 
-        var review = new ReviewDecision("Approve", "interview-demo", "Validated sample technical account.", []);
+        var review = new ReviewDecision("Approve", "open-source-demo", "Validated sample technical account.", []);
         var reviewResponse = await client.PostAsJsonAsync($"/api/documents/{upload.Id}/review", review, SerializerOptions);
         reviewResponse.EnsureSuccessStatusCode();
         var reviewed = await reviewResponse.Content.ReadFromJsonAsync<DocumentDetail>(SerializerOptions);
@@ -112,5 +112,4 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
         throw new FileNotFoundException($"Sample file was not found: {name}.");
     }
 }
-
 

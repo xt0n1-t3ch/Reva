@@ -22,7 +22,7 @@ PaddleOCR-VL is the recommended optional adapter for scanned or visually complex
 
 ## Why not cloud-first
 
-Azure Document Intelligence is a strong production adapter for Microsoft-heavy enterprises, but this interview MVP is local-first to avoid secrets and prove architecture. The production path is an additional parser implementation, not a rewrite.
+Azure Document Intelligence is a strong production adapter for Microsoft-heavy enterprises, but Reva stays local-first by default to avoid secrets, reduce setup friction, and keep the architecture portable. The production path is an additional parser implementation, not a rewrite.
 
 ## Roadmap
 
