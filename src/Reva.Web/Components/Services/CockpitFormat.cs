@@ -24,9 +24,13 @@ public static class CockpitFormat
         DocumentStatus.Extracted => "tone-green",
         DocumentStatus.Parsed => "tone-blue",
         DocumentStatus.Uploaded => "tone-slate",
+        DocumentStatus.Unsupported => "tone-amber",
         DocumentStatus.Failed => "tone-red",
         _ => "tone-slate"
     };
+
+    public static bool IsActionable(DocumentStatus status) =>
+        status == DocumentStatus.Extracted;
 
     public static string ReviewTone(ReviewState state) => state switch
     {

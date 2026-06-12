@@ -37,20 +37,113 @@
         </div>
     }
 
-    <section class="kpi-grid" aria-label="Key metrics">
-        <KpiCard Tone="blue" IconName="file" Label="Documents Processed"
-                 Value="@_metrics.Total.ToString()" Foot="@($"{_metrics.Extracted} fully extracted")" />
-        <KpiCard Tone="teal" IconName="shield" Label="AI Confidence"
-                 Value="@CockpitFormat.Percent(_metrics.AvgConfidence)"
-                 Foot="@($"across {_metrics.Total} documents")" />
-        <KpiCard Tone="amber" IconName="alert" Label="Exceptions"
-                 Value="@_metrics.TotalExceptions.ToString()"
-                 Foot="@($"{_metrics.Flagged} documents flagged")" />
-        <KpiCard Tone="violet" IconName="clock" Label="Pending Review"
-                 Value="@_metrics.Pending.ToString()" Foot="@($"{_metrics.Approved} approved")" />
+    <section class="status-band" aria-label="Workspace overview">
+        <div class="band-top">
+            <div class="band-lead">
+                <span class="band-eyebrow">Workspace overview</span>
+                <h2 class="band-headline">@HealthHeadline</h2>
+                <p class="band-sub">@HealthSummary</p>
+            </div>
+            <div class="band-meta">
+                <span class="band-live"><span class="dot"></span>Live</span>
+                <span class="band-synced">Global Reinsurance · synced @CockpitFormat.RelativeTime(_now, _now)</span>
+            </div>
+        </div>
+        <div class="band-metrics" aria-label="Key metrics">
+            <KpiCard Tone="blue" IconName="file" Label="Documents"
+                     Value="@_metrics.Total.ToString()" Foot="@DocumentsFoot" />
+            <KpiCard Tone="teal" IconName="shield" Label="Avg confidence"
+                     Value="@ConfidenceValue" Foot="@($"across {_metrics.Extracted} extracted")" />
+            <KpiCard Tone="amber" IconName="alert" Label="Exceptions"
+                     Value="@_metrics.TotalExceptions.ToString()" Foot="@($"{_metrics.Flagged} flagged")" />
+            <KpiCard Tone="violet" IconName="clock" Label="Pending review"
+                     Value="@_metrics.Pending.ToString()" Foot="@($"{_metrics.Approved} approved")" />
+        </div>
     </section>
 
     <div class="dash-grid">
+        <section class="card card-pad-0 queue-card" id="review-queue">
+            <div class="card-head">
+                <Icon Name="queue" Size="20" />
+                <h2>Review queue</h2>
+                <div class="head-tools">
+                    <span class="pill tone-slate">@Filtered.Count of @_documents.Count</span>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (_loading)
+                {
+                    <div class="loading-pane"><span class="spinner"></span> Loading documents…</div>
+                }
+                else if (_documents.Count == 0)
+                {
+                    <div class="empty-state">
+                        <span class="empty-ic"><Icon Name="inbox" Size="40" /></span>
+                        <h3>No documents yet</h3>
+                        <p>Upload a reinsurance document to start extracting and reviewing intelligence.</p>
+                    </div>
+                }
+                else if (Filtered.Count == 0)
+                {
+                    <div class="empty-state">
+                        <span class="empty-ic"><Icon Name="search" Size="36" /></span>
+                        <h3>No matches</h3>
+                        <p>No documents match “@_search”.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <caption class="visually-hidden">Document review queue</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Document</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Review</th>
+                                    <th scope="col">Confidence</th>
+                                    <th scope="col">Exceptions</th>
+                                    <th scope="col">Updated</th>
+                                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var doc in Filtered)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="cell-file">
+                                                <span class="file-ic"><Icon Name="file" Size="18" /></span>
+                                                <div class="cell-stack">
+                                                    <a class="cell-strong" href="@ReviewHref(doc.Id)">@doc.FileName</a>
+                                                    <span class="cell-sub">@CockpitFormat.DocumentTypeLabel(doc.DocumentType)</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><StatusPill Status="doc.Status" /></td>
+                                        <td><ReviewPill State="doc.ReviewState" /></td>
+                                        <td><ConfidenceBadge Value="doc.Confidence" /></td>
+                                        <td>
+                                            <span class="pill @CockpitFormat.ExceptionTone(doc.ExceptionCount)">@doc.ExceptionCount</span>
+                                        </td>
+                                        <td class="cell-sub">@CockpitFormat.RelativeTime(doc.UpdatedAt, _now)</td>
+                                        <td>
+                                            <div class="row-actions">
+                                                <a class="btn btn-subtle" href="@ReviewHref(doc.Id)"
+                                                   aria-label="@($"Open review for {doc.FileName}")">
+                                                    Open <Icon Name="arrow-right" Size="16" />
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+
         <div class="section-stack">
             <section class="card" id="intake">
                 <div class="card-head">
@@ -62,7 +155,7 @@
                         <span class="kpi-icon tone-teal"><Icon Name="export" Size="22" /></span>
                         <span class="upload-copy">
                             <strong>Drop a document or browse to upload</strong>
-                            <span>Technical account statements, bordereaux, treaties — TXT, CSV, PDF, images up to 15 MB.</span>
+                            <span>Statements, bordereaux, treaties — TXT, CSV, PDF, images up to 15 MB.</span>
                         </span>
                         <InputFile OnChange="OnUpload" disabled="@_uploading"
                                    accept=".txt,.csv,.pdf,.png,.jpg,.jpeg,.tif,.tiff,.md" aria-label="Upload reinsurance document into intake" />
@@ -70,131 +163,49 @@
                 </div>
             </section>
 
-            <section class="card card-pad-0" id="review-queue">
+            <section class="card card-pad-0" id="exceptions">
                 <div class="card-head">
-                    <Icon Name="queue" Size="20" />
-                    <h2>Review Queue</h2>
+                    <Icon Name="alert" Size="20" />
+                    <h2>Exceptions</h2>
                     <div class="head-tools">
-                        <span class="pill tone-slate">@Filtered.Count of @_documents.Count</span>
+                        <span class="pill @CockpitFormat.ExceptionTone(_metrics.TotalExceptions)">@_metrics.TotalExceptions total</span>
                     </div>
                 </div>
                 <div class="card-body">
                     @if (_loading)
                     {
-                        <div class="loading-pane"><span class="spinner"></span> Loading documents…</div>
+                        <div class="loading-pane"><span class="spinner"></span></div>
                     }
-                    else if (_documents.Count == 0)
+                    else if (Flagged.Count == 0)
                     {
                         <div class="empty-state">
-                            <span class="empty-ic"><Icon Name="inbox" Size="40" /></span>
-                            <h3>No documents yet</h3>
-                            <p>Upload a reinsurance document to start extracting and reviewing intelligence.</p>
-                        </div>
-                    }
-                    else if (Filtered.Count == 0)
-                    {
-                        <div class="empty-state">
-                            <span class="empty-ic"><Icon Name="search" Size="36" /></span>
-                            <h3>No matches</h3>
-                            <p>No documents match “@_search”.</p>
+                            <span class="empty-ic"><Icon Name="check-circle" Size="38" /></span>
+                            <h3>All clear</h3>
+                            <p>No outstanding extraction exceptions across the workspace.</p>
                         </div>
                     }
                     else
                     {
-                        <div class="table-scroll">
-                            <table class="data-table">
-                                <caption class="visually-hidden">Document review queue</caption>
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Document</th>
-                                        <th scope="col">Status</th>
-                                        <th scope="col">Review</th>
-                                        <th scope="col">Confidence</th>
-                                        <th scope="col">Exceptions</th>
-                                        <th scope="col">Updated</th>
-                                        <th scope="col"><span class="visually-hidden">Actions</span></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var doc in Filtered)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <div class="cell-file">
-                                                    <span class="file-ic"><Icon Name="file" Size="18" /></span>
-                                                    <div class="cell-stack">
-                                                        <a class="cell-strong" href="@ReviewHref(doc.Id)">@doc.FileName</a>
-                                                        <span class="cell-sub">@CockpitFormat.DocumentTypeLabel(doc.DocumentType)</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td><StatusPill Status="doc.Status" /></td>
-                                            <td><ReviewPill State="doc.ReviewState" /></td>
-                                            <td><ConfidenceBadge Value="doc.Confidence" /></td>
-                                            <td>
-                                                <span class="pill @CockpitFormat.ExceptionTone(doc.ExceptionCount)">@doc.ExceptionCount</span>
-                                            </td>
-                                            <td class="cell-sub">@CockpitFormat.RelativeTime(doc.UpdatedAt, _now)</td>
-                                            <td>
-                                                <div class="row-actions">
-                                                    <a class="btn btn-subtle" href="@ReviewHref(doc.Id)"
-                                                       aria-label="@($"Open review for {doc.FileName}")">
-                                                        Open <Icon Name="arrow-right" Size="16" />
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                        <div class="exception-list">
+                            @foreach (var doc in Flagged)
+                            {
+                                <a class="exception-item" href="@ReviewHref(doc.Id)">
+                                    <span class="exc-ic @ExceptionSeverityClass(doc.ExceptionCount)"><Icon Name="alert" Size="22" /></span>
+                                    <div class="exc-body">
+                                        <div class="exc-title">
+                                            <span class="exc-title-file">@doc.FileName</span>
+                                            <span class="pill @CockpitFormat.ExceptionTone(doc.ExceptionCount)">@doc.ExceptionCount</span>
+                                        </div>
+                                        <div class="exc-msg">@CockpitFormat.DocumentTypeLabel(doc.DocumentType) · confidence @CockpitFormat.PercentWhole(doc.Confidence)</div>
+                                    </div>
+                                    <span class="cell-sub"><Icon Name="chevron-right" Size="18" /></span>
+                                </a>
+                            }
                         </div>
                     }
                 </div>
             </section>
         </div>
-
-        <section class="card card-pad-0" id="exceptions">
-            <div class="card-head">
-                <Icon Name="alert" Size="20" />
-                <h2>Exceptions</h2>
-                <div class="head-tools">
-                    <span class="pill tone-red">@_metrics.TotalExceptions total</span>
-                </div>
-            </div>
-            <div class="card-body">
-                @if (_loading)
-                {
-                    <div class="loading-pane"><span class="spinner"></span></div>
-                }
-                else if (Flagged.Count == 0)
-                {
-                    <div class="empty-state">
-                        <span class="empty-ic"><Icon Name="check-circle" Size="38" /></span>
-                        <h3>All clear</h3>
-                        <p>No outstanding extraction exceptions across the workspace.</p>
-                    </div>
-                }
-                else
-                {
-                    <div class="exception-list">
-                        @foreach (var doc in Flagged)
-                        {
-                            <a class="exception-item" href="@ReviewHref(doc.Id)">
-                                <span class="exc-ic @ExceptionSeverityClass(doc.ExceptionCount)"><Icon Name="alert" Size="22" /></span>
-                                <div class="exc-body">
-                                    <div class="exc-title">
-                                        <span class="exc-title-file">@doc.FileName</span>
-                                        <span class="pill @CockpitFormat.ExceptionTone(doc.ExceptionCount)">@doc.ExceptionCount</span>
-                                    </div>
-                                    <div class="exc-msg">@CockpitFormat.DocumentTypeLabel(doc.DocumentType) · confidence @CockpitFormat.PercentWhole(doc.Confidence)</div>
-                                </div>
-                                <span class="cell-sub"><Icon Name="chevron-right" Size="18" /></span>
-                            </a>
-                        }
-                    </div>
-                }
-            </div>
-        </section>
     </div>
 </div>
 
@@ -272,6 +283,28 @@
         }
     }
 
+    private string HealthHeadline => _documents.Count switch
+    {
+        0 => "No documents in the workspace yet",
+        _ when _metrics.NeedsAttention == 1 => "1 document needs attention",
+        _ when _metrics.NeedsAttention > 1 => $"{_metrics.NeedsAttention} documents need attention",
+        _ when _metrics.Pending == 1 => "1 document is pending review",
+        _ when _metrics.Pending > 1 => $"{_metrics.Pending} documents are pending review",
+        _ => "All documents reviewed and clear"
+    };
+
+    private string HealthSummary => _documents.Count == 0
+        ? "Drop a reinsurance document into intake to begin."
+        : $"{_metrics.Extracted} extracted · {_metrics.NeedsAttention} unsupported · {_metrics.TotalExceptions} open exceptions";
+
+    private string ConfidenceValue => _metrics.Extracted == 0
+        ? "—"
+        : CockpitFormat.Percent(_metrics.AvgConfidence);
+
+    private string DocumentsFoot => _metrics.NeedsAttention > 0
+        ? $"{_metrics.NeedsAttention} need attention"
+        : $"{_metrics.Extracted} extracted";
+
     private List<DocumentSummary> Filtered =>
         string.IsNullOrWhiteSpace(_search)
             ? _documents
@@ -293,9 +326,9 @@
         _ => "sev-info"
     };
 
-    private readonly record struct Metrics(int Total, int Extracted, double AvgConfidence, int TotalExceptions, int Flagged, int Pending, int Approved)
+    private readonly record struct Metrics(int Total, int Extracted, double AvgConfidence, int TotalExceptions, int Flagged, int Pending, int Approved, int NeedsAttention)
     {
-        public static Metrics Empty => new(0, 0, 0, 0, 0, 0, 0);
+        public static Metrics Empty => new(0, 0, 0, 0, 0, 0, 0, 0);
 
         public static Metrics From(IReadOnlyList<DocumentSummary> docs)
         {
@@ -304,14 +337,17 @@
                 return Empty;
             }
 
+            var extracted = docs.Where(d => d.Status == DocumentStatus.Extracted).ToList();
+
             return new Metrics(
                 docs.Count,
-                docs.Count(d => d.Status == DocumentStatus.Extracted),
-                docs.Average(d => d.Confidence),
+                extracted.Count,
+                extracted.Count > 0 ? extracted.Average(d => d.Confidence) : 0,
                 docs.Sum(d => d.ExceptionCount),
                 docs.Count(d => d.ExceptionCount > 0),
                 docs.Count(d => d.ReviewState == ReviewState.Pending),
-                docs.Count(d => d.ReviewState == ReviewState.Approved));
+                docs.Count(d => d.ReviewState == ReviewState.Approved),
+                docs.Count(d => !CockpitFormat.IsActionable(d.Status)));
         }
     }
 }

@@ -16,13 +16,22 @@
     @if (_detail is not null)
     {
         <div class="topbar-tools">
-            <a class="btn btn-ghost" href="@_api.ExportUrl(Id, "json")" download
-               aria-label="Export as JSON"><Icon Name="download" Size="16" /> JSON</a>
-            <a class="btn btn-ghost" href="@_api.ExportUrl(Id, "csv")" download
-               aria-label="Export as CSV"><Icon Name="download" Size="16" /> CSV</a>
-            <button class="btn btn-teal" type="button" @onclick="ApproveAsync" disabled="@_submitting">
-                <Icon Name="check" Size="16" /> Approve
-            </button>
+            @if (CanAct)
+            {
+                <a class="btn btn-ghost" href="@_api.ExportUrl(Id, "json")" download
+                   aria-label="Export as JSON"><Icon Name="download" Size="16" /> JSON</a>
+                <a class="btn btn-ghost" href="@_api.ExportUrl(Id, "csv")" download
+                   aria-label="Export as CSV"><Icon Name="download" Size="16" /> CSV</a>
+                <button class="btn btn-teal" type="button" @onclick="ApproveAsync" disabled="@_submitting">
+                    <Icon Name="check" Size="16" /> Approve
+                </button>
+            }
+            else
+            {
+                <span class="btn btn-ghost is-disabled" aria-disabled="true" title="Export is unavailable for unsupported documents"><Icon Name="download" Size="16" /> JSON</span>
+                <span class="btn btn-ghost is-disabled" aria-disabled="true" title="Export is unavailable for unsupported documents"><Icon Name="download" Size="16" /> CSV</span>
+                <span class="btn btn-teal is-disabled" aria-disabled="true" title="Approval is unavailable for unsupported documents"><Icon Name="check" Size="16" /> Approve</span>
+            }
         </div>
     }
 </header>
@@ -65,11 +74,29 @@
             </div>
         </section>
 
-        <div class="review-grid">
+        @if (!CanAct)
+        {
+            <section class="callout @(_detail.Status == DocumentStatus.Failed ? "callout-fail" : "callout-warn")" role="note">
+                <span class="callout-ic"><Icon Name="alert" Size="24" /></span>
+                <div class="callout-body">
+                    <h3>@(_detail.Status == DocumentStatus.Failed ? "Processing failed" : "Unsupported document — needs attention")</h3>
+                    <p>
+                        @(_detail.Status == DocumentStatus.Failed
+                            ? "This document could not be processed, so no fields were extracted. Export and approval are unavailable."
+                            : "This file was not recognised as a supported reinsurance document, so no canonical fields were extracted. Export and approval are unavailable. Upload a treaty, statement of account, bordereau, or loss run to extract structured data.")
+                    </p>
+                </div>
+            </section>
+        }
+
+        <div class="review-grid @(ShowFields ? null : "cols-2")">
             <section class="card card-pad-0">
                 <div class="card-head">
                     <Icon Name="file" Size="20" />
-                    <h2>Document Preview</h2>
+                    <h2>Document preview</h2>
+                    <div class="head-tools">
+                        <span class="pill tone-slate">@_detail.ParserProfile</span>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="preview-frame">
@@ -78,21 +105,17 @@
                 </div>
             </section>
 
-            <section class="card card-pad-0">
-                <div class="card-head">
-                    <Icon Name="sparkle" Size="20" />
-                    <h2>Extracted Fields</h2>
-                    <div class="head-tools">
-                        <span class="pill tone-teal">AI confidence @CockpitFormat.Percent(_detail.Confidence)</span>
+            @if (ShowFields)
+            {
+                <section class="card card-pad-0">
+                    <div class="card-head">
+                        <Icon Name="sparkle" Size="20" />
+                        <h2>Extracted fields</h2>
+                        <div class="head-tools">
+                            <span class="pill tone-teal">AI confidence @CockpitFormat.Percent(_detail.Confidence)</span>
+                        </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    @if (_fields.Count == 0)
-                    {
-                        <div class="empty-state"><p>No structured fields were extracted from this document.</p></div>
-                    }
-                    else
-                    {
+                    <div class="card-body">
                         <div class="field-list">
                             @for (var i = 0; i < _fields.Count; i++)
                             {
@@ -108,9 +131,9 @@
                                 </div>
                             }
                         </div>
-                    }
-                </div>
-            </section>
+                    </div>
+                </section>
+            }
 
             <section class="card card-pad-0 review-exceptions">
                 <div class="card-head">
@@ -195,7 +218,7 @@
         <section class="card">
             <div class="card-head">
                 <Icon Name="check-circle" Size="20" />
-                <h2>Review Decision</h2>
+                <h2>Review decision</h2>
                 <div class="head-tools">
                     @if (EditedCount > 0)
                     {
@@ -204,32 +227,39 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="meta-strip review-form-strip">
-                    <div class="meta-item review-form-item-short">
-                        <label class="k" for="reviewer">Reviewer</label>
-                        <input id="reviewer" class="field-input review-input-bordered" @bind="_reviewer" aria-label="Reviewer name" />
-                    </div>
-                    <div class="meta-item review-form-item-wide">
-                        <label class="k" for="notes">Notes</label>
-                        <input id="notes" class="field-input review-input-bordered" @bind="_notes"
-                               placeholder="Optional review notes" aria-label="Review notes" />
-                    </div>
-                </div>
-                <div class="row-actions review-decision-actions">
-                    <button class="btn btn-teal" type="button" @onclick="ApproveAsync" disabled="@(_submitting || !CanSubmit)">
-                        @if (_submitting) { <span class="spinner"></span> } else { <Icon Name="check" Size="16" /> }
-                        Approve
-                    </button>
-                    <button class="btn btn-ghost" type="button" @onclick="RequestCorrectionAsync" disabled="@(_submitting || !CanSubmit)">
-                        <Icon Name="edit" Size="16" /> Request correction
-                    </button>
-                    <button class="btn btn-ghost" type="button" @onclick="RejectAsync" disabled="@(_submitting || !CanSubmit)">
-                        <Icon Name="x-circle" Size="16" /> Reject
-                    </button>
-                </div>
-                @if (!CanSubmit)
+                @if (!CanAct)
                 {
-                    <p class="review-help">Enter a reviewer name to record a decision.</p>
+                    <p class="review-help">This document is unsupported and cannot be reviewed, corrected, or exported. Re-upload a supported reinsurance document to continue.</p>
+                }
+                else
+                {
+                    <div class="meta-strip review-form-strip">
+                        <div class="meta-item review-form-item-short">
+                            <label class="k" for="reviewer">Reviewer</label>
+                            <input id="reviewer" class="field-input review-input-bordered" @bind="_reviewer" aria-label="Reviewer name" />
+                        </div>
+                        <div class="meta-item review-form-item-wide">
+                            <label class="k" for="notes">Notes</label>
+                            <input id="notes" class="field-input review-input-bordered" @bind="_notes"
+                                   placeholder="Optional review notes" aria-label="Review notes" />
+                        </div>
+                    </div>
+                    <div class="row-actions review-decision-actions">
+                        <button class="btn btn-teal" type="button" @onclick="ApproveAsync" disabled="@(_submitting || !CanSubmit)">
+                            @if (_submitting) { <span class="spinner"></span> } else { <Icon Name="check" Size="16" /> }
+                            Approve
+                        </button>
+                        <button class="btn btn-ghost" type="button" @onclick="RequestCorrectionAsync" disabled="@(_submitting || !CanSubmit)">
+                            <Icon Name="edit" Size="16" /> Request correction
+                        </button>
+                        <button class="btn btn-ghost" type="button" @onclick="RejectAsync" disabled="@(_submitting || !CanSubmit)">
+                            <Icon Name="x-circle" Size="16" /> Reject
+                        </button>
+                    </div>
+                    @if (!CanSubmit)
+                    {
+                        <p class="review-help">Enter a reviewer name to record a decision.</p>
+                    }
                 }
             </div>
         </section>
@@ -307,7 +337,11 @@
 
     private int EditedCount => _fields.Count(f => f.IsEdited);
 
-    private bool CanSubmit => !string.IsNullOrWhiteSpace(_reviewer);
+    private bool CanAct => _detail is not null && CockpitFormat.IsActionable(_detail.Status);
+
+    private bool ShowFields => _fields.Count > 0;
+
+    private bool CanSubmit => CanAct && !string.IsNullOrWhiteSpace(_reviewer);
 
     private Task ApproveAsync() => SubmitAsync("Approve");
 

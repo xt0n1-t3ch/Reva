@@ -23,7 +23,11 @@ if (-not (Test-Path $exePath)) {
 $port = 5199
 $outLog = Join-Path $extractRoot "smoke.out.log"
 $errLog = Join-Path $extractRoot "smoke.err.log"
-$process = Start-Process -FilePath $exePath -ArgumentList @("--urls", "http://localhost:$port") -WorkingDirectory $extractRoot -PassThru -WindowStyle Hidden -RedirectStandardOutput $outLog -RedirectStandardError $errLog
+$previousUrls = $env:ASPNETCORE_URLS
+$previousNoOpen = $env:REVA_NO_OPEN
+$env:ASPNETCORE_URLS = "http://localhost:$port"
+$env:REVA_NO_OPEN = "1"
+$process = Start-Process -FilePath $exePath -WorkingDirectory $extractRoot -PassThru -WindowStyle Hidden -RedirectStandardOutput $outLog -RedirectStandardError $errLog
 try {
     $healthy = $false
     for ($i = 1; $i -le 45; $i++) {
@@ -56,4 +60,6 @@ try {
     if (-not $process.HasExited) {
         Stop-Process -Id $process.Id -Force
     }
+    $env:ASPNETCORE_URLS = $previousUrls
+    $env:REVA_NO_OPEN = $previousNoOpen
 }

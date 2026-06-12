@@ -132,6 +132,12 @@ public sealed class DocumentWorkflow(
             return null;
         }
 
+        if (Enum.Parse<DocumentStatus>(document.Status) is not DocumentStatus.Extracted
+            || Enum.Parse<ReinsuranceDocumentType>(document.DocumentType) is ReinsuranceDocumentType.Unknown)
+        {
+            throw new InvalidOperationException("Only extracted reinsurance documents can be exported.");
+        }
+
         var fields = document.Fields.ToDictionary(field => field.Name, field => field.Value, StringComparer.OrdinalIgnoreCase);
         return new ExportRecord(
             document.Id,
@@ -147,13 +153,20 @@ public sealed class DocumentWorkflow(
         {
             var parsed = await parser.ParseAsync(record.StoragePath, cancellationToken);
             var classification = classifier.Classify(parsed);
+            record.ParserProfile = parsed.ParserProfile;
+            record.ParsedMarkdown = parsed.Markdown;
+            record.ParsedJson = parsed.RawJson;
+
+            if (!DocumentSupportPolicy.IsSupported(classification))
+            {
+                MarkUnsupported(record, parsed, classification);
+                return;
+            }
+
             var extraction = extractor.Extract(parsed, classification);
             record.Status = DocumentStatus.Extracted.ToString();
             record.DocumentType = extraction.DocumentType.ToString();
             record.Confidence = extraction.Confidence;
-            record.ParserProfile = parsed.ParserProfile;
-            record.ParsedMarkdown = parsed.Markdown;
-            record.ParsedJson = parsed.RawJson;
             record.Fields = extraction.Fields.Select(field => new DocumentFieldRecord
             {
                 Name = field.Name,
@@ -182,6 +195,30 @@ public sealed class DocumentWorkflow(
             record.ErrorMessage = ex.Message;
             record.UpdatedAt = DateTimeOffset.UtcNow;
         }
+    }
+
+    private static void MarkUnsupported(DocumentRecord record, ParsedDocument parsed, ClassificationResult classification)
+    {
+        var issues = parsed.Warnings
+            .Select(warning => new ExtractionIssue(ExceptionSeverity.Info, warning))
+            .Prepend(DocumentSupportPolicy.UnsupportedIssue());
+        record.Status = DocumentStatus.Unsupported.ToString();
+        record.DocumentType = classification.DocumentType.ToString();
+        record.Confidence = classification.Confidence;
+        record.Fields = [];
+        record.Tables = parsed.Tables.Select(table => new DocumentTableRecord
+        {
+            Name = table.Name,
+            HeadersJson = JsonSerializer.Serialize(table.Headers, SerializerOptions),
+            RowsJson = JsonSerializer.Serialize(table.Rows, SerializerOptions)
+        }).ToList();
+        record.Exceptions = issues.Select(issue => new DocumentIssueRecord
+        {
+            Severity = issue.Severity.ToString(),
+            Message = issue.Message
+        }).ToList();
+        record.ErrorMessage = null;
+        record.UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     private static void ValidateFile(string fileName, Stream content)
@@ -258,4 +295,3 @@ public sealed class DocumentWorkflow(
         return new ExtractedTable(table.Name, headers, rows.Select(row => (IReadOnlyDictionary<string, string>)row).ToList());
     }
 }
-

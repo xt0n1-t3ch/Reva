@@ -32,8 +32,8 @@ if ($LASTEXITCODE -ne 0) {
 $launcher = @"
 @echo off
 cd /d "%~dp0"
-start "" "http://localhost:5187"
-Reva.exe --urls http://localhost:5187
+set ASPNETCORE_URLS=http://localhost:5187
+Reva.exe
 "@
 Set-Content -Path (Join-Path $publishDir "Start-Reva.cmd") -Value $launcher -Encoding ASCII
 
@@ -42,11 +42,13 @@ Reva $Version for Windows
 
 Quick start:
 1. Extract this ZIP.
-2. Double-click Start-Reva.cmd.
-3. If the browser does not open automatically, visit http://localhost:5187.
+2. Double-click Reva.exe.
+3. Reva opens http://localhost:5187 automatically.
 
 Direct mode:
-- Run Reva.exe --urls http://localhost:5187
+- Double-click Reva.exe, or set ASPNETCORE_URLS=http://localhost:5187 before running Reva.exe when a fixed port is needed.
+- Start-Reva.cmd is included as a fallback launcher.
+- Use REVA_NO_OPEN=1 for headless smoke tests.
 
 Notes:
 - .NET is bundled in this self-contained package.

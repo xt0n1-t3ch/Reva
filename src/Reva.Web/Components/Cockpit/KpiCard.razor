@@ -1,20 +1,15 @@
-<div class="card kpi-card">
-    <div class="kpi-top">
-        <span class="kpi-icon tone-@Tone">
-            <Icon Name="@IconName" Size="24" />
-        </span>
-        <div class="kpi-meta">
-            <span class="kpi-label">@Label</span>
-            <span class="kpi-value">@Value</span>
-        </div>
-    </div>
-    @if (!string.IsNullOrWhiteSpace(Foot))
-    {
-        <span class="kpi-foot">@Foot</span>
-    }
-    <svg class="kpi-spark" viewBox="0 0 200 34" fill="none" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-        <path d="@Spark" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />
-    </svg>
+<div class="kpi-card">
+    <span class="kpi-icon tone-@Tone">
+        <Icon Name="@IconName" Size="22" />
+    </span>
+    <span class="kpi-meta">
+        <span class="kpi-label">@Label</span>
+        <span class="kpi-value">@Value</span>
+        @if (!string.IsNullOrWhiteSpace(Foot))
+        {
+            <span class="kpi-foot">@Foot</span>
+        }
+    </span>
 </div>
 
 @code {
@@ -23,7 +18,4 @@
     [Parameter] public string? Foot { get; set; }
     [Parameter] public string Tone { get; set; } = "blue";
     [Parameter] public string IconName { get; set; } = "chart";
-
-    private const string Spark =
-        "M2 26 L24 22 L46 27 L68 18 L90 21 L112 12 L134 17 L156 9 L178 14 L198 6";
 }

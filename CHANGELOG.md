@@ -5,6 +5,16 @@ Keep a Changelog 1.1.0, and this project follows Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-12
+
+### Added
+- One-click Windows launch: double-clicking `Reva.exe` now starts the local server and opens the browser automatically.
+
+### Fixed
+- Unsupported uploads are quarantined as unsupported documents instead of being presented as extracted reinsurance records.
+- Export now blocks non-extracted or unknown documents with a clear conflict response.
+- Existing low-confidence unknown records are normalized at startup so old local demo data stops polluting the queue.
+
 ## [0.1.1] - 2026-06-12
 
 ### Added

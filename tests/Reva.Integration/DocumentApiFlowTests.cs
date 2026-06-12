@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
@@ -139,6 +140,32 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
         var detail = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{upload.Id}", SerializerOptions);
         Assert.NotNull(detail);
         Assert.Contains(detail.Tables, table => table.Headers.Contains("Cedent") && table.Rows.Count > 0);
+    }
+
+    [Fact]
+    public async Task UnsupportedPdfUploadIsQuarantinedAndCannotExport()
+    {
+        using var client = factory.CreateClient();
+        using var multipart = new MultipartFormDataContent();
+        var bytes = Encoding.Latin1.GetBytes("%PDF-1.4\n1 0 obj\nTitle (Antonio Martinez Resume)\nSkills C# SQL React\nExperience Programmer Analyst\nEducation Computer Science\nendobj\n%%EOF");
+        multipart.Add(new ByteArrayContent(bytes), "file", "Antonio_Martinez_2026_Resume.pdf");
+
+        var uploadResponse = await client.PostAsync("/api/documents/", multipart);
+        uploadResponse.EnsureSuccessStatusCode();
+        var upload = await uploadResponse.Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(upload);
+        Assert.Equal(DocumentStatus.Unsupported, upload.Status);
+
+        var detail = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{upload.Id}", SerializerOptions);
+        Assert.NotNull(detail);
+        Assert.Equal(DocumentStatus.Unsupported, detail.Status);
+        Assert.Equal(ReinsuranceDocumentType.Unknown, detail.DocumentType);
+        Assert.Empty(detail.Fields);
+        Assert.Contains(detail.Exceptions, issue => issue.Message.StartsWith("Unsupported document:", StringComparison.Ordinal));
+        Assert.DoesNotContain(detail.Exceptions, issue => issue.Message.StartsWith("Missing canonical field:", StringComparison.Ordinal));
+
+        var exportResponse = await client.GetAsync($"/api/documents/{upload.Id}/export");
+        Assert.Equal(System.Net.HttpStatusCode.Conflict, exportResponse.StatusCode);
     }
 
     private static string SamplePath(string name)

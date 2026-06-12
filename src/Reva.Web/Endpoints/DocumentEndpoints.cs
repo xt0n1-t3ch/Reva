@@ -48,7 +48,16 @@ public static class DocumentEndpoints
 
         group.MapGet("/{id:guid}/export", async (Guid id, string? format, IDocumentWorkflow workflow, CancellationToken cancellationToken) =>
         {
-            var export = await workflow.ExportAsync(id, cancellationToken);
+            ExportRecord? export;
+            try
+            {
+                export = await workflow.ExportAsync(id, cancellationToken);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new { error = ex.Message });
+            }
+
             if (export is null)
             {
                 return Results.NotFound();
@@ -90,4 +99,3 @@ public static class DocumentEndpoints
         return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
     }
 }
-
