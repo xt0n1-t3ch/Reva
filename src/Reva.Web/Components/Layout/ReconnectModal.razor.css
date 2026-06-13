@@ -1,3 +1,4 @@
+/* --- State visibility (driven by Blazor's reconnect handler) --- */
 .components-reconnect-first-attempt-visible,
 .components-reconnect-repeated-attempt-visible,
 .components-reconnect-failed-visible,
@@ -11,147 +12,174 @@
 #components-reconnect-modal.components-reconnect-show .components-rejoining-animation,
 #components-reconnect-modal.components-reconnect-paused .components-pause-visible,
 #components-reconnect-modal.components-reconnect-resume-failed .components-resume-failed-visible,
-#components-reconnect-modal.components-reconnect-retrying,
 #components-reconnect-modal.components-reconnect-retrying .components-reconnect-repeated-attempt-visible,
 #components-reconnect-modal.components-reconnect-retrying .components-rejoining-animation,
-#components-reconnect-modal.components-reconnect-failed,
 #components-reconnect-modal.components-reconnect-failed .components-reconnect-failed-visible {
     display: block;
 }
 
-
+/* --- Branded modal --- */
 #components-reconnect-modal {
-    background-color: white;
-    width: 20rem;
-    margin: 20vh auto;
-    padding: 2rem;
     border: 0;
-    border-radius: 0.5rem;
-    box-shadow: 0 3px 6px 2px rgba(0, 0, 0, 0.3);
+    padding: 0;
+    width: min(92vw, 26rem);
+    margin: auto;
+    background: transparent;
+    color: #18233a;
     opacity: 0;
-    transition: display 0.5s allow-discrete, overlay 0.5s allow-discrete;
-    animation: components-reconnect-modal-fadeOutOpacity 0.5s both;
-    &[open]
+    transition: display 0.4s allow-discrete, overlay 0.4s allow-discrete;
+    animation: reconnect-fade-out 0.4s both;
+}
 
-{
-    animation: components-reconnect-modal-slideUp 1.5s cubic-bezier(.05, .89, .25, 1.02) 0.3s, components-reconnect-modal-fadeInOpacity 0.5s ease-in-out 0.3s;
+#components-reconnect-modal[open] {
+    animation: reconnect-slide-up 0.7s cubic-bezier(0.05, 0.89, 0.25, 1.02), reconnect-fade-in 0.35s ease-in-out;
     animation-fill-mode: both;
 }
 
-}
-
 #components-reconnect-modal::backdrop {
-    background-color: rgba(0, 0, 0, 0.4);
-    animation: components-reconnect-modal-fadeInOpacity 0.5s ease-in-out;
-    opacity: 1;
+    background: rgba(13, 24, 48, 0.55);
+    backdrop-filter: blur(3px);
+    animation: reconnect-fade-in 0.35s ease-in-out;
 }
 
-@keyframes components-reconnect-modal-slideUp {
-    0% {
-        transform: translateY(30px) scale(0.95);
-    }
-
-    100% {
-        transform: translateY(0);
-    }
-}
-
-@keyframes components-reconnect-modal-fadeInOpacity {
-    0% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-@keyframes components-reconnect-modal-fadeOutOpacity {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
-}
-
-.components-reconnect-container {
+.reconnect-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
-}
-
-#components-reconnect-modal p {
-    margin: 0;
+    gap: 0.85rem;
+    padding: 2rem 1.75rem 1.75rem;
+    background: var(--surface-card, #ffffff);
+    border: 1px solid var(--border, #e6eaf2);
+    border-radius: var(--r-card, 16px);
+    box-shadow: 0 2px 6px rgba(16, 24, 40, 0.08), 0 24px 60px rgba(16, 24, 40, 0.22);
     text-align: center;
+    font-family: var(--font-sans, "Segoe UI", system-ui, sans-serif);
 }
 
-#components-reconnect-modal button {
-    border: 0;
-    background-color: #6b9ed2;
-    color: white;
-    padding: 4px 24px;
-    border-radius: 4px;
+.reconnect-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
-    #components-reconnect-modal button:hover {
-        background-color: #3b6ea2;
-    }
+.reconnect-mark {
+    color: var(--teal-500, #14b8a6);
+}
 
-    #components-reconnect-modal button:active {
-        background-color: #6b9ed2;
-    }
+.reconnect-sub {
+    color: var(--text-muted, #647089);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+}
 
-.components-rejoining-animation {
+.reconnect-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-strong, #18233a);
+}
+
+.reconnect-msg {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-muted, #647089);
+    max-width: 22rem;
+}
+
+.reconnect-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: center;
+    margin-top: 0.35rem;
+}
+
+.reconnect-btn {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: var(--r-control, 10px);
+    padding: 0.55rem 1.25rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+
+.reconnect-btn:active {
+    transform: translateY(1px);
+}
+
+.reconnect-btn-primary {
+    background: var(--navy-800, #15223f);
+    color: #ffffff;
+}
+
+.reconnect-btn-primary:hover {
+    background: var(--navy-700, #1e2c50);
+}
+
+.reconnect-btn-ghost {
+    background: transparent;
+    border-color: var(--border-strong, #d6dce8);
+    color: var(--text-body, #334155);
+}
+
+.reconnect-btn-ghost:hover {
+    background: var(--surface-muted, #f5f7fb);
+}
+
+/* --- Spinner --- */
+.reconnect-spinner {
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: 56px;
+    height: 56px;
 }
 
-    .components-rejoining-animation div {
-        position: absolute;
-        border: 3px solid #0087ff;
-        opacity: 1;
-        border-radius: 50%;
-        animation: components-rejoining-animation 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-    }
+.reconnect-spinner div {
+    position: absolute;
+    border: 3px solid var(--teal-500, #14b8a6);
+    opacity: 1;
+    border-radius: 50%;
+    animation: reconnect-ring 1.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
 
-        .components-rejoining-animation div:nth-child(2) {
-            animation-delay: -0.5s;
-        }
+.reconnect-spinner div:nth-child(2) {
+    animation-delay: -0.5s;
+}
 
-@keyframes components-rejoining-animation {
-    0% {
-        top: 40px;
-        left: 40px;
-        width: 0;
-        height: 0;
-        opacity: 0;
-    }
+@keyframes reconnect-ring {
+    0%, 4.9% { top: 28px; left: 28px; width: 0; height: 0; opacity: 0; }
+    5% { top: 28px; left: 28px; width: 0; height: 0; opacity: 1; }
+    100% { top: 0; left: 0; width: 56px; height: 56px; opacity: 0; }
+}
 
-    4.9% {
-        top: 40px;
-        left: 40px;
-        width: 0;
-        height: 0;
-        opacity: 0;
-    }
+@keyframes reconnect-slide-up {
+    0% { transform: translateY(24px) scale(0.97); }
+    100% { transform: translateY(0) scale(1); }
+}
 
-    5% {
-        top: 40px;
-        left: 40px;
-        width: 0;
-        height: 0;
-        opacity: 1;
-    }
+@keyframes reconnect-fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
 
-    100% {
-        top: 0px;
-        left: 0px;
-        width: 80px;
-        height: 80px;
-        opacity: 0;
+@keyframes reconnect-fade-out {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #components-reconnect-modal,
+    #components-reconnect-modal[open],
+    .reconnect-spinner div {
+        animation-duration: 0.01ms;
+        animation-iteration-count: 1;
     }
 }
