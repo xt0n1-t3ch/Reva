@@ -132,12 +132,7 @@ public sealed class DocumentWorkflow(
             return null;
         }
 
-        if (Enum.Parse<DocumentStatus>(document.Status) is not DocumentStatus.Extracted
-            || Enum.Parse<ReinsuranceDocumentType>(document.DocumentType) is ReinsuranceDocumentType.Unknown)
-        {
-            throw new InvalidOperationException("Only extracted reinsurance documents can be exported.");
-        }
-
+        // Raw export is always available, even for unknown/low-confidence documents.
         var fields = document.Fields.ToDictionary(field => field.Name, field => field.Value, StringComparer.OrdinalIgnoreCase);
         return new ExportRecord(
             document.Id,
@@ -157,12 +152,8 @@ public sealed class DocumentWorkflow(
             record.ParsedMarkdown = parsed.Markdown;
             record.ParsedJson = parsed.RawJson;
 
-            if (!DocumentSupportPolicy.IsSupported(classification))
-            {
-                MarkUnsupported(record, parsed, classification);
-                return;
-            }
-
+            // Always run best-effort extraction. Unknown/low-confidence documents are still
+            // ingested as reviewable records (the extractor flags them) — never quarantined.
             var extraction = extractor.Extract(parsed, classification);
             record.Status = DocumentStatus.Extracted.ToString();
             record.DocumentType = extraction.DocumentType.ToString();
@@ -197,30 +188,6 @@ public sealed class DocumentWorkflow(
         }
     }
 
-    private static void MarkUnsupported(DocumentRecord record, ParsedDocument parsed, ClassificationResult classification)
-    {
-        var issues = parsed.Warnings
-            .Select(warning => new ExtractionIssue(ExceptionSeverity.Info, warning))
-            .Prepend(DocumentSupportPolicy.UnsupportedIssue());
-        record.Status = DocumentStatus.Unsupported.ToString();
-        record.DocumentType = classification.DocumentType.ToString();
-        record.Confidence = classification.Confidence;
-        record.Fields = [];
-        record.Tables = parsed.Tables.Select(table => new DocumentTableRecord
-        {
-            Name = table.Name,
-            HeadersJson = JsonSerializer.Serialize(table.Headers, SerializerOptions),
-            RowsJson = JsonSerializer.Serialize(table.Rows, SerializerOptions)
-        }).ToList();
-        record.Exceptions = issues.Select(issue => new DocumentIssueRecord
-        {
-            Severity = issue.Severity.ToString(),
-            Message = issue.Message
-        }).ToList();
-        record.ErrorMessage = null;
-        record.UpdatedAt = DateTimeOffset.UtcNow;
-    }
-
     private static void ValidateFile(string fileName, Stream content)
     {
         if (string.IsNullOrWhiteSpace(fileName))
@@ -228,12 +195,8 @@ public sealed class DocumentWorkflow(
             throw new ArgumentException("A file name is required.", nameof(fileName));
         }
 
-        var extension = Path.GetExtension(fileName).ToLowerInvariant();
-        if (!DocumentIntakePolicy.SupportedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException($"Unsupported file extension: {extension}.");
-        }
-
+        // No extension whitelist: any file type is accepted and parsed best-effort.
+        // Only operational safety limits remain (empty + oversize).
         if (content.Length == 0)
         {
             throw new InvalidOperationException("The uploaded document is empty.");

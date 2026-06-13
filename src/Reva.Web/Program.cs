@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure;
 using Reva.Infrastructure.Persistence;
 using Reva.Web.Components;
@@ -25,7 +24,6 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RevaDbContext>();
     await dbContext.Database.MigrateAsync();
-    await NormalizeUnsupportedDocumentsAsync(dbContext);
 }
 
 if (!app.Environment.IsDevelopment())
@@ -50,36 +48,6 @@ if (launchBrowser)
 }
 
 await app.WaitForShutdownAsync();
-
-static async Task NormalizeUnsupportedDocumentsAsync(RevaDbContext dbContext)
-{
-    var documents = await dbContext.Documents
-        .AsSplitQuery()
-        .Include(document => document.Fields)
-        .Include(document => document.Exceptions)
-        .Where(document => document.Status == "Extracted"
-            && document.DocumentType == "Unknown"
-            && document.Confidence < DocumentSupportPolicy.MinimumClassificationConfidence)
-        .ToListAsync();
-
-    foreach (var document in documents)
-    {
-        document.Status = "Unsupported";
-        document.Fields.Clear();
-        document.Exceptions.Clear();
-        document.Exceptions.Add(new DocumentIssueRecord
-        {
-            Severity = "Warning",
-            Message = DocumentSupportPolicy.UnsupportedDocumentMessage
-        });
-        document.UpdatedAt = DateTimeOffset.UtcNow;
-    }
-
-    if (documents.Count > 0)
-    {
-        await dbContext.SaveChangesAsync();
-    }
-}
 
 static void OpenBrowser(WebApplication app)
 {

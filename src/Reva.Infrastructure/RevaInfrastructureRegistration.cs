@@ -39,7 +39,7 @@ public static class RevaInfrastructureRegistration
 
         services.AddSingleton<IDocumentHasher, Sha256DocumentHasher>();
         services.AddSingleton<IDocumentStorage, LocalDocumentStorage>();
-        services.AddSingleton<IDocumentParser, DoclingDocumentParser>();
+        services.AddSingleton<IDocumentParser, ParserRouter>();
         services.AddSingleton<IReinsuranceClassifier, ReinsuranceClassifier>();
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();
         services.AddScoped<IDocumentWorkflow, DocumentWorkflow>();
