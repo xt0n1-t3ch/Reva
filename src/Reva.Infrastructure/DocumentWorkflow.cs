@@ -248,6 +248,7 @@ public sealed class DocumentWorkflow(
     private Task<DocumentRecord?> LoadDocumentAsync(Guid id, CancellationToken cancellationToken)
     {
         return dbContext.Documents
+            .AsSplitQuery()
             .Include(document => document.Fields)
             .Include(document => document.Tables)
             .Include(document => document.Exceptions)

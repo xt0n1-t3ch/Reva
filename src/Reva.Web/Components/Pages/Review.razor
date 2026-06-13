@@ -1,42 +1,43 @@
 @page "/review/{Id:guid}"
 @rendermode @(new InteractiveServerRenderMode(false))
 @inject NavigationManager Nav
+@inject IDocumentWorkflow Workflow
 
 <PageTitle>@(_detail is null ? "Document review" : $"Review · {_detail.FileName}")</PageTitle>
 
-<header class="cockpit-topbar">
+<header class="cockpit-topbar cockpit-topbar-workbench review-topbar">
     <div class="topbar-titles">
         <a class="back-link" href="/"><Icon Name="arrow-left" Size="16" /> Back to cockpit</a>
         <h1>@(_detail?.FileName ?? "Document review")</h1>
         @if (_detail is not null)
         {
-            <p>@CockpitFormat.DocumentTypeLabel(_detail.DocumentType) · @_detail.ParserProfile</p>
+            <p>@CockpitFormat.DocumentTypeLabel(_detail.DocumentType) · @_detail.ParserProfile · updated @CockpitFormat.RelativeTime(_detail.UpdatedAt, _now)</p>
+        }
+        else
+        {
+            <p>Review, correct, approve, and export canonical reinsurance intelligence</p>
         }
     </div>
     @if (_detail is not null)
     {
-        <div class="topbar-tools">
+        <div class="topbar-tools review-topbar-tools">
             @if (CanAct)
             {
-                <a class="btn btn-ghost" href="@_api.ExportUrl(Id, "json")" download
-                   aria-label="Export as JSON"><Icon Name="download" Size="16" /> JSON</a>
-                <a class="btn btn-ghost" href="@_api.ExportUrl(Id, "csv")" download
-                   aria-label="Export as CSV"><Icon Name="download" Size="16" /> CSV</a>
-                <button class="btn btn-teal" type="button" @onclick="ApproveAsync" disabled="@_submitting">
-                    <Icon Name="check" Size="16" /> Approve
-                </button>
+                <a class="btn btn-ghost" href="@ExportHref("json")" download aria-label="Export as JSON"><Icon Name="download" Size="16" /> JSON</a>
+                <a class="btn btn-ghost" href="@ExportHref("csv")" download aria-label="Export as CSV"><Icon Name="download" Size="16" /> CSV</a>
+                <button class="btn btn-primary" type="button" @onclick="ApproveAsync" disabled="@_submitting"><Icon Name="check" Size="16" /> Approve</button>
             }
             else
             {
                 <span class="btn btn-ghost is-disabled" aria-disabled="true" title="Export is unavailable for unsupported documents"><Icon Name="download" Size="16" /> JSON</span>
                 <span class="btn btn-ghost is-disabled" aria-disabled="true" title="Export is unavailable for unsupported documents"><Icon Name="download" Size="16" /> CSV</span>
-                <span class="btn btn-teal is-disabled" aria-disabled="true" title="Approval is unavailable for unsupported documents"><Icon Name="check" Size="16" /> Approve</span>
+                <span class="btn btn-primary is-disabled" aria-disabled="true" title="Approval is unavailable for unsupported documents"><Icon Name="check" Size="16" /> Approve</span>
             }
         </div>
     }
 </header>
 
-<div class="cockpit-content">
+<div class="cockpit-content cockpit-content-workbench review-workbench-content">
     @if (_toast is not null)
     {
         <div class="toast @_toast.Value.Kind" role="status">
@@ -47,106 +48,174 @@
 
     @if (_loading)
     {
-        <div class="loading-pane"><span class="spinner"></span> Loading document…</div>
+        <section class="card empty-workbench"><div class="loading-pane"><span class="spinner"></span> Loading review workspace…</div></section>
     }
     else if (_detail is null)
     {
-        <div class="card">
+        <section class="card empty-workbench">
             <div class="empty-state">
-                <span class="empty-ic"><Icon Name="x-circle" Size="40" /></span>
+                <span class="empty-ic"><Icon Name="x-circle" Size="44" /></span>
                 <h3>Document not found</h3>
                 <p>This document may have been removed. Return to the cockpit to pick another.</p>
                 <a class="btn btn-primary" href="/"><Icon Name="arrow-left" Size="16" /> Back to cockpit</a>
             </div>
-        </div>
+        </section>
     }
     else
     {
-        <section class="card">
-            <div class="card-body">
-                <div class="meta-strip">
-                    <div class="meta-item"><span class="k">Status</span><span class="v"><StatusPill Status="_detail.Status" /></span></div>
-                    <div class="meta-item"><span class="k">Review</span><span class="v"><ReviewPill State="_detail.ReviewState" /></span></div>
-                    <div class="meta-item"><span class="k">Confidence</span><span class="v"><ConfidenceBadge Value="_detail.Confidence" /></span></div>
-                    <div class="meta-item"><span class="k">Exceptions</span><span class="v"><span class="pill @CockpitFormat.ExceptionTone(_detail.Exceptions.Count)">@_detail.Exceptions.Count</span></span></div>
-                    <div class="meta-item"><span class="k">Document hash</span><span class="v hash-value">@ShortHash(_detail.Sha256Hash)</span></div>
-                </div>
+        <section class="review-hero-panel @ActionToneClass">
+            <div class="review-hero-copy">
+                <span class="eyebrow">Review workspace</span>
+                <h2>@ReviewHeadline</h2>
+                <p>@ReviewSummary</p>
+            </div>
+            <div class="review-hero-stats" aria-label="Document status metrics">
+                <div class="review-stat-card"><span>Status</span><strong><StatusPill Status="_detail.Status" /></strong></div>
+                <div class="review-stat-card"><span>Review</span><strong><ReviewPill State="_detail.ReviewState" /></strong></div>
+                <div class="review-stat-card"><span>Confidence</span><strong><ConfidenceBadge Value="_detail.Confidence" /></strong></div>
+                <div class="review-stat-card"><span>Exceptions</span><strong><span class="pill @CockpitFormat.ExceptionTone(_detail.Exceptions.Count)">@_detail.Exceptions.Count</span></strong></div>
             </div>
         </section>
 
         @if (!CanAct)
         {
-            <section class="callout @(_detail.Status == DocumentStatus.Failed ? "callout-fail" : "callout-warn")" role="note">
-                <span class="callout-ic"><Icon Name="alert" Size="24" /></span>
-                <div class="callout-body">
-                    <h3>@(_detail.Status == DocumentStatus.Failed ? "Processing failed" : "Unsupported document — needs attention")</h3>
-                    <p>
-                        @(_detail.Status == DocumentStatus.Failed
-                            ? "This document could not be processed, so no fields were extracted. Export and approval are unavailable."
-                            : "This file was not recognised as a supported reinsurance document, so no canonical fields were extracted. Export and approval are unavailable. Upload a treaty, statement of account, bordereau, or loss run to extract structured data.")
-                    </p>
+            <section class="unsupported-review-hero" role="note">
+                <div class="unsupported-icon"><Icon Name="alert" Size="26" /></div>
+                <div>
+                    <span class="eyebrow">Needs attention</span>
+                    <h3>@AttentionTitle</h3>
+                    <p>@AttentionCopy</p>
+                </div>
+                <div class="supported-chip-grid" aria-label="Supported reinsurance document examples">
+                    <span>Treaty</span>
+                    <span>Statement of account</span>
+                    <span>Bordereau</span>
+                    <span>Loss run</span>
+                    <span>Claim notice</span>
                 </div>
             </section>
         }
 
-        <div class="review-grid @(ShowFields ? null : "cols-2")">
-            <section class="card card-pad-0">
-                <div class="card-head">
-                    <Icon Name="file" Size="20" />
-                    <h2>Document preview</h2>
-                    <div class="head-tools">
-                        <span class="pill tone-slate">@_detail.ParserProfile</span>
+        <section class="workbench-grid review-workbench-grid @ReviewShellClass" aria-label="Document review workbench">
+            <article class="card card-pad-0 document-preview-card review-preview-card">
+                <div class="card-head preview-head">
+                    <div class="head-title"><Icon Name="file" Size="20" /><h2>Document Preview</h2></div>
+                    <span class="pill tone-slate">@_detail.ParserProfile</span>
+                </div>
+                <div class="preview-toolbar" aria-label="Document preview controls">
+                    <button class="tool-btn" type="button" aria-label="Zoom out"><Icon Name="search" Size="16" /></button>
+                    <button class="tool-btn" type="button" aria-label="Zoom in"><Icon Name="search" Size="18" /></button>
+                    <span class="toolbar-sep"></span>
+                    <button class="tool-btn" type="button" aria-label="Previous page"><Icon Name="arrow-left" Size="16" /></button>
+                    <span class="page-chip">1 / @PreviewPageCount</span>
+                    <button class="tool-btn" type="button" aria-label="Next page"><Icon Name="arrow-right" Size="16" /></button>
+                    <span class="zoom-chip">100%</span>
+                    <span class="toolbar-spacer"></span>
+                    <button class="tool-btn" type="button" aria-label="Refresh" @onclick="LoadAsync"><Icon Name="sparkle" Size="16" /></button>
+                </div>
+                <div class="document-stage review-document-stage">
+                    @if (CanAct)
+                    {
+                        <div class="document-paper review-paper">
+                            <div class="paper-doc-title">@DocumentDisplayTitle</div>
+                            <div class="paper-doc-subtitle">Canonical extraction workspace</div>
+                            <dl class="paper-facts review-paper-facts">
+                                @foreach (var edit in _fields.Take(8))
+                                {
+                                    <div>
+                                        <dt>@edit.Name</dt>
+                                        <dd>@edit.Value</dd>
+                                    </div>
+                                }
+                            </dl>
+                            @if (_detail.Tables.Count > 0)
+                            {
+                                var table = _detail.Tables[0];
+                                <table class="paper-table" aria-label="Document table preview">
+                                    <thead>
+                                        <tr>
+                                            @foreach (var header in table.Headers.Take(5))
+                                            {
+                                                <th>@header</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var row in table.Rows.Take(4))
+                                        {
+                                            <tr>
+                                                @foreach (var header in table.Headers.Take(5))
+                                                {
+                                                    <td>@(row.TryGetValue(header, out var cell) ? cell : string.Empty)</td>
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(_detail.ParsedMarkdown))
+                            {
+                                <pre class="paper-excerpt">@PreviewExcerpt</pre>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="unsupported-sheet">
+                            <div class="unsupported-sheet-mark"><Icon Name="alert" Size="34" /></div>
+                            <span class="eyebrow">Quarantined intake</span>
+                            <h3>Not a supported reinsurance document</h3>
+                            <p>Reva preserved the upload and technical parse, but it will not fabricate canonical fields for a resume, random PDF, or non-reinsurance file.</p>
+                            <div class="unsupported-next-steps">
+                                <strong>Next best action</strong>
+                                <span>Upload a treaty, technical account, bordereau, loss run, endorsement, facultative slip, or claim notice.</span>
+                            </div>
+                        </div>
+                    }
+                    <div class="thumbnail-strip" aria-label="Document pages">
+                        @for (var index = 1; index <= PreviewPageCount; index++)
+                        {
+                            <span class="thumb @(index == 1 ? "active" : string.Empty)"><span></span><b>@index</b></span>
+                        }
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="preview-frame">
-                        <pre>@_detail.ParsedMarkdown</pre>
-                    </div>
-                </div>
-            </section>
+            </article>
 
             @if (ShowFields)
             {
-                <section class="card card-pad-0">
+                <article class="card card-pad-0 extracted-card review-fields-card">
                     <div class="card-head">
-                        <Icon Name="sparkle" Size="20" />
-                        <h2>Extracted fields</h2>
-                        <div class="head-tools">
-                            <span class="pill tone-teal">AI confidence @CockpitFormat.Percent(_detail.Confidence)</span>
-                        </div>
+                        <div class="head-title"><Icon Name="sparkle" Size="20" /><h2>Extracted Reinsurance Fields</h2></div>
+                        <div class="head-tools"><span class="pill tone-green">AI Confidence: @CockpitFormat.PercentWhole(_detail.Confidence)</span></div>
                     </div>
-                    <div class="card-body">
-                        <div class="field-list">
-                            @for (var i = 0; i < _fields.Count; i++)
-                            {
-                                var index = i;
-                                var field = _fields[index];
-                                <div class="field-row">
-                                    <label class="field-label" for="@($"field-{index}")">@field.Name</label>
-                                    <input id="@($"field-{index}")" class="field-input @(field.IsEdited ? "is-edited" : null)"
-                                           value="@field.Value"
-                                           @oninput="e => OnFieldInput(index, e.Value?.ToString())"
-                                           aria-label="@($"{field.Name} value")" />
-                                    <ConfidenceBadge Value="field.Confidence" />
-                                </div>
-                            }
-                        </div>
+                    <div class="field-list compact-field-list review-edit-list">
+                        @for (var i = 0; i < _fields.Count; i++)
+                        {
+                            var index = i;
+                            var edit = _fields[index];
+                            <div class="field-row review-edit-row">
+                                <label class="field-label" for="@($"field-{index}")">@edit.Name</label>
+                                <input id="@($"field-{index}")" class="field-input @(edit.IsEdited ? "is-edited" : null)" value="@edit.Value" @oninput="e => OnFieldInput(index, e.Value?.ToString())" aria-label="@($"{edit.Name} value")" />
+                                <ConfidenceBadge Value="edit.Confidence" />
+                            </div>
+                        }
                     </div>
-                </section>
+                    <div class="card-actions review-field-actions">
+                        <span>@EditedCount correction(s) staged</span>
+                        <button class="btn btn-ghost" type="button" @onclick="LoadAsync" disabled="@_submitting"><Icon Name="sparkle" Size="16" /> Reset fields</button>
+                    </div>
+                </article>
             }
 
-            <section class="card card-pad-0 review-exceptions">
+            <aside class="card card-pad-0 exceptions-panel review-exceptions-panel">
                 <div class="card-head">
-                    <Icon Name="alert" Size="20" />
-                    <h2>Exceptions</h2>
-                    <div class="head-tools">
-                        <span class="pill @CockpitFormat.ExceptionTone(_detail.Exceptions.Count)">@_detail.Exceptions.Count</span>
-                    </div>
+                    <div class="head-title"><Icon Name="alert" Size="20" /><h2>Exceptions</h2></div>
+                    <div class="head-tools"><span class="pill @CockpitFormat.ExceptionTone(_detail.Exceptions.Count)">@_detail.Exceptions.Count total</span></div>
                 </div>
-                <div class="card-body">
+                <div class="exception-review-list">
                     @if (_detail.Exceptions.Count == 0)
                     {
-                        <div class="empty-state">
+                        <div class="empty-state compact-empty">
                             <span class="empty-ic"><Icon Name="check-circle" Size="36" /></span>
                             <h3>No exceptions</h3>
                             <p>Every extracted value passed validation.</p>
@@ -154,107 +223,104 @@
                     }
                     else
                     {
-                        <div class="exception-list">
-                            @foreach (var issue in _detail.Exceptions)
-                            {
-                                <div class="exception-item">
-                                    <span class="exc-ic @CockpitFormat.SeverityClass(issue.Severity)"><Icon Name="alert" Size="22" /></span>
-                                    <div class="exc-body">
-                                        <div class="exc-title">
-                                            @issue.Severity
-                                            <span class="pill @CockpitFormat.SeverityTone(issue.Severity)">@issue.Severity</span>
-                                        </div>
-                                        <div class="exc-msg">@issue.Message</div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
+                        @foreach (var issue in _detail.Exceptions)
+                        {
+                            <div class="exception-review-card review-exception-static">
+                                <span class="exception-alert"><Icon Name="alert" Size="18" /></span>
+                                <span class="exception-copy">
+                                    <strong>@issue.Severity</strong>
+                                    <span>Issue</span>
+                                    <em>@issue.Message</em>
+                                </span>
+                                <span class="exception-score @SeverityScoreClass(issue.Severity)">@issue.Severity</span>
+                            </div>
+                        }
                     }
                 </div>
+            </aside>
+        </section>
+
+        @if (!CanAct && !string.IsNullOrWhiteSpace(_detail.ParsedMarkdown))
+        {
+            <section class="card card-pad-0 technical-preview-card">
+                <div class="card-head">
+                    <div class="head-title"><Icon Name="file" Size="20" /><h2>Technical parse preview</h2></div>
+                    <div class="head-tools"><span class="pill tone-amber">Raw text kept for audit</span></div>
+                </div>
+                <div class="technical-preview-frame"><pre>@PreviewExcerpt</pre></div>
             </section>
-        </div>
+        }
 
         @if (_detail.Tables.Count > 0)
         {
             @foreach (var table in _detail.Tables)
             {
-                <section class="card card-pad-0">
+                <section class="card card-pad-0 normalized-card">
                     <div class="card-head">
-                        <Icon Name="table" Size="20" />
-                        <h2>@table.Name</h2>
-                        <div class="head-tools">
-                            <span class="pill tone-slate">@table.Rows.Count rows</span>
-                        </div>
+                        <div class="head-title"><Icon Name="table" Size="20" /><h2>@table.Name</h2></div>
+                        <div class="head-tools"><span class="pill tone-slate">@table.Rows.Count rows</span></div>
                     </div>
-                    <div class="card-body">
-                        <div class="table-scroll">
-                            <table class="data-table">
-                                <thead>
+                    <div class="table-scroll">
+                        <table class="data-table normalized-table">
+                            <thead>
+                                <tr>
+                                    @foreach (var header in table.Headers)
+                                    {
+                                        <th scope="col">@header</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in table.Rows)
+                                {
                                     <tr>
                                         @foreach (var header in table.Headers)
                                         {
-                                            <th scope="col">@header</th>
+                                            <td>@(row.TryGetValue(header, out var cell) ? cell : string.Empty)</td>
                                         }
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var row in table.Rows)
-                                    {
-                                        <tr>
-                                            @foreach (var header in table.Headers)
-                                            {
-                                                <td>@(row.TryGetValue(header, out var cell) ? cell : string.Empty)</td>
-                                            }
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </section>
             }
         }
 
-        <section class="card">
+        <section class="card card-pad-0 review-decision-card">
             <div class="card-head">
-                <Icon Name="check-circle" Size="20" />
-                <h2>Review decision</h2>
+                <div class="head-title"><Icon Name="check-circle" Size="20" /><h2>Review decision</h2></div>
                 <div class="head-tools">
                     @if (EditedCount > 0)
                     {
-                        <span class="pill tone-violet">@EditedCount field correction(s)</span>
+                        <span class="pill tone-violet">@EditedCount correction(s)</span>
                     }
                 </div>
             </div>
             <div class="card-body">
                 @if (!CanAct)
                 {
-                    <p class="review-help">This document is unsupported and cannot be reviewed, corrected, or exported. Re-upload a supported reinsurance document to continue.</p>
+                    <p class="review-help">This document is unsupported and cannot be reviewed, corrected, exported, or approved. Re-upload a supported reinsurance document to continue.</p>
                 }
                 else
                 {
-                    <div class="meta-strip review-form-strip">
-                        <div class="meta-item review-form-item-short">
-                            <label class="k" for="reviewer">Reviewer</label>
+                    <div class="decision-form-grid">
+                        <label class="decision-input-group" for="reviewer">
+                            <span>Reviewer</span>
                             <input id="reviewer" class="field-input review-input-bordered" @bind="_reviewer" aria-label="Reviewer name" />
-                        </div>
-                        <div class="meta-item review-form-item-wide">
-                            <label class="k" for="notes">Notes</label>
-                            <input id="notes" class="field-input review-input-bordered" @bind="_notes"
-                                   placeholder="Optional review notes" aria-label="Review notes" />
-                        </div>
+                        </label>
+                        <label class="decision-input-group" for="notes">
+                            <span>Notes</span>
+                            <input id="notes" class="field-input review-input-bordered" @bind="_notes" placeholder="Optional review notes" aria-label="Review notes" />
+                        </label>
                     </div>
                     <div class="row-actions review-decision-actions">
-                        <button class="btn btn-teal" type="button" @onclick="ApproveAsync" disabled="@(_submitting || !CanSubmit)">
+                        <button class="btn btn-primary" type="button" @onclick="ApproveAsync" disabled="@(_submitting || !CanSubmit)">
                             @if (_submitting) { <span class="spinner"></span> } else { <Icon Name="check" Size="16" /> }
                             Approve
                         </button>
-                        <button class="btn btn-ghost" type="button" @onclick="RequestCorrectionAsync" disabled="@(_submitting || !CanSubmit)">
-                            <Icon Name="edit" Size="16" /> Request correction
-                        </button>
-                        <button class="btn btn-ghost" type="button" @onclick="RejectAsync" disabled="@(_submitting || !CanSubmit)">
-                            <Icon Name="x-circle" Size="16" /> Reject
-                        </button>
+                        <button class="btn btn-ghost" type="button" @onclick="RequestCorrectionAsync" disabled="@(_submitting || !CanSubmit)"><Icon Name="edit" Size="16" /> Request correction</button>
+                        <button class="btn btn-ghost" type="button" @onclick="RejectAsync" disabled="@(_submitting || !CanSubmit)"><Icon Name="x-circle" Size="16" /> Reject</button>
                     </div>
                     @if (!CanSubmit)
                     {
@@ -280,7 +346,6 @@
         public bool IsEdited => !string.Equals(Value, Original, StringComparison.Ordinal);
     }
 
-    private DocumentApiClient _api = default!;
     private DocumentDetail? _detail;
     private List<FieldEdit> _fields = [];
     private string _reviewer = "Underwriting Team";
@@ -288,20 +353,23 @@
     private bool _loading = true;
     private bool _submitting;
     private Toast? _toast;
+    private DateTimeOffset _now = DateTimeOffset.UtcNow;
 
     protected override async Task OnInitializedAsync()
     {
-        _api = new DocumentApiClient(Nav.BaseUri);
         await LoadAsync();
     }
+
+    private string ExportHref(string format) => $"api/documents/{Id}/export?format={format}";
 
     private async Task LoadAsync()
     {
         _loading = true;
+        _now = DateTimeOffset.UtcNow;
         StateHasChanged();
         try
         {
-            _detail = await _api.GetAsync(Id);
+            _detail = await Workflow.GetAsync(Id, CancellationToken.None);
             BindFields();
         }
         catch (Exception ex)
@@ -318,12 +386,12 @@
     {
         _fields = _detail is null
             ? []
-            : [.. _detail.Fields.Select(f => new FieldEdit
+            : [.. _detail.Fields.Select(extracted => new FieldEdit
             {
-                Name = f.Name,
-                Original = f.Value,
-                Value = f.Value,
-                Confidence = f.Confidence
+                Name = extracted.Name,
+                Original = extracted.Value,
+                Value = extracted.Value,
+                Confidence = extracted.Confidence
             })];
     }
 
@@ -335,13 +403,65 @@
         }
     }
 
-    private int EditedCount => _fields.Count(f => f.IsEdited);
+    private int EditedCount => _fields.Count(candidate => candidate.IsEdited);
 
     private bool CanAct => _detail is not null && CockpitFormat.IsActionable(_detail.Status);
 
-    private bool ShowFields => _fields.Count > 0;
+    private bool ShowFields => CanAct && _fields.Count > 0;
 
     private bool CanSubmit => CanAct && !string.IsNullOrWhiteSpace(_reviewer);
+
+    private int PreviewPageCount => Math.Clamp((_detail?.Tables.Count ?? 0) + 1, 1, 6);
+
+    private string ReviewShellClass => ShowFields ? "has-fields" : "attention-only";
+
+    private string ActionToneClass => _detail?.Status switch
+    {
+        DocumentStatus.Extracted => "is-ready",
+        DocumentStatus.Failed => "is-critical",
+        DocumentStatus.Unsupported => "is-attention",
+        _ => "is-attention"
+    };
+
+    private string ReviewHeadline => _detail?.Status switch
+    {
+        DocumentStatus.Extracted => "Canonical reinsurance fields are ready for analyst review",
+        DocumentStatus.Failed => "Processing failed before extraction could complete",
+        DocumentStatus.Unsupported => "Unsupported intake isolated without polluting reinsurance data",
+        _ => "Document needs attention before approval"
+    };
+
+    private string ReviewSummary => _detail?.Status switch
+    {
+        DocumentStatus.Extracted => "Validate the extracted fields, correct any exceptions, then export or record a review decision.",
+        DocumentStatus.Failed => "The parser could not produce a usable extraction. Keep the audit trail and re-upload a clean document.",
+        DocumentStatus.Unsupported => "Reva kept the file for audit, but blocked approval and export because this is not a recognized reinsurance document.",
+        _ => "Review the intake result and resolve any blocker before sending it downstream."
+    };
+
+    private string AttentionTitle => _detail?.Status == DocumentStatus.Failed
+        ? "Processing failed"
+        : "Unsupported document — no fabricated fields";
+
+    private string AttentionCopy => _detail?.Status == DocumentStatus.Failed
+        ? "No trusted extraction was created, so export and approval remain locked."
+        : "This file was not recognized as a supported reinsurance document. Export and approval stay locked until a supported source file is uploaded.";
+
+    private string DocumentDisplayTitle => _detail?.DocumentType == ReinsuranceDocumentType.Bordereau
+        ? "BORDEREAUX REGISTER"
+        : "TECHNICAL ACCOUNT STATEMENT";
+
+    private string PreviewExcerpt
+    {
+        get
+        {
+            var text = string.IsNullOrWhiteSpace(_detail?.ParsedMarkdown)
+                ? "No preview text available."
+                : _detail.ParsedMarkdown.Trim();
+            const int limit = 1800;
+            return text.Length <= limit ? text : text[..limit] + "\n…";
+        }
+    }
 
     private Task ApproveAsync() => SubmitAsync("Approve");
 
@@ -362,14 +482,14 @@
         try
         {
             var corrections = _fields
-                .Where(f => f.IsEdited)
-                .Select(f => new FieldCorrection(f.Name, f.Value))
+                .Where(candidate => candidate.IsEdited)
+                .Select(candidate => new FieldCorrection(candidate.Name, candidate.Value))
                 .ToList();
 
             var payload = new ReviewDecision(decision, _reviewer.Trim(),
                 string.IsNullOrWhiteSpace(_notes) ? null : _notes.Trim(), corrections);
 
-            var updated = await _api.ReviewAsync(Id, payload);
+            var updated = await Workflow.ReviewAsync(Id, payload, CancellationToken.None);
             if (updated is null)
             {
                 _toast = new Toast("err", "The review could not be saved.");
@@ -377,6 +497,7 @@
             else
             {
                 _detail = updated;
+                _now = DateTimeOffset.UtcNow;
                 BindFields();
                 _toast = new Toast("ok", $"Decision recorded: {DecisionLabel(decision)}.");
             }
@@ -398,8 +519,10 @@
         _ => "approved"
     };
 
-    private static string ShortHash(string hash) =>
-        string.IsNullOrEmpty(hash) ? "—" : hash.Length <= 12 ? hash : hash[..12];
+    private static string SeverityScoreClass(ExceptionSeverity severity) => severity switch
+    {
+        ExceptionSeverity.Critical => "score-low",
+        ExceptionSeverity.Warning => "score-mid",
+        _ => "score-info"
+    };
 }
-
-
