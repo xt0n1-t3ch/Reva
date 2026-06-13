@@ -24,7 +24,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RevaDbContext>();
-    await dbContext.Database.EnsureCreatedAsync();
+    await dbContext.Database.MigrateAsync();
     await NormalizeUnsupportedDocumentsAsync(dbContext);
 }
 
@@ -54,6 +54,7 @@ await app.WaitForShutdownAsync();
 static async Task NormalizeUnsupportedDocumentsAsync(RevaDbContext dbContext)
 {
     var documents = await dbContext.Documents
+        .AsSplitQuery()
         .Include(document => document.Fields)
         .Include(document => document.Exceptions)
         .Where(document => document.Status == "Extracted"
