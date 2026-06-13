@@ -48,6 +48,16 @@ public static class DocumentEndpoints
 
         group.MapGet("/{id:guid}/export", async (Guid id, string? format, IDocumentWorkflow workflow, CancellationToken cancellationToken) =>
         {
+            // Raw export: the parsed source text/markdown for any document, even ones with no
+            // canonical fields. JSON/CSV below are the canonical reinsurance-field export.
+            if (string.Equals(format, "raw", StringComparison.OrdinalIgnoreCase))
+            {
+                var detail = await workflow.GetAsync(id, cancellationToken);
+                return detail is null
+                    ? Results.NotFound()
+                    : Results.Text(detail.ParsedMarkdown ?? string.Empty, "text/plain; charset=utf-8");
+            }
+
             ExportRecord? export;
             try
             {
