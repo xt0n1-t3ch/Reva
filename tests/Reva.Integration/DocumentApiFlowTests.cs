@@ -143,7 +143,7 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
     }
 
     [Fact]
-    public async Task UnsupportedPdfUploadIsQuarantinedAndCannotExport()
+    public async Task UnrecognizedFileIsIngestedBestEffortAndStaysExportable()
     {
         using var client = factory.CreateClient();
         using var multipart = new MultipartFormDataContent();
@@ -154,18 +154,21 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
         uploadResponse.EnsureSuccessStatusCode();
         var upload = await uploadResponse.Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
         Assert.NotNull(upload);
-        Assert.Equal(DocumentStatus.Unsupported, upload.Status);
+
+        // Never hard-rejected: an unrecognized file is still ingested as a reviewable record.
+        Assert.NotEqual(DocumentStatus.Failed, upload.Status);
 
         var detail = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{upload.Id}", SerializerOptions);
         Assert.NotNull(detail);
-        Assert.Equal(DocumentStatus.Unsupported, detail.Status);
         Assert.Equal(ReinsuranceDocumentType.Unknown, detail.DocumentType);
-        Assert.Empty(detail.Fields);
-        Assert.Contains(detail.Exceptions, issue => issue.Message.StartsWith("Unsupported document:", StringComparison.Ordinal));
-        Assert.DoesNotContain(detail.Exceptions, issue => issue.Message.StartsWith("Missing canonical field:", StringComparison.Ordinal));
+        // Best-effort, so confidence is genuinely low rather than a fabricated high score.
+        Assert.True(detail.Confidence < 0.6, $"Expected low confidence for an unrecognized file, got {detail.Confidence}.");
+        // It surfaces why it is uncertain instead of silently quarantining.
+        Assert.Contains(detail.Exceptions, issue => issue.Message.Contains("classif", StringComparison.OrdinalIgnoreCase));
 
+        // Raw export always works — no terminal "cannot export" state.
         var exportResponse = await client.GetAsync($"/api/documents/{upload.Id}/export");
-        Assert.Equal(System.Net.HttpStatusCode.Conflict, exportResponse.StatusCode);
+        exportResponse.EnsureSuccessStatusCode();
     }
 
     private static string SamplePath(string name)
