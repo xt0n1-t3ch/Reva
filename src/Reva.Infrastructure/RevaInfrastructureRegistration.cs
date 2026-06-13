@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Hashing;
+using Reva.Infrastructure.Ocr;
 using Reva.Infrastructure.Parsing;
 using Reva.Infrastructure.Persistence;
 using Reva.Infrastructure.Storage;
@@ -39,6 +40,7 @@ public static class RevaInfrastructureRegistration
 
         services.AddSingleton<IDocumentHasher, Sha256DocumentHasher>();
         services.AddSingleton<IDocumentStorage, LocalDocumentStorage>();
+        services.AddSingleton<IOcrEngine, PaddleOcrEngine>();
         services.AddSingleton<IDocumentParser, ParserRouter>();
         services.AddSingleton<IReinsuranceClassifier, ReinsuranceClassifier>();
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();

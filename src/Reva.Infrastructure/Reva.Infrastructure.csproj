@@ -20,6 +20,13 @@
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="MimeKit" Version="4.17.0" />
     <PackageReference Include="MSGReader" Version="6.0.12" />
+    <!-- Native OCR (PaddleOCR / PP-OCR) for scanned images. Models are bundled (offline). -->
+    <PackageReference Include="Sdcb.PaddleInference" Version="3.3.1" />
+    <PackageReference Include="Sdcb.PaddleOCR" Version="3.3.1" />
+    <PackageReference Include="Sdcb.PaddleOCR.Models.Local" Version="3.3.1" />
+    <PackageReference Include="Sdcb.PaddleOCR.Models.LocalV5" Version="3.3.1" />
+    <PackageReference Include="Sdcb.PaddleInference.runtime.win64.mkl" Version="3.3.1.70" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20260602" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,3 +1,5 @@
+using Reva.Infrastructure.Ocr;
+
 namespace Reva.Infrastructure.Parsing;
 
 // The single entry point for parsing. Picks the first parser that claims the file by
@@ -8,7 +10,7 @@ public sealed class ParserRouter : IDocumentParser
     private readonly IReadOnlyList<IFileParser> _parsers;
     private readonly BinaryFallbackParser _fallback = new();
 
-    public ParserRouter()
+    public ParserRouter(IOcrEngine? ocr = null)
     {
         _parsers =
         [
@@ -18,6 +20,7 @@ public sealed class ParserRouter : IDocumentParser
             new WordFileParser(),
             new PowerPointFileParser(),
             new ExcelFileParser(),
+            new ImageFileParser(ocr),
             new EmailFileParser(this),
             new MsgFileParser(this),
         ];
