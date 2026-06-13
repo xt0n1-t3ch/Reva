@@ -10,9 +10,12 @@
             <span class="kpi-foot">@Foot</span>
         }
     </span>
-    <svg class="kpi-spark" viewBox="0 0 112 34" fill="none" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-        <path d="@SparkPath" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
+    @if (HasSpark)
+    {
+        <svg class="kpi-spark" viewBox="0 0 112 34" fill="none" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path d="@SparkPath" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    }
 </div>
 
 @code {
@@ -22,11 +25,28 @@
     [Parameter] public string Tone { get; set; } = "blue";
     [Parameter] public string IconName { get; set; } = "chart";
 
-    private string SparkPath => Tone switch
+    // Optional REAL data series. When at least two points are supplied the sparkline is
+    // drawn from them; otherwise no sparkline is shown (no decorative/fake trend).
+    [Parameter] public IReadOnlyList<double>? Series { get; set; }
+
+    private bool HasSpark => Series is { Count: >= 2 };
+
+    private string SparkPath
     {
-        "amber" => "M2 24 L12 18 L22 25 L32 10 L42 23 L52 20 L62 12 L72 21 L82 9 L92 17 L110 12",
-        "violet" => "M2 23 L12 18 L22 22 L32 15 L42 24 L52 18 L62 22 L72 13 L82 20 L92 17 L110 8",
-        "teal" => "M2 24 L12 22 L22 15 L32 19 L42 10 L52 23 L62 17 L72 15 L82 8 L92 11 L110 3",
-        _ => "M2 23 L12 17 L22 22 L32 14 L42 19 L52 9 L62 15 L72 13 L82 5 L92 11 L110 2"
-    };
+        get
+        {
+            var series = Series!;
+            var min = series.Min();
+            var max = series.Max();
+            var range = max - min;
+            var lastIndex = series.Count - 1;
+            var segments = series.Select((value, index) =>
+            {
+                var x = (double)index / lastIndex * 110 + 1;
+                var y = range == 0 ? 17 : 34 - (((value - min) / range * 30) + 2);
+                return FormattableString.Invariant($"{(index == 0 ? "M" : "L")}{x:0.#} {y:0.#}");
+            });
+            return string.Join(" ", segments);
+        }
+    }
 }
