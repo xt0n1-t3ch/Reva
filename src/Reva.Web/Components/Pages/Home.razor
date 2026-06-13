@@ -3,11 +3,11 @@
 @inject NavigationManager Nav
 @inject IDocumentWorkflow Workflow
 
-<PageTitle>Reva Intelligence Cockpit</PageTitle>
+<PageTitle>Reve Intelligence Cockpit</PageTitle>
 
 <header class="cockpit-topbar cockpit-topbar-workbench">
     <div class="topbar-titles">
-        <h1>Reva Intelligence Cockpit</h1>
+        <h1>Reve Intelligence Cockpit</h1>
         <p>Transforming reinsurance data into trusted intelligence</p>
     </div>
     <div class="topbar-tools">
@@ -48,13 +48,13 @@
 
     <section class="kpi-grid" aria-label="Key metrics">
         <KpiCard Tone="blue" IconName="file" Label="Documents Processed"
-                 Value="@_metrics.Total.ToString("N0")" Foot="@DocumentsFoot" />
+                 Value="@_metrics.Total.ToString("N0")" Foot="@DocumentsFoot" Series="@DocumentsSeries" />
         <KpiCard Tone="teal" IconName="shield" Label="AI Confidence"
-                 Value="@ConfidenceValue" Foot="@ConfidenceFoot" />
+                 Value="@ConfidenceValue" Foot="@ConfidenceFoot" Series="@ConfidenceSeries" />
         <KpiCard Tone="amber" IconName="alert" Label="Exceptions"
-                 Value="@_metrics.TotalExceptions.ToString("N0")" Foot="@ExceptionsFoot" />
+                 Value="@_metrics.TotalExceptions.ToString("N0")" Foot="@ExceptionsFoot" Series="@ExceptionsSeries" />
         <KpiCard Tone="violet" IconName="clock" Label="Pending Review"
-                 Value="@_metrics.Pending.ToString("N0")" Foot="@PendingFoot" />
+                 Value="@_metrics.Pending.ToString("N0")" Foot="@PendingFoot" Series="@PendingSeries" />
     </section>
 
     @if (_loading)
@@ -218,9 +218,9 @@
                                 <span class="exception-alert"><Icon Name="alert" Size="18" /></span>
                                 <span class="exception-copy">
                                     <strong>@issue.Title</strong>
-                                    <span>Detected</span>
+                                    <span>File</span>
                                     <em>@issue.Detected</em>
-                                    <span>Expected</span>
+                                    <span>Status</span>
                                     <em>@issue.Expected</em>
                                 </span>
                                 <span class="exception-score @issue.ScoreClass">@issue.Score</span>
@@ -417,13 +417,46 @@
 
     private string ConfidenceValue => _metrics.Extracted == 0 ? "—" : CockpitFormat.Percent(_metrics.AvgConfidence);
 
-    private string DocumentsFoot => _metrics.Extracted == 0 ? "Ready for intake" : "↑ 18% vs last 7 days";
+    private string DocumentsFoot => _metrics.Extracted == 0 ? "Ready for intake" : $"{_metrics.Extracted} extracted";
 
-    private string ConfidenceFoot => _metrics.Extracted == 0 ? "No extracted docs" : "↑ 2.7 pp vs last 7 days";
+    private string ConfidenceFoot => _metrics.Extracted == 0 ? "No extracted documents" : $"across {_metrics.Extracted} documents";
 
-    private string ExceptionsFoot => _metrics.TotalExceptions == 0 ? "No open exceptions" : $"↑ {_metrics.TotalExceptions} vs last 7 days";
+    private string ExceptionsFoot => _metrics.TotalExceptions == 0 ? "No open exceptions" : $"{_metrics.Flagged} documents flagged";
 
-    private string PendingFoot => _metrics.Pending == 0 ? "0 pending" : $"↓ {_metrics.Approved} approved";
+    private string PendingFoot => _metrics.Pending == 0 ? "Nothing pending" : $"{_metrics.Approved} approved so far";
+
+    private IReadOnlyList<DocumentSummary> Chronological => [.. _documents.OrderBy(document => document.CreatedAt)];
+
+    // Sparklines are drawn from REAL document data (or hidden when there are too few documents).
+    private IReadOnlyList<double>? DocumentsSeries => ToSeries(Chronological.Select((_, index) => (double)(index + 1)));
+
+    private IReadOnlyList<double>? ConfidenceSeries =>
+        ToSeries(Chronological.Where(document => document.Status == DocumentStatus.Extracted).Select(document => document.Confidence * 100));
+
+    private IReadOnlyList<double>? ExceptionsSeries => ToSeries(Chronological.Select(document => (double)document.ExceptionCount));
+
+    private IReadOnlyList<double>? PendingSeries
+    {
+        get
+        {
+            var running = 0;
+            return ToSeries(Chronological.Select(document =>
+            {
+                if (document.ReviewState == ReviewState.Pending)
+                {
+                    running++;
+                }
+
+                return (double)running;
+            }));
+        }
+    }
+
+    private static IReadOnlyList<double>? ToSeries(IEnumerable<double> values)
+    {
+        var list = values.ToList();
+        return list.Count >= 2 ? list : null;
+    }
 
     private string ActiveDocumentFile => _activeDetail?.FileName ?? "No active document";
 
@@ -449,9 +482,9 @@
     private List<DashboardException> DashboardExceptions => Flagged
         .Select(document => new DashboardException(
             document.Id,
-            document.DocumentType == ReinsuranceDocumentType.Unknown ? "Unsupported Document" : CockpitFormat.DocumentTypeLabel(document.DocumentType),
-            document.DocumentType == ReinsuranceDocumentType.Unknown ? "Unknown format" : $"{document.ExceptionCount} exceptions",
-            document.DocumentType == ReinsuranceDocumentType.Unknown ? "Supported reinsurance file" : "Analyst validated values",
+            CockpitFormat.DocumentTypeLabel(document.DocumentType),
+            document.FileName,
+            $"{document.ExceptionCount} exception{(document.ExceptionCount == 1 ? string.Empty : "s")} to review",
             document.Confidence < 0.6 ? $"Low {CockpitFormat.PercentWhole(document.Confidence)}" : $"Medium {CockpitFormat.PercentWhole(document.Confidence)}",
             document.Confidence < 0.6 ? "score-low" : "score-mid"))
         .ToList();
