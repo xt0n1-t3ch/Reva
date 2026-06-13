@@ -1,3 +1,4 @@
+using Reva.Core.Contracts;
 using Reva.Core.Reinsurance;
 using Reva.Infrastructure.Parsing;
 
@@ -16,29 +17,35 @@ public sealed class ReinsuranceClassifier : IReinsuranceClassifier
         [ReinsuranceDocumentType.ClaimNotice] = ["claim notice", "date of loss", "reserve"]
     };
 
+    // Columns that mark a row-per-risk bordereau table rather than a prose statement.
+    private static readonly string[] BordereauColumns =
+        ["cedent", "member", "premium", "claims", "commission", "cession", "ceded", "line of business", "line no"];
+
     public ClassificationResult Classify(ParsedDocument parsedDocument)
     {
         var text = parsedDocument.Text.ToLowerInvariant();
-        var bestType = ReinsuranceDocumentType.Unknown;
-        var bestScore = 0;
+        var scores = Signals.ToDictionary(entry => entry.Key, entry => (double)entry.Value.Count(text.Contains));
 
-        foreach (var signalSet in Signals)
+        // A data table with several reinsurance financial columns is strong evidence of a
+        // bordereau — this is what a row-per-risk register looks like, and it outweighs the
+        // generic "premium"/"commission" words that also appear in statements of account.
+        if (HasBordereauTable(parsedDocument.Tables))
         {
-            var score = signalSet.Value.Count(text.Contains);
-            if (score > bestScore)
-            {
-                bestType = signalSet.Key;
-                bestScore = score;
-            }
+            scores[ReinsuranceDocumentType.Bordereau] += 4;
         }
 
-        if (bestType == ReinsuranceDocumentType.Unknown)
+        var best = scores.OrderByDescending(entry => entry.Value).First();
+        if (best.Value <= 0)
         {
-            return new ClassificationResult(bestType, 0.35);
+            return new ClassificationResult(ReinsuranceDocumentType.Unknown, 0.35);
         }
 
-        var confidence = Math.Min(0.96, 0.45 + (bestScore * 0.12));
-        return new ClassificationResult(bestType, confidence);
+        var confidence = Math.Min(0.97, 0.5 + (best.Value * 0.1));
+        return new ClassificationResult(best.Key, Math.Round(confidence, 2));
     }
-}
 
+    private static bool HasBordereauTable(IReadOnlyList<ExtractedTable> tables) =>
+        tables.Any(table => table.Rows.Count > 0
+            && table.Headers.Count(header => BordereauColumns.Any(column =>
+                header.Contains(column, StringComparison.OrdinalIgnoreCase))) >= 3);
+}
