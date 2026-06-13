@@ -42,12 +42,12 @@ Reva $Version for Windows
 
 Quick start:
 1. Extract this ZIP.
-2. Double-click Reva.exe.
-3. Reva opens http://localhost:5187 automatically.
+2. Double-click Reva.exe (or Start-Reva.cmd).
+3. Reva opens http://localhost:5187 automatically. Upload your documents to begin.
 
-Direct mode:
-- Double-click Reva.exe, or set ASPNETCORE_URLS=http://localhost:5187 before running Reva.exe when a fixed port is needed.
-- Start-Reva.cmd is included as a fallback launcher.
+Optional:
+- The workspace starts empty and works only on the real documents you upload.
+- Pass --seed-demo (or set REVA_SEED_DEMO=1) to load a few sample documents for evaluation.
 - Use REVA_NO_OPEN=1 for headless smoke tests.
 
 Notes:

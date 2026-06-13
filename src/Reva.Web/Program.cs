@@ -3,12 +3,15 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Reva.Infrastructure;
 using Reva.Infrastructure.Persistence;
+using Reva.Infrastructure.Persistence.DemoData;
 using Reva.Web.Components;
 using Reva.Web.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 var launchBrowser = !args.Contains("--no-open", StringComparer.OrdinalIgnoreCase)
     && !string.Equals(Environment.GetEnvironmentVariable("REVA_NO_OPEN"), "1", StringComparison.OrdinalIgnoreCase);
+var seedDemo = args.Contains("--seed-demo", StringComparer.OrdinalIgnoreCase)
+    || string.Equals(Environment.GetEnvironmentVariable("REVA_SEED_DEMO"), "1", StringComparison.OrdinalIgnoreCase);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -24,6 +27,12 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RevaDbContext>();
     await dbContext.Database.MigrateAsync();
+
+    if (seedDemo)
+    {
+        var workflow = scope.ServiceProvider.GetRequiredService<IDocumentWorkflow>();
+        await DemoDocumentSeeder.SeedIfEmptyAsync(workflow, dbContext, CancellationToken.None);
+    }
 }
 
 if (!app.Environment.IsDevelopment())
