@@ -1,3 +1,4 @@
+using Reva.Core.Contracts;
 using Reva.Core.Reinsurance;
 using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Parsing;
@@ -44,6 +45,41 @@ public sealed class ReinsuranceExtractionTests
         Assert.Contains(result.Fields, field => field.Name == ReinsuranceFieldNames.Cedent && field.Value == "Andes Mutual Insurance");
         Assert.Contains(result.Fields, field => field.Name == ReinsuranceFieldNames.Currency && field.Value == "USD");
         Assert.DoesNotContain(result.Exceptions, issue => issue.Severity == ExceptionSeverity.Critical);
+    }
+
+    [Fact]
+    public void ClassifierDetectsBordereauFromTabularColumns()
+    {
+        // A bordereau CSV: generic words ("commission","premium") also appear in statements,
+        // but the row-per-risk table with reinsurance columns should win.
+        IReadOnlyList<IReadOnlyDictionary<string, string>> rows =
+        [
+            new Dictionary<string, string> { ["Cedent"] = "Orion", ["Premium"] = "5550000", ["Cession %"] = "47.72%" }
+        ];
+        var table = new ExtractedTable("bordereau", ["Cedent", "Premium", "Claims", "Commission", "Cession %"], rows);
+        var text = "Cedent,Premium,Claims,Commission,Cession %\nOrion,5550000,2625000,277500,47.72%";
+        var parsed = new ParsedDocument("test", "csv", text, text, "{}", [table], []);
+
+        var result = new ReinsuranceClassifier().Classify(parsed);
+
+        Assert.Equal(ReinsuranceDocumentType.Bordereau, result.DocumentType);
+    }
+
+    [Fact]
+    public void ExtractorProducesVariedRealConfidence()
+    {
+        var text = "Cedent: Orion Insurance\nCurrency: USD";
+        var parsed = new ParsedDocument("test", "txt", text, text, "{}", [], []);
+        var extractor = new ReinsuranceFieldExtractor();
+
+        var result = extractor.Extract(parsed, new ReinsuranceClassifier().Classify(parsed));
+        var found = result.Fields.Where(field => !string.IsNullOrWhiteSpace(field.Value)).ToList();
+        var missing = result.Fields.Where(field => string.IsNullOrWhiteSpace(field.Value)).ToList();
+
+        // Confidence is computed, not a flat constant.
+        Assert.True(found.Select(field => field.Confidence).Distinct().Count() > 1, "found fields should carry varied confidence");
+        Assert.All(found, field => Assert.True(field.Confidence > 0.6, $"{field.Name} confidence {field.Confidence}"));
+        Assert.All(missing, field => Assert.True(field.Confidence < 0.3, $"{field.Name} confidence {field.Confidence}"));
     }
 
     private static string SampleStatementText()
