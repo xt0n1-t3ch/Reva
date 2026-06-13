@@ -5,7 +5,7 @@
 
 <PageTitle>Reve Intelligence Cockpit</PageTitle>
 
-<header class="cockpit-topbar cockpit-topbar-workbench">
+<header class="cockpit-topbar cockpit-topbar-workbench" id="intake">
     <div class="topbar-titles">
         <h1>Reve Intelligence Cockpit</h1>
         <p>Transforming reinsurance data into trusted intelligence</p>
@@ -15,25 +15,21 @@
             <Icon Name="search" Size="18" />
             <input type="search" placeholder="Search documents, contracts, cedents…"
                    aria-label="Search documents" @bind="_search" @bind:event="oninput" />
-            <span class="kbd">⌘ K</span>
         </div>
         <label class="btn btn-primary upload-control upload-main">
             <Icon Name="plus" Size="18" />
             <span>@(_uploading ? "Uploading…" : "Upload Documents")</span>
-            <Icon Name="chevron-down" Size="16" />
-            <InputFile OnChange="OnUpload" disabled="@_uploading"
-                       accept=".txt,.csv,.pdf,.png,.jpg,.jpeg,.tif,.tiff,.md" aria-label="Upload reinsurance document" />
+            <InputFile OnChange="OnUpload" disabled="@_uploading" aria-label="Upload document" />
         </label>
         <span class="topbar-divider" aria-hidden="true"></span>
-        <button class="icon-btn" type="button" aria-label="Help"><Icon Name="help" Size="20" /></button>
-        <button class="icon-btn" type="button" aria-label="Notifications">
+        <a class="icon-btn" href="#exceptions" aria-label="Jump to exceptions">
             <Icon Name="bell" Size="20" />
             @if (_metrics.TotalExceptions > 0)
             {
                 <span class="icon-badge">@Math.Min(_metrics.TotalExceptions, 99)</span>
             }
-        </button>
-        <span class="top-avatar" aria-label="Analyst initials">AM</span>
+        </a>
+        <span class="top-avatar" aria-label="Analyst"><Icon Name="shield" Size="18" /></span>
     </div>
 </header>
 
@@ -190,7 +186,7 @@
                 </div>
             </article>
 
-            <aside class="card card-pad-0 exceptions-panel">
+            <aside class="card card-pad-0 exceptions-panel" id="exceptions">
                 <div class="card-head">
                     <div class="head-title">
                         <Icon Name="alert" Size="20" />
