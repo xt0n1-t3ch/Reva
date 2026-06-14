@@ -47,6 +47,8 @@ public static class RevaInfrastructureRegistration
         services.AddScoped<IDocumentWorkflow, DocumentWorkflow>();
         services.AddScoped<Export.IExportTemplateStore, Export.ExportTemplateStore>();
         services.AddSingleton<Export.IDocumentExporter, Export.DocumentExporter>();
+        services.AddScoped<Settings.ISettingsStore, Settings.SettingsStore>();
+        services.AddScoped<Settings.IDataMaintenance, Settings.DataMaintenance>();
 
         return services;
     }

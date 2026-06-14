@@ -25,7 +25,13 @@
                     @foreach (var template in _templates)
                     {
                         <a class="export-menu-item" href="@TemplateExportHref(template.Id)" download>
-                            <span>@template.Name</span>
+                            <span>
+                                @template.Name
+                                @if (template.Id == RuntimeSettings.Current.DefaultTemplateId)
+                                {
+                                    <span class="pill tone-green">Default</span>
+                                }
+                            </span>
                             <span class="pill tone-blue">@template.Format.ToString().ToUpperInvariant()</span>
                         </a>
                     }
@@ -274,7 +280,8 @@
         try
         {
             _detail = await Workflow.GetAsync(Id, CancellationToken.None);
-            _templates = [.. await Templates.ListAsync(CancellationToken.None)];
+            var defaultId = RuntimeSettings.Current.DefaultTemplateId;
+            _templates = [.. (await Templates.ListAsync(CancellationToken.None)).OrderByDescending(template => template.Id == defaultId)];
             BindFields();
         }
         catch (Exception ex)

@@ -6,6 +6,7 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
 {
     public DbSet<DocumentRecord> Documents => Set<DocumentRecord>();
     public DbSet<ExportTemplateRecord> ExportTemplates => Set<ExportTemplateRecord>();
+    public DbSet<AppSettingsRecord> AppSettings => Set<AppSettingsRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,6 +52,14 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
             entity.HasKey(template => template.Id);
             entity.Property(template => template.Name).HasMaxLength(120);
             entity.Property(template => template.Format).HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<AppSettingsRecord>(entity =>
+        {
+            entity.HasKey(settings => settings.Id);
+            entity.Property(settings => settings.Theme).HasMaxLength(16);
+            entity.Property(settings => settings.AccentColor).HasMaxLength(16);
+            entity.Property(settings => settings.ProductName).HasMaxLength(80);
         });
 
         modelBuilder.Entity<ReviewEventRecord>(entity =>
