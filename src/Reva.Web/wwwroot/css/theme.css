@@ -588,3 +588,308 @@ h3 {
     .stat-row { grid-template-columns: 1fr; }
     .import-bar-cta { display: none; }
 }
+
+/* ── Review split-view (epic #27) ──────────────────────────────────────── */
+.review-content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 1320px;
+}
+
+.review-topbar .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.review-topbar .back-link:hover {
+    color: var(--accent);
+}
+
+/* Stepper */
+.stepper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 2px;
+}
+
+.stepper .step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-soft);
+}
+
+.stepper .step-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface-muted);
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.stepper .step.active {
+    color: var(--text-strong);
+}
+
+.stepper .step.active .step-dot {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-accent);
+}
+
+.stepper .step.done {
+    color: var(--accent);
+}
+
+.stepper .step.done .step-dot {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.stepper .step-line {
+    flex: 1;
+    height: 1.5px;
+    background: var(--border-strong);
+    max-width: 80px;
+}
+
+/* Split */
+.review-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(340px, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.review-doc-body {
+    padding: 14px 16px 18px;
+}
+
+.cite-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: var(--r-pill);
+    padding: 5px 12px;
+    margin-bottom: 12px;
+}
+
+.cite-hint.muted {
+    color: var(--text-muted);
+    background: var(--surface-muted);
+}
+
+.doc-paper {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    max-height: 620px;
+    overflow: auto;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.doc-text {
+    margin: 0 0 14px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--text-body);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+mark.cite {
+    background: #fde68a;
+    color: #4a3206;
+    padding: 1px 3px;
+    border-radius: 4px;
+    font-weight: 700;
+    box-shadow: 0 0 0 2px rgba(253, 230, 138, 0.6);
+}
+
+.doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.doc-table th,
+.doc-table td {
+    border: 1px solid var(--border);
+    padding: 7px 10px;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+}
+
+.doc-table th {
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    font-weight: 650;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+}
+
+.doc-table td.cite {
+    background: #fde68a;
+    color: #4a3206;
+    font-weight: 700;
+}
+
+/* Side */
+.review-side {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: sticky;
+    top: 18px;
+}
+
+.field-editor {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.field-edit-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 11px;
+    border: 1px solid transparent;
+    transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.field-edit-row.is-active {
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.field-edit-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.field-edit-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.field-edit-control .field-input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 11px;
+    font-size: 13.5px;
+}
+
+.field-input.is-edited {
+    border-color: var(--violet-600);
+    background: var(--violet-soft);
+}
+
+.checks-list {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Attention (unsupported/failed) */
+.attention-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 16px 18px;
+    border-radius: var(--r-card);
+    background: var(--amber-soft);
+    border: 1px solid color-mix(in srgb, var(--amber-600) 30%, transparent);
+}
+
+.attention-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 12px;
+    background: var(--surface-card);
+    color: var(--amber-600);
+}
+
+.attention-card strong {
+    color: var(--text-strong);
+}
+
+.attention-card p {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--text-body);
+}
+
+/* Decision */
+.review-decision-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.decision-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 14px;
+}
+
+.decision-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.decision-input-group span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.review-decision-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.review-help {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+@media (max-width: 1080px) {
+    .review-split { grid-template-columns: 1fr; }
+    .review-side { position: static; }
+    .decision-form-grid { grid-template-columns: 1fr; }
+}
