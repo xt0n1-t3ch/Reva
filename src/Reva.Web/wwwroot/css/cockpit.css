@@ -2242,3 +2242,136 @@ a {
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* Field-level exception cards (reference-grade Detected/Expected reconciliation) */
+.exception-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface-card);
+    color: var(--text-body);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+a.exception-card:hover {
+    box-shadow: var(--shadow-card);
+    transform: translateY(-1px);
+}
+
+.exception-card.tier-low {
+    background: linear-gradient(90deg, var(--surface-card) 30%, var(--red-soft) 100%);
+    border-color: var(--red-soft);
+}
+
+.exception-card.tier-mid {
+    background: linear-gradient(90deg, var(--surface-card) 30%, var(--amber-soft) 100%);
+    border-color: var(--amber-soft);
+}
+
+.exception-card.tier-high {
+    background: linear-gradient(90deg, var(--surface-card) 30%, var(--green-soft) 100%);
+    border-color: var(--green-soft);
+}
+
+.exception-card .exception-alert {
+    color: var(--amber-600);
+    margin-top: 2px;
+}
+
+.exception-card.tier-low .exception-alert {
+    color: var(--red-600);
+}
+
+.exception-card.tier-high .exception-alert {
+    color: var(--green-600);
+}
+
+.exception-card .exception-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.exception-copy-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.exception-copy-head strong {
+    color: var(--text-strong);
+    font-size: 15px;
+    font-weight: 650;
+}
+
+.exception-score {
+    border-radius: var(--r-pill);
+    padding: 4px 11px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.exception-score.tier-low {
+    background: var(--red-soft);
+    color: var(--red-600);
+}
+
+.exception-score.tier-mid {
+    background: var(--amber-soft);
+    color: var(--amber-600);
+}
+
+.exception-score.tier-high {
+    background: var(--green-soft);
+    color: var(--green-600);
+}
+
+.exception-delta {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 6px 18px;
+    margin: 0;
+}
+
+.exception-delta div {
+    display: contents;
+}
+
+.exception-delta dt {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.exception-delta dd {
+    margin: 0;
+    color: var(--text-strong);
+    font-weight: 650;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.exception-message {
+    margin: 0;
+    color: var(--text-body);
+    font-size: 13px;
+}
+
+.exception-go {
+    align-self: center;
+    color: var(--text-soft);
+}
+
+.confidence.reviewed {
+    background: var(--violet-soft);
+    color: var(--violet-600);
+    min-width: 0;
+    padding: 3px 11px;
+}

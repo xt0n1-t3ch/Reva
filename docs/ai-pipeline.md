@@ -1,32 +1,55 @@
 # AI Pipeline
 
-Reva treats AI/OCR as a core backend capability, not a UI add-on.
+Reve Intelligence treats parsing, OCR, extraction, and reconciliation as core backend
+capabilities, not UI add-ons. The default path is keyless and offline.
 
 ## Runtime path
 
-1. Store upload with a SHA-256 hash.
-2. Invoke the local parser worker.
-3. Return Markdown, text, tables, parser profile, and warnings.
-4. Classify the reinsurance document type.
-5. Extract canonical fields and confidence scores.
-6. Surface issues for human review.
-7. Export approved JSON or CSV.
+1. Store the upload with a SHA-256 hash (safe random name, no-execute).
+2. Route it through `ParserRouter` by sniffed content — never by extension alone.
+3. Get back text, Markdown, tables, a parser profile, and any warnings.
+4. Classify the reinsurance document type (bordereau-aware).
+5. Extract canonical fields with computed, explainable confidence.
+6. Reconcile stated figures against the line-item totals (see below).
+7. Surface field-level exceptions for human review.
+8. Export approved JSON or CSV.
 
-## Default local profile
+## Parsers (native .NET, no Python required)
 
-The worker uses Docling when it is available locally. Docling is a practical default because it focuses on document conversion, tables, OCR-capable parsing, Markdown, and JSON-style downstream use. The fallback parser keeps the demo runnable without GPU, cloud credentials, or large model downloads.
+| Input | Parser |
+| --- | --- |
+| txt / md / csv | built-in (encoding-detected) |
+| docx / pptx | DocumentFormat.OpenXml |
+| xlsx | ClosedXML |
+| eml | MimeKit (body + recursive attachments) |
+| msg | MSGReader |
+| digital PDF | PdfPig |
+| images / scanned PDF | PaddleOCR (PP-OCR V5, bundled, offline) |
+| unknown / binary | best-effort visible-text fallback (low confidence, never an error) |
 
-## Optional high-accuracy profile
+## OCR
 
-PaddleOCR-VL is the recommended optional adapter for scanned or visually complex documents. It is a lightweight vision-language OCR family aimed at document parsing tasks such as text, tables, charts, and complex layout. It should be added behind the existing `IDocumentParser` contract rather than wired directly into the UI.
+`Sdcb.PaddleOCR` with the local PP-OCR V5 models runs entirely on the machine — no Python, no
+cloud, no API key. Per-line confidence comes from the engine, so the scores are real. Models
+are loaded lazily and provisioned on first use; a missing model degrades gracefully instead of
+crashing.
 
-## Why not cloud-first
+## Reconciliation
 
-Azure Document Intelligence is a strong production adapter for Microsoft-heavy enterprises, but Reva stays local-first by default to avoid secrets, reduce setup friction, and keep the architecture portable. The production path is an additional parser implementation, not a rewrite.
+A real, common reinsurance break: a broker cover note states headline totals that do not match
+the attached bordereau line items. The extractor computes the line-item totals and compares
+them to the stated values, emitting a field-level exception with the Detected value, the
+Expected (computed) value, and an agreement score. The seeded hero document demonstrates this
+with genuine, varied discrepancies — see `docs/demo-script.md`.
 
-## Roadmap
+## Optional LLM (deferred)
 
-- Add a `PaddleOcrVlDocumentParser` worker mode.
-- Add table reconciliation checks for totals and currency consistency.
-- Add confidence calibration from reviewed corrections.
-- Add SQL Server migrations and Power BI export views.
+`Microsoft.Extensions.AI` can supply an optional `IChatClient` that proposes field candidates;
+the deterministic validators still decide. It stays off by default (`Reve:Llm:Provider = None`)
+so the app runs keyless. Tracked separately as an issue.
+
+## Why local-first
+
+Cloud OCR (e.g. Azure Document Intelligence) is a strong production adapter, but local-first by
+default avoids secrets, removes setup friction, and keeps the architecture portable. Production
+adapters plug in behind the existing parser contract — they are not a rewrite.

@@ -40,6 +40,9 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
         {
             entity.Property(exception => exception.Severity).HasMaxLength(24);
             entity.Property(exception => exception.Message).HasMaxLength(512);
+            entity.Property(exception => exception.FieldName).HasMaxLength(96);
+            entity.Property(exception => exception.Detected).HasMaxLength(256);
+            entity.Property(exception => exception.Expected).HasMaxLength(256);
         });
 
         modelBuilder.Entity<ReviewEventRecord>(entity =>

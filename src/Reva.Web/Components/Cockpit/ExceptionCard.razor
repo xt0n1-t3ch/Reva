@@ -1,0 +1,58 @@
+@* A single exception. Reconciliation findings show the field, an agreement tier, and the
+   Detected-vs-Expected delta (matching the reference). Generic findings show the message. *@
+@if (Issue.IsReconciliation)
+{
+    @if (Href is not null)
+    {
+        <a class="exception-card @CockpitFormat.AgreementTier(Issue.Confidence)" href="@Href">
+            @CardBody
+            <span class="exception-go"><Icon Name="chevron-right" Size="18" /></span>
+        </a>
+    }
+    else
+    {
+        <div class="exception-card @CockpitFormat.AgreementTier(Issue.Confidence)">
+            @CardBody
+        </div>
+    }
+}
+else
+{
+    <div class="exception-card exception-generic @SeverityTier">
+        <span class="exception-alert"><Icon Name="alert" Size="18" /></span>
+        <div class="exception-copy">
+            <strong>@CockpitFormat.SeverityLabel(Issue.Severity)</strong>
+            <p class="exception-message">@Issue.Message</p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public ExtractionIssue Issue { get; set; } = default!;
+
+    // Optional link to the field's review page (used on the dashboard).
+    [Parameter] public string? Href { get; set; }
+
+    private string SeverityTier => Issue.Severity switch
+    {
+        ExceptionSeverity.Critical => "tier-low",
+        ExceptionSeverity.Warning => "tier-mid",
+        _ => "tier-high"
+    };
+
+    private RenderFragment CardBody => @<text>
+        <span class="exception-alert"><Icon Name="alert" Size="18" /></span>
+        <div class="exception-copy">
+            <div class="exception-copy-head">
+                <strong>@Issue.FieldName</strong>
+                <span class="exception-score @CockpitFormat.AgreementTier(Issue.Confidence)">
+                    @CockpitFormat.AgreementLabel(Issue.Confidence) @CockpitFormat.PercentWhole(Issue.Confidence)
+                </span>
+            </div>
+            <dl class="exception-delta">
+                <div><dt>Detected</dt><dd>@Issue.Detected</dd></div>
+                <div><dt>Expected</dt><dd>@Issue.Expected</dd></div>
+            </dl>
+        </div>
+    </text>;
+}

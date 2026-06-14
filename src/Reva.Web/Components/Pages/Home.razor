@@ -3,12 +3,12 @@
 @inject NavigationManager Nav
 @inject IDocumentWorkflow Workflow
 
-<PageTitle>Reve Intelligence Cockpit</PageTitle>
+<PageTitle>@Brand.Cockpit</PageTitle>
 
 <header class="cockpit-topbar cockpit-topbar-workbench" id="intake">
     <div class="topbar-titles">
-        <h1>Reve Intelligence Cockpit</h1>
-        <p>Transforming reinsurance data into trusted intelligence</p>
+        <h1>@Brand.Cockpit</h1>
+        <p>@Brand.Tagline</p>
     </div>
     <div class="topbar-tools">
         <div class="searchbox">
@@ -106,8 +106,8 @@
                         }
                         else if (ActiveFields.Count > 0)
                         {
-                            <div class="paper-doc-title">@DocumentDisplayTitle</div>
-                            <div class="paper-doc-subtitle">Treaty account</div>
+                            <div class="paper-doc-title">@_activeDetail.FileName</div>
+                            <div class="paper-doc-subtitle">@CockpitFormat.DocumentTypeLabel(_activeDetail.DocumentType) · parsed via @_activeDetail.ParserProfile</div>
                             <dl class="paper-facts">
                                 @foreach (var extracted in ActiveFields.Take(7))
                                 {
@@ -117,23 +117,30 @@
                                     </div>
                                 }
                             </dl>
-                            <table class="paper-table" aria-label="Document financial summary">
-                                <thead>
-                                    <tr><th>Member</th><th>Premium</th><th>Claims</th><th>Commission</th><th>Ceded</th></tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var row in NormalizedRows.Take(3))
-                                    {
+                            @if (PreviewTable is { } table)
+                            {
+                                <table class="paper-table" aria-label="Document line items">
+                                    <thead>
                                         <tr>
-                                            <td>@row.Member</td>
-                                            <td>@row.Premium</td>
-                                            <td>@row.Claims</td>
-                                            <td>@row.Commission</td>
-                                            <td>@row.Ceded</td>
+                                            @foreach (var header in table.Headers.Take(5))
+                                            {
+                                                <th>@header</th>
+                                            }
                                         </tr>
-                                    }
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var row in table.Rows.Take(4))
+                                        {
+                                            <tr>
+                                                @foreach (var header in table.Headers.Take(5))
+                                                {
+                                                    <td>@(row.TryGetValue(header, out var cell) ? cell : string.Empty)</td>
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
                         }
                         else
                         {
@@ -193,35 +200,24 @@
                         <h2>Exceptions</h2>
                     </div>
                     <div class="head-tools">
-                        <span class="pill @CockpitFormat.ExceptionTone(_metrics.TotalExceptions)">All Exceptions (@_metrics.TotalExceptions)</span>
+                        <span class="pill @CockpitFormat.ExceptionTone(ActiveExceptions.Count)">@ActiveExceptions.Count for this document</span>
                         <button class="tool-btn" type="button" aria-label="Filter exceptions"><Icon Name="filter" Size="16" /></button>
                     </div>
                 </div>
                 <div class="exception-review-list">
-                    @if (DashboardExceptions.Count == 0)
+                    @if (ActiveExceptions.Count == 0)
                     {
                         <div class="empty-state compact-empty">
                             <span class="empty-ic"><Icon Name="check-circle" Size="34" /></span>
                             <h3>All clear</h3>
-                            <p>No outstanding extraction exceptions.</p>
+                            <p>Every stated value reconciles with the line items.</p>
                         </div>
                     }
                     else
                     {
-                        @foreach (var issue in DashboardExceptions)
+                        @foreach (var issue in ActiveExceptions)
                         {
-                            <a class="exception-review-card" href="@ReviewHref(issue.DocumentId)">
-                                <span class="exception-alert"><Icon Name="alert" Size="18" /></span>
-                                <span class="exception-copy">
-                                    <strong>@issue.Title</strong>
-                                    <span>File</span>
-                                    <em>@issue.Detected</em>
-                                    <span>Status</span>
-                                    <em>@issue.Expected</em>
-                                </span>
-                                <span class="exception-score @issue.ScoreClass">@issue.Score</span>
-                                <Icon Name="chevron-right" Size="18" />
-                            </a>
+                            <ExceptionCard Issue="issue" Href="@ActiveReviewHref" />
                         }
                     }
                 </div>
@@ -278,11 +274,11 @@
                     <tfoot>
                         <tr>
                             <td colspan="3">Total</td>
-                            <td>@FinancialField("Premium")</td>
-                            <td>@FinancialField("Claims")</td>
-                            <td>@FinancialField("Commission")</td>
-                            <td>@EstimatedCeded</td>
-                            <td>@FinancialField("Cession %", "Cession")</td>
+                            <td>@ColumnTotal("Premium", "Premium (USD)")</td>
+                            <td>@ColumnTotal("Claims", "Claims (USD)")</td>
+                            <td>@ColumnTotal("Commission", "Commission (USD)")</td>
+                            <td>@ColumnTotal("Net Ceded", "Ceded", "Ceded (USD)")</td>
+                            <td>@RepresentativeCession</td>
                             <td>@CockpitFormat.PercentWhole(_activeDetail?.Confidence ?? 0)</td>
                         </tr>
                     </tfoot>
@@ -340,7 +336,6 @@
 @code {
     private readonly record struct Toast(string Kind, string Message);
     private readonly record struct NormalizedRow(int LineNumber, string Member, string Premium, string Claims, string Commission, string Ceded, string Cession, string Confidence);
-    private readonly record struct DashboardException(Guid DocumentId, string Title, string Detected, string Expected, string Score, string ScoreClass);
 
     private List<DocumentSummary> _documents = [];
     private DocumentDetail? _activeDetail;
@@ -462,28 +457,25 @@
 
     private int PreviewPageCount => Math.Clamp((_activeDetail?.Tables.Count ?? 0) + 1, 1, 6);
 
-    private string DocumentDisplayTitle => _activeDetail?.DocumentType == ReinsuranceDocumentType.Bordereau
-        ? "BORDEREAUX REGISTER"
-        : "TECHNICAL ACCOUNT STATEMENT";
-
     private string PreviewText => string.IsNullOrWhiteSpace(_activeDetail?.ParsedMarkdown)
         ? "No preview text available."
         : _activeDetail.ParsedMarkdown;
+
+    private ExtractedTable? PreviewTable => _activeDetail?.Tables.FirstOrDefault(table => table.Rows.Count > 0);
 
     private List<ExtractedField> ActiveFields => _activeDetail?.Fields
         .Where(extracted => !string.IsNullOrWhiteSpace(extracted.Value))
         .OrderByDescending(extracted => extracted.Confidence)
         .ToList() ?? [];
 
-    private List<DashboardException> DashboardExceptions => Flagged
-        .Select(document => new DashboardException(
-            document.Id,
-            CockpitFormat.DocumentTypeLabel(document.DocumentType),
-            document.FileName,
-            $"{document.ExceptionCount} exception{(document.ExceptionCount == 1 ? string.Empty : "s")} to review",
-            document.Confidence < 0.6 ? $"Low {CockpitFormat.PercentWhole(document.Confidence)}" : $"Medium {CockpitFormat.PercentWhole(document.Confidence)}",
-            document.Confidence < 0.6 ? "score-low" : "score-mid"))
-        .ToList();
+    // The active document's findings, worst agreement first: reconciliation breaks lead,
+    // generic notes follow. This is what the dashboard exception panel shows.
+    private IReadOnlyList<ExtractionIssue> ActiveExceptions => _activeDetail is null
+        ? []
+        : [.. _activeDetail.Exceptions
+            .OrderByDescending(issue => issue.IsReconciliation)
+            .ThenBy(issue => issue.Confidence)
+            .Take(8)];
 
     private IReadOnlyList<NormalizedRow> NormalizedRows
     {
@@ -500,10 +492,10 @@
                 return table.Rows.Select((row, index) => new NormalizedRow(
                     index + 1,
                     RowValue(row, "Member", "Cedent", "Line of Business"),
-                    Money(RowValue(row, "Premium", "Premium (USD)")),
-                    Money(RowValue(row, "Claims", "Claims (USD)")),
-                    Money(RowValue(row, "Commission", "Commission (USD)")),
-                    RowValue(row, "Net Ceded", "Ceded", "Ceded (USD)"),
+                    MoneyFormatter.Money(RowValue(row, "Premium", "Premium (USD)")),
+                    MoneyFormatter.Money(RowValue(row, "Claims", "Claims (USD)")),
+                    MoneyFormatter.Money(RowValue(row, "Commission", "Commission (USD)")),
+                    MoneyFormatter.Money(RowValue(row, "Net Ceded", "Ceded", "Ceded (USD)")),
                     RowValue(row, "Cession %", "Cession", "Share"),
                     CockpitFormat.PercentWhole(_activeDetail.Confidence))).ToList();
             }
@@ -516,39 +508,27 @@
             return [new NormalizedRow(
                 1,
                 FinancialField("Line of Business"),
-                Money(FinancialField("Premium")),
-                Money(FinancialField("Claims")),
-                Money(FinancialField("Commission")),
+                MoneyFormatter.Money(FinancialField("Premium")),
+                MoneyFormatter.Money(FinancialField("Claims")),
+                MoneyFormatter.Money(FinancialField("Commission")),
                 EstimatedCeded,
                 FinancialField("Cession %", "Cession"),
                 CockpitFormat.PercentWhole(_activeDetail.Confidence))];
         }
     }
 
-    private string EstimatedCeded
-    {
-        get
-        {
-            var premium = DecimalField("Premium");
-            var cession = PercentField("Cession %", "Cession");
-            if (premium is null || cession is null)
-            {
-                return "—";
-            }
-
-            return Money((premium.Value * cession.Value).ToString("0.##"));
-        }
-    }
+    // Single-row fallback (document has fields but no line-item table): ceded ≈ premium × cession.
+    private string EstimatedCeded =>
+        MoneyFormatter.TryParseAmount(FinancialField("Premium"), out var premium)
+        && MoneyFormatter.TryParsePercent(FinancialField("Cession %", "Cession"), out var cession)
+            ? MoneyFormatter.Money(premium * cession / 100m)
+            : "—";
 
     private List<DocumentSummary> Filtered => string.IsNullOrWhiteSpace(_search)
         ? _documents
         : [.. _documents.Where(d =>
             d.FileName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
             CockpitFormat.DocumentTypeLabel(d.DocumentType).Contains(_search, StringComparison.OrdinalIgnoreCase))];
-
-    private List<DocumentSummary> Flagged => [.. _documents.Where(d => d.ExceptionCount > 0)
-        .OrderByDescending(d => d.ExceptionCount)
-        .Take(8)];
 
     private string ReviewHref(Guid id) => $"review/{id}";
 
@@ -571,18 +551,55 @@
         return "—";
     }
 
-    private decimal? DecimalField(params string[] names)
+    // Sums a money column across the active document's line items (the honest table total).
+    private string ColumnTotal(params string[] names)
     {
-        var value = FinancialField(names).Replace("USD", string.Empty, StringComparison.OrdinalIgnoreCase)
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-        return decimal.TryParse(value, out var parsed) ? parsed : null;
+        var table = PreviewTable;
+        var column = table?.Headers.FirstOrDefault(header => names.Any(name => header.Equals(name, StringComparison.OrdinalIgnoreCase)));
+        if (table is null || column is null)
+        {
+            return "—";
+        }
+
+        var total = 0m;
+        var any = false;
+        foreach (var row in table.Rows)
+        {
+            if (row.TryGetValue(column, out var cell) && MoneyFormatter.TryParseAmount(cell, out var amount))
+            {
+                total += amount;
+                any = true;
+            }
+        }
+
+        return any ? MoneyFormatter.Money(total) : "—";
     }
 
-    private decimal? PercentField(params string[] names)
+    // The cession rate the line items carry (first non-empty value).
+    private string RepresentativeCession
     {
-        var value = FinancialField(names).Replace("%", string.Empty, StringComparison.Ordinal).Trim();
-        return decimal.TryParse(value, out var parsed) ? parsed / 100m : null;
+        get
+        {
+            var table = PreviewTable;
+            var column = table?.Headers.FirstOrDefault(header =>
+                header.Equals("Cession %", StringComparison.OrdinalIgnoreCase)
+                || header.Equals("Cession", StringComparison.OrdinalIgnoreCase)
+                || header.Equals("Share", StringComparison.OrdinalIgnoreCase));
+            if (table is null || column is null)
+            {
+                return "—";
+            }
+
+            foreach (var row in table.Rows)
+            {
+                if (row.TryGetValue(column, out var cell) && !string.IsNullOrWhiteSpace(cell))
+                {
+                    return MoneyFormatter.Percent(cell);
+                }
+            }
+
+            return "—";
+        }
     }
 
     private static string RowValue(IReadOnlyDictionary<string, string> row, params string[] names)
@@ -596,14 +613,6 @@
         }
 
         return "—";
-    }
-
-    private static string Money(string value)
-    {
-        var cleaned = value.Replace("USD", string.Empty, StringComparison.OrdinalIgnoreCase)
-            .Replace(",", string.Empty, StringComparison.Ordinal)
-            .Trim();
-        return decimal.TryParse(cleaned, out var amount) ? $"USD {amount:N0}" : value;
     }
 
     private readonly record struct Metrics(int Total, int Extracted, double AvgConfidence, int TotalExceptions, int Flagged, int Pending, int Approved, int NeedsAttention)

@@ -82,6 +82,51 @@ public sealed class ReinsuranceExtractionTests
         Assert.All(missing, field => Assert.True(field.Confidence < 0.3, $"{field.Name} confidence {field.Confidence}"));
     }
 
+    [Fact]
+    public void ExtractorReconcilesStatedTotalsAgainstLineItems()
+    {
+        // A broker cover note states a Premium that disagrees with the attached line items.
+        // Reconciliation must surface a field-level exception with both values and a real score.
+        var text = "Cedent: Orion Insurance Company Ltd.\nCurrency: USD\nPremium: USD 4,400,000\n";
+        IReadOnlyList<IReadOnlyDictionary<string, string>> rows =
+        [
+            new Dictionary<string, string> { ["Member"] = "North America", ["Premium"] = "2450000" },
+            new Dictionary<string, string> { ["Member"] = "Europe", ["Premium"] = "1850000" },
+            new Dictionary<string, string> { ["Member"] = "Asia Pacific", ["Premium"] = "1250000" }
+        ];
+        var table = new ExtractedTable("bordereau", ["Member", "Premium"], rows);
+        var parsed = new ParsedDocument("test", "csv", text, text, "{}", [table], []);
+        var extractor = new ReinsuranceFieldExtractor();
+
+        var result = extractor.Extract(parsed, new ReinsuranceClassifier().Classify(parsed));
+
+        var premiumBreak = result.Exceptions.Single(issue =>
+            issue.IsReconciliation && issue.FieldName == ReinsuranceFieldNames.Premium);
+        Assert.Equal("USD 4,400,000", premiumBreak.Detected);
+        // Expected is the computed line-item total (5,550,000), never the stated value.
+        Assert.Equal("USD 5,550,000", premiumBreak.Expected);
+        Assert.InRange(premiumBreak.Confidence, 0.01, 0.99);
+    }
+
+    [Fact]
+    public void ExtractorRaisesNoReconciliationWhenStatedMatchesLineItems()
+    {
+        var text = "Currency: USD\nPremium: USD 5,550,000\n";
+        IReadOnlyList<IReadOnlyDictionary<string, string>> rows =
+        [
+            new Dictionary<string, string> { ["Premium"] = "2450000" },
+            new Dictionary<string, string> { ["Premium"] = "3100000" }
+        ];
+        var table = new ExtractedTable("bordereau", ["Premium"], rows);
+        var parsed = new ParsedDocument("test", "csv", text, text, "{}", [table], []);
+        var extractor = new ReinsuranceFieldExtractor();
+
+        var result = extractor.Extract(parsed, new ReinsuranceClassifier().Classify(parsed));
+
+        Assert.DoesNotContain(result.Exceptions, issue =>
+            issue.IsReconciliation && issue.FieldName == ReinsuranceFieldNames.Premium);
+    }
+
     private static string SampleStatementText()
     {
         return """
