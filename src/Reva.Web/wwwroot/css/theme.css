@@ -1,0 +1,275 @@
+/*
+ * Reve Intelligence — premium design system (v0.3.0 Reimagine, epic #25).
+ *
+ * This layer loads after cockpit.css and is the authoritative design system: a calm,
+ * confident, English aesthetic. It redefines the design tokens (so every existing class
+ * is restyled at once) and elevates the shared primitives. One accent drives the whole
+ * palette and can be recolored from Settings by overriding `--accent`. Later epics migrate
+ * structural rules here and shrink the legacy sheet.
+ */
+
+:root {
+    color-scheme: light;
+
+    --font-sans: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Cascadia Code", "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+
+    /* One confident accent. Settings recolors by overriding --accent + --accent-strong. */
+    --accent: #0f766e;
+    --accent-strong: #0b5d56;
+    --accent-bright: #14b8a6;
+    --accent-soft: #e8faf4;
+    --accent-ring: rgba(15, 118, 110, 0.32);
+
+    /* Surfaces — soft, warm-cool neutrals. */
+    --surface-app: #f5f7fa;
+    --surface-card: #ffffff;
+    --surface-rail: #ffffff;
+    --surface-muted: #f1f4f8;
+    --surface-inset: #f8fafc;
+
+    /* Ink scale (also used where the legacy sheet references navy-*). */
+    --navy-900: #0b1220;
+    --navy-800: #111a2c;
+    --navy-700: #1b2740;
+    --navy-600: #243150;
+    --navy-active: #0b1220;
+
+    --teal-600: var(--accent);
+    --teal-500: var(--accent-bright);
+    --teal-400: #2dd4bf;
+    --teal-soft: var(--accent-soft);
+
+    --text-strong: #0b1220;
+    --text-body: #3a4559;
+    --text-muted: #6b7689;
+    --text-soft: #98a2b3;
+    --text-on-dark: #f4f7fc;
+
+    --border: #ebeef4;
+    --border-strong: #dde2ec;
+
+    --green-600: #0f9d6b;
+    --green-soft: #e7f7ef;
+    --amber-600: #b3791b;
+    --amber-soft: #fbf1dc;
+    --red-600: #d2445d;
+    --red-soft: #fce8ec;
+    --blue-600: #3f6fd6;
+    --blue-soft: #e9effc;
+    --violet-600: #6d5cd6;
+    --violet-soft: #ece9fb;
+
+    --r-card: 18px;
+    --r-control: 11px;
+    --r-pill: 999px;
+
+    --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px -8px rgba(15, 23, 42, 0.10);
+    --shadow-raised: 0 2px 8px rgba(15, 23, 42, 0.06), 0 22px 48px -16px rgba(15, 23, 42, 0.20);
+    --shadow-rail: 1px 0 0 var(--border);
+
+    --text-on-accent: #ffffff;
+    --surface-active-badge: rgba(255, 255, 255, 0.16);
+    --focus-ring: 0 0 0 3px var(--accent-ring);
+
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --dur: 0.16s;
+}
+
+/* Explicit dark theme (toggled from Settings in a later epic). Default stays light. */
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    --accent: #2dd4bf;
+    --accent-strong: #14b8a6;
+    --accent-bright: #5eead4;
+    --accent-soft: #112d2b;
+    --accent-ring: rgba(45, 212, 191, 0.32);
+
+    --surface-app: #0a0f1a;
+    --surface-card: #111a2b;
+    --surface-rail: #0d1524;
+    --surface-muted: #152034;
+    --surface-inset: #0f1827;
+
+    --navy-900: #e8edf6;
+    --navy-active: #1c2740;
+
+    --text-strong: #f1f5fb;
+    --text-body: #c2cbdb;
+    --text-muted: #8b97ab;
+    --text-soft: #6b7689;
+    --text-on-dark: #f4f7fc;
+
+    --border: #1e293b;
+    --border-strong: #2a374e;
+
+    --green-soft: #0e2a20;
+    --amber-soft: #2c2310;
+    --red-soft: #2e1620;
+    --blue-soft: #16223c;
+    --violet-soft: #211d3a;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 22px -10px rgba(0, 0, 0, 0.6);
+    --shadow-raised: 0 2px 10px rgba(0, 0, 0, 0.5), 0 26px 52px -16px rgba(0, 0, 0, 0.7);
+}
+
+body {
+    font-family: var(--font-sans);
+    background:
+        radial-gradient(1200px 600px at 82% -10%, rgba(15, 118, 110, 0.05), transparent 60%),
+        var(--surface-app);
+    letter-spacing: 0.1px;
+}
+
+h1,
+h2,
+h3 {
+    letter-spacing: -0.012em;
+    color: var(--text-strong);
+}
+
+/* ── Shell ─────────────────────────────────────────────────────────────── */
+.cockpit-rail {
+    padding: 24px 16px;
+    border-right: 1px solid var(--border);
+    box-shadow: none;
+    background: var(--surface-rail);
+}
+
+.cockpit-topbar {
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface-card) 78%, transparent);
+    backdrop-filter: saturate(1.1) blur(8px);
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────────── */
+.card {
+    border: 1px solid var(--border);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-card);
+    background: var(--surface-card);
+    transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.btn {
+    border-radius: var(--r-control);
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.btn:active {
+    transform: translateY(0.5px);
+}
+
+.btn-primary {
+    background: var(--accent);
+    border: 1px solid transparent;
+    color: var(--text-on-accent);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10), 0 6px 16px -8px var(--accent-ring);
+}
+
+.btn-primary:hover {
+    background: var(--accent-strong);
+}
+
+.btn-ghost,
+.btn-subtle {
+    background: var(--surface-card);
+    border: 1px solid var(--border-strong);
+    color: var(--text-body);
+}
+
+.btn-ghost:hover,
+.btn-subtle:hover {
+    background: var(--surface-muted);
+    border-color: var(--text-soft);
+}
+
+/* ── Inputs ────────────────────────────────────────────────────────────── */
+.field-input,
+.searchbox {
+    border-radius: var(--r-control);
+    border: 1px solid var(--border-strong);
+    background: var(--surface-inset);
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.field-input:focus,
+.field-input:focus-visible,
+.searchbox:focus-within {
+    border-color: var(--accent);
+    background: var(--surface-card);
+    box-shadow: var(--focus-ring);
+    outline: none;
+}
+
+/* ── KPI cards ─────────────────────────────────────────────────────────── */
+.kpi-card,
+.metric-card {
+    border: 1px solid var(--border);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-card);
+}
+
+.kpi-card:hover,
+.metric-card:hover {
+    box-shadow: var(--shadow-raised);
+    transform: translateY(-2px);
+}
+
+.kpi-value {
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────── */
+.data-table thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 650;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table tbody td {
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+}
+
+.data-table tbody tr {
+    transition: background var(--dur) var(--ease);
+}
+
+.data-table tbody tr:hover {
+    background: var(--surface-muted);
+}
+
+.data-table tfoot td {
+    border-top: 2px solid var(--border-strong);
+    font-weight: 700;
+}
+
+/* ── Pills & badges ────────────────────────────────────────────────────── */
+.pill {
+    border-radius: var(--r-pill);
+    font-weight: 600;
+    letter-spacing: 0.1px;
+}
+
+.confidence {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+/* ── Motion etiquette ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+    }
+}
