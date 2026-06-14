@@ -24,3 +24,17 @@ jobs:
       - run: python -m unittest discover tools/docling-worker/tests
       - shell: pwsh
         run: ./tests/package-smoke.ps1
+
+  e2e:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet build Reva.slnx
+      - run: dotnet build tests/Reva.E2E/Reva.E2E.csproj
+      - shell: pwsh
+        name: Install Playwright browser
+        run: tests/Reva.E2E/bin/Debug/net10.0/playwright.ps1 install chromium
+      - run: dotnet test tests/Reva.E2E/Reva.E2E.csproj --no-build
