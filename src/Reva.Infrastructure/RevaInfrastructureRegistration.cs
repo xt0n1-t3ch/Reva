@@ -45,6 +45,8 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IReinsuranceClassifier, ReinsuranceClassifier>();
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();
         services.AddScoped<IDocumentWorkflow, DocumentWorkflow>();
+        services.AddScoped<Export.IExportTemplateStore, Export.ExportTemplateStore>();
+        services.AddSingleton<Export.IDocumentExporter, Export.DocumentExporter>();
 
         return services;
     }

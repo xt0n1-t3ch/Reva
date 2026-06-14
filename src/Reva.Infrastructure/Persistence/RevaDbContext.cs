@@ -5,6 +5,7 @@ namespace Reva.Infrastructure.Persistence;
 public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbContext(options)
 {
     public DbSet<DocumentRecord> Documents => Set<DocumentRecord>();
+    public DbSet<ExportTemplateRecord> ExportTemplates => Set<ExportTemplateRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +44,13 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
             entity.Property(exception => exception.FieldName).HasMaxLength(96);
             entity.Property(exception => exception.Detected).HasMaxLength(256);
             entity.Property(exception => exception.Expected).HasMaxLength(256);
+        });
+
+        modelBuilder.Entity<ExportTemplateRecord>(entity =>
+        {
+            entity.HasKey(template => template.Id);
+            entity.Property(template => template.Name).HasMaxLength(120);
+            entity.Property(template => template.Format).HasMaxLength(16);
         });
 
         modelBuilder.Entity<ReviewEventRecord>(entity =>

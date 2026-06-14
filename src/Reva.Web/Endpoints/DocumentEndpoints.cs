@@ -1,6 +1,7 @@
 using System.Text;
 using Reva.Core.Contracts;
 using Reva.Infrastructure;
+using Reva.Infrastructure.Export;
 
 namespace Reva.Web.Endpoints;
 
@@ -46,7 +47,7 @@ public static class DocumentEndpoints
             return document is null ? Results.NotFound() : Results.Ok(document);
         });
 
-        group.MapGet("/{id:guid}/export", async (Guid id, string? format, IDocumentWorkflow workflow, CancellationToken cancellationToken) =>
+        group.MapGet("/{id:guid}/export", async (Guid id, string? format, Guid? templateId, IDocumentWorkflow workflow, IExportTemplateStore templates, IDocumentExporter exporter, CancellationToken cancellationToken) =>
         {
             // Raw export: the parsed source text/markdown for any document, even ones with no
             // canonical fields. JSON/CSV below are the canonical reinsurance-field export.
@@ -56,6 +57,25 @@ public static class DocumentEndpoints
                 return detail is null
                     ? Results.NotFound()
                     : Results.Text(detail.ParsedMarkdown ?? string.Empty, "text/plain; charset=utf-8");
+            }
+
+            // Templated export: apply a saved export template (custom columns/labels/format).
+            if (templateId is Guid layoutId)
+            {
+                var detail = await workflow.GetAsync(id, cancellationToken);
+                if (detail is null)
+                {
+                    return Results.NotFound();
+                }
+
+                var template = await templates.GetAsync(layoutId, cancellationToken);
+                if (template is null)
+                {
+                    return Results.NotFound(new { error = "Export template not found." });
+                }
+
+                var file = exporter.Export(detail, template);
+                return Results.File(file.Content, file.ContentType, file.FileName);
             }
 
             ExportRecord? export;
