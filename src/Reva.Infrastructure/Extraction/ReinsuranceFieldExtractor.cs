@@ -30,7 +30,9 @@ public sealed partial class ReinsuranceFieldExtractor : IReinsuranceExtractor
             .Select(name => ExtractField(parsedDocument.Text, name))
             .ToList();
 
-        var exceptions = BuildExceptions(parsedDocument, classificationResult, fields).ToList();
+        var exceptions = BuildReconciliationExceptions(fields, parsedDocument.Tables)
+            .Concat(BuildExceptions(parsedDocument, classificationResult, fields))
+            .ToList();
         var foundConfidence = fields.Count == 0 ? 0 : fields.Average(field => field.Confidence);
         var confidence = Math.Round((classificationResult.Confidence * 0.45) + (foundConfidence * 0.55), 2);
 
@@ -139,6 +141,178 @@ public sealed partial class ReinsuranceFieldExtractor : IReinsuranceExtractor
         var values = lines[1].Split(',').Select(value => value.Trim()).ToArray();
         return index < values.Length ? values[index] : null;
     }
+
+    private enum ReconcileKind { Money, Percent, Text }
+
+    private static readonly (string Field, string[] Columns, ReconcileKind Kind)[] ReconcilableFields =
+    [
+        (ReinsuranceFieldNames.Premium, ["Premium", "Premium (USD)", "Gross Premium"], ReconcileKind.Money),
+        (ReinsuranceFieldNames.Claims, ["Claims", "Claims (USD)", "Paid Loss"], ReconcileKind.Money),
+        (ReinsuranceFieldNames.Commission, ["Commission", "Commission (USD)", "Brokerage"], ReconcileKind.Money),
+        (ReinsuranceFieldNames.Cession, ["Cession %", "Cession", "Share"], ReconcileKind.Percent),
+        (ReinsuranceFieldNames.LineOfBusiness, ["Line of Business", "LOB", "Class of Business"], ReconcileKind.Text),
+    ];
+
+    // Compares each value the document STATED (extracted scalar field) against the value
+    // COMPUTED from the line-item table, and flags genuine disagreements. This is real
+    // reinsurance reconciliation — the figures and the agreement score come from the data,
+    // nothing is fabricated. A perfect match produces no exception.
+    private static IEnumerable<ExtractionIssue> BuildReconciliationExceptions(IReadOnlyList<ExtractedField> fields, IReadOnlyList<ExtractedTable> tables)
+    {
+        var table = tables.FirstOrDefault(candidate => candidate.Rows.Count > 0);
+        if (table is null)
+        {
+            yield break;
+        }
+
+        foreach (var (fieldName, columns, kind) in ReconcilableFields)
+        {
+            var stated = fields.FirstOrDefault(field => field.Name == fieldName)?.Value;
+            if (string.IsNullOrWhiteSpace(stated))
+            {
+                continue;
+            }
+
+            var column = table.Headers.FirstOrDefault(header => columns.Any(candidate => header.Equals(candidate, StringComparison.OrdinalIgnoreCase)));
+            if (column is null)
+            {
+                continue;
+            }
+
+            var cells = table.Rows
+                .Select(row => row.TryGetValue(column, out var value) ? value : null)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .ToList();
+            if (cells.Count == 0)
+            {
+                continue;
+            }
+
+            var issue = kind switch
+            {
+                ReconcileKind.Money => ReconcileMoney(fieldName, stated, cells!),
+                ReconcileKind.Percent => ReconcilePercent(fieldName, stated, cells!),
+                _ => ReconcileText(fieldName, stated, cells![0]!)
+            };
+
+            if (issue is not null)
+            {
+                yield return issue;
+            }
+        }
+    }
+
+    private static ExtractionIssue? ReconcileMoney(string fieldName, string stated, IReadOnlyList<string> cells)
+    {
+        if (!MoneyFormatter.TryParseAmount(stated, out var detected))
+        {
+            return null;
+        }
+
+        decimal expected = 0m;
+        foreach (var cell in cells)
+        {
+            if (MoneyFormatter.TryParseAmount(cell, out var amount))
+            {
+                expected += amount;
+            }
+        }
+
+        if (expected == 0m)
+        {
+            return null;
+        }
+
+        var relativeGap = Math.Abs(detected - expected) / Math.Max(Math.Abs(expected), 1m);
+        if (relativeGap < 0.0005m)
+        {
+            return null;
+        }
+
+        var agreement = ClampAgreement(1m - relativeGap);
+        return new ExtractionIssue(
+            SeverityFor(agreement),
+            $"{fieldName} stated in the document does not reconcile with the line-item total.",
+            fieldName,
+            MoneyFormatter.Money(detected),
+            MoneyFormatter.Money(expected),
+            agreement);
+    }
+
+    private static ExtractionIssue? ReconcilePercent(string fieldName, string stated, IReadOnlyList<string> cells)
+    {
+        if (!MoneyFormatter.TryParsePercent(stated, out var detected))
+        {
+            return null;
+        }
+
+        var values = cells
+            .Select(cell => MoneyFormatter.TryParsePercent(cell, out var value) ? (decimal?)value : null)
+            .Where(value => value is not null)
+            .Select(value => value!.Value)
+            .ToList();
+        if (values.Count == 0)
+        {
+            return null;
+        }
+
+        var expected = values.Average();
+        var gap = Math.Abs(detected - expected);
+        if (gap < 0.01m)
+        {
+            return null;
+        }
+
+        // Cession percentage points are material: a one-point gap drives agreement to zero.
+        var agreement = ClampAgreement(1m - gap);
+        return new ExtractionIssue(
+            SeverityFor(agreement),
+            $"{fieldName} stated in the document does not match the line-item rate.",
+            fieldName,
+            MoneyFormatter.Percent(detected),
+            MoneyFormatter.Percent(expected),
+            agreement);
+    }
+
+    private static ExtractionIssue? ReconcileText(string fieldName, string stated, string tableValue)
+    {
+        if (stated.Trim().Equals(tableValue.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var statedTokens = Tokenize(stated);
+        var tableTokens = Tokenize(tableValue);
+        if (tableTokens.Count == 0)
+        {
+            return null;
+        }
+
+        var matched = tableTokens.Count(token => statedTokens.Contains(token));
+        var agreement = ClampAgreement((decimal)matched / tableTokens.Count);
+        return new ExtractionIssue(
+            SeverityFor(agreement),
+            $"{fieldName} stated in the document does not match the line-item value.",
+            fieldName,
+            stated.Trim(),
+            tableValue.Trim(),
+            agreement);
+    }
+
+    private static HashSet<string> Tokenize(string value) =>
+        value.Split([' ', '\t', '-', '/'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(token => token.ToLowerInvariant())
+            .ToHashSet(StringComparer.Ordinal);
+
+    private static double ClampAgreement(decimal value) =>
+        (double)Math.Round(Math.Clamp(value, 0m, 1m), 2);
+
+    private static ExceptionSeverity SeverityFor(double agreement) => agreement switch
+    {
+        < 0.5 => ExceptionSeverity.Critical,
+        < 0.85 => ExceptionSeverity.Warning,
+        _ => ExceptionSeverity.Info
+    };
 
     private static IEnumerable<ExtractionIssue> BuildExceptions(ParsedDocument parsedDocument, ClassificationResult classificationResult, IReadOnlyList<ExtractedField> fields)
     {

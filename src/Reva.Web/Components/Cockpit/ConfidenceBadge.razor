@@ -1,7 +1,18 @@
-<span class="confidence @CockpitFormat.ConfidenceLevel(Value)" title="@($"AI confidence {CockpitFormat.Percent(Value)}")">
-    @CockpitFormat.PercentWhole(Value)
-</span>
+@if (IsCorrected)
+{
+    <span class="confidence reviewed" title="Analyst corrected — value confirmed by review">Reviewed</span>
+}
+else
+{
+    <span class="confidence @CockpitFormat.ConfidenceLevel(Value)" title="@($"AI confidence {CockpitFormat.Percent(Value)}")">
+        @CockpitFormat.PercentWhole(Value)
+    </span>
+}
 
 @code {
     [Parameter] public double Value { get; set; }
+
+    // When an analyst has corrected the value, show "Reviewed" instead of an AI confidence
+    // score — a corrected field is trusted because a human set it, not because a model guessed.
+    [Parameter] public bool IsCorrected { get; set; }
 }

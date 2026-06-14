@@ -171,6 +171,32 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
         exportResponse.EnsureSuccessStatusCode();
     }
 
+    [Fact]
+    public async Task CorrectedFieldComesBackMarkedReviewed()
+    {
+        using var client = factory.CreateClient();
+        using var multipart = new MultipartFormDataContent();
+        var content = new ByteArrayContent(File.ReadAllBytes(SamplePath("technical-account-statement.txt")));
+        multipart.Add(content, "file", "technical-account-statement.txt");
+
+        var upload = await (await client.PostAsync("/api/documents/", multipart))
+            .Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(upload);
+
+        var review = new ReviewDecision("Approve", "Underwriting Team", "Corrected the broker.",
+            [new FieldCorrection(ReinsuranceFieldNames.Broker, "Meridian Reinsurance Brokers Ltd.")]);
+        var reviewed = await (await client.PostAsJsonAsync($"/api/documents/{upload.Id}/review", review, SerializerOptions))
+            .Content.ReadFromJsonAsync<DocumentDetail>(SerializerOptions);
+
+        Assert.NotNull(reviewed);
+        var broker = reviewed.Fields.Single(field => field.Name == ReinsuranceFieldNames.Broker);
+        // This flag drives the "Reviewed" badge instead of an inflated AI confidence score.
+        Assert.True(broker.IsCorrected);
+        Assert.Equal("Meridian Reinsurance Brokers Ltd.", broker.Value);
+        // A field nobody touched stays an AI extraction, not "Reviewed".
+        Assert.DoesNotContain(reviewed.Fields, field => field.Name == ReinsuranceFieldNames.Cedent && field.IsCorrected);
+    }
+
     private static string SamplePath(string name)
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);

@@ -117,8 +117,8 @@
                     @if (CanAct)
                     {
                         <div class="document-paper review-paper">
-                            <div class="paper-doc-title">@DocumentDisplayTitle</div>
-                            <div class="paper-doc-subtitle">Canonical extraction workspace</div>
+                            <div class="paper-doc-title">@_detail.FileName</div>
+                            <div class="paper-doc-subtitle">@CockpitFormat.DocumentTypeLabel(_detail.DocumentType) · parsed via @_detail.ParserProfile</div>
                             <dl class="paper-facts review-paper-facts">
                                 @foreach (var edit in _fields.Take(8))
                                 {
@@ -196,7 +196,7 @@
                             <div class="field-row review-edit-row">
                                 <label class="field-label" for="@($"field-{index}")">@edit.Name</label>
                                 <input id="@($"field-{index}")" class="field-input @(edit.IsEdited ? "is-edited" : null)" value="@edit.Value" @oninput="e => OnFieldInput(index, e.Value?.ToString())" aria-label="@($"{edit.Name} value")" />
-                                <ConfidenceBadge Value="edit.Confidence" />
+                                <ConfidenceBadge Value="edit.Confidence" IsCorrected="edit.IsCorrected" />
                             </div>
                         }
                     </div>
@@ -223,17 +223,9 @@
                     }
                     else
                     {
-                        @foreach (var issue in _detail.Exceptions)
+                        @foreach (var issue in OrderedExceptions)
                         {
-                            <div class="exception-review-card review-exception-static">
-                                <span class="exception-alert"><Icon Name="alert" Size="18" /></span>
-                                <span class="exception-copy">
-                                    <strong>@issue.Severity</strong>
-                                    <span>Issue</span>
-                                    <em>@issue.Message</em>
-                                </span>
-                                <span class="exception-score @SeverityScoreClass(issue.Severity)">@issue.Severity</span>
-                            </div>
+                            <ExceptionCard Issue="issue" />
                         }
                     }
                 </div>
@@ -343,6 +335,7 @@
         public string Original { get; init; } = "";
         public string Value { get; set; } = "";
         public double Confidence { get; init; }
+        public bool IsCorrected { get; init; }
         public bool IsEdited => !string.Equals(Value, Original, StringComparison.Ordinal);
     }
 
@@ -391,7 +384,8 @@
                 Name = extracted.Name,
                 Original = extracted.Value,
                 Value = extracted.Value,
-                Confidence = extracted.Confidence
+                Confidence = extracted.Confidence,
+                IsCorrected = extracted.IsCorrected
             })];
     }
 
@@ -447,9 +441,12 @@
         ? "No trusted extraction was created, so export and approval remain locked."
         : "This file was not recognized as a supported reinsurance document. Export and approval stay locked until a supported source file is uploaded.";
 
-    private string DocumentDisplayTitle => _detail?.DocumentType == ReinsuranceDocumentType.Bordereau
-        ? "BORDEREAUX REGISTER"
-        : "TECHNICAL ACCOUNT STATEMENT";
+    // Reconciliation breaks lead (worst agreement first), then generic findings.
+    private IReadOnlyList<ExtractionIssue> OrderedExceptions => _detail is null
+        ? []
+        : [.. _detail.Exceptions
+            .OrderByDescending(issue => issue.IsReconciliation)
+            .ThenBy(issue => issue.Confidence)];
 
     private string PreviewExcerpt
     {
@@ -517,12 +514,5 @@
         "RequestCorrection" => "correction requested",
         "Reject" => "rejected",
         _ => "approved"
-    };
-
-    private static string SeverityScoreClass(ExceptionSeverity severity) => severity switch
-    {
-        ExceptionSeverity.Critical => "score-low",
-        ExceptionSeverity.Warning => "score-mid",
-        _ => "score-info"
     };
 }

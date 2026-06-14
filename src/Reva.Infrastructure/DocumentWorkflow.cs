@@ -175,7 +175,11 @@ public sealed class DocumentWorkflow(
             record.Exceptions = extraction.Exceptions.Select(exception => new DocumentIssueRecord
             {
                 Severity = exception.Severity.ToString(),
-                Message = exception.Message
+                Message = exception.Message,
+                FieldName = exception.FieldName,
+                Detected = exception.Detected,
+                Expected = exception.Expected,
+                Confidence = exception.Confidence
             }).ToList();
             record.ErrorMessage = null;
             record.UpdatedAt = DateTimeOffset.UtcNow;
@@ -247,7 +251,13 @@ public sealed class DocumentWorkflow(
             document.ParserProfile,
             document.Fields.Select(field => new ExtractedField(field.Name, field.Value, field.Confidence, field.Source, field.IsCorrected)).ToList(),
             document.Tables.Select(ToExtractedTable).ToList(),
-            document.Exceptions.Select(exception => new ExtractionIssue(Enum.Parse<ExceptionSeverity>(exception.Severity), exception.Message)).ToList(),
+            document.Exceptions.Select(exception => new ExtractionIssue(
+                Enum.Parse<ExceptionSeverity>(exception.Severity),
+                exception.Message,
+                exception.FieldName,
+                exception.Detected,
+                exception.Expected,
+                exception.Confidence)).ToList(),
             document.CreatedAt,
             document.UpdatedAt);
     }

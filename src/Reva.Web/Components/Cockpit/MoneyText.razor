@@ -1,0 +1,6 @@
+@* Renders a raw extracted amount through the single MoneyFormatter (e.g. "USD 5,550,000"). *@
+<span class="money-text">@Reva.Core.Reinsurance.MoneyFormatter.Money(Value)</span>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+}

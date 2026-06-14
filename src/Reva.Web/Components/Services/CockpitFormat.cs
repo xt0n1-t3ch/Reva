@@ -56,6 +56,28 @@ public static class CockpitFormat
         _ => type.ToString()
     };
 
+    public static string SeverityLabel(ExceptionSeverity severity) => severity switch
+    {
+        ExceptionSeverity.Critical => "Critical",
+        ExceptionSeverity.Warning => "Warning",
+        _ => "Note"
+    };
+
+    // Reconciliation agreement tier from a [0,1] score: Low (red), Medium (amber), High (green).
+    public static string AgreementTier(double score) => score switch
+    {
+        < 0.6 => "tier-low",
+        < 0.85 => "tier-mid",
+        _ => "tier-high"
+    };
+
+    public static string AgreementLabel(double score) => score switch
+    {
+        < 0.6 => "Low",
+        < 0.85 => "Medium",
+        _ => "High"
+    };
+
     public static string SeverityClass(ExceptionSeverity severity) => severity switch
     {
         ExceptionSeverity.Critical => "sev-critical",
