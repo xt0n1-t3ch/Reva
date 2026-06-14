@@ -1,4 +1,5 @@
 @import url('css/cockpit.css');
+@import url('css/theme.css');
 
 h1:focus {
     outline: none;
