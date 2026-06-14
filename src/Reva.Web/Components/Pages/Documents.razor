@@ -1,0 +1,111 @@
+@page "/documents"
+@rendermode @(new InteractiveServerRenderMode(false))
+@inject IDocumentWorkflow Workflow
+
+<PageTitle>Documents · @Brand.Product</PageTitle>
+
+<header class="cockpit-topbar cockpit-topbar-workbench">
+    <div class="topbar-titles">
+        <h1>Documents</h1>
+        <p>Every document you have uploaded, newest first.</p>
+    </div>
+    <div class="topbar-tools">
+        <div class="searchbox">
+            <Icon Name="search" Size="18" />
+            <input type="search" placeholder="Search by name or type…" aria-label="Search documents"
+                   @bind="_search" @bind:event="oninput" />
+        </div>
+        <a class="btn btn-primary" href="/"><Icon Name="plus" Size="18" /> <span>Upload</span></a>
+    </div>
+</header>
+
+<div class="cockpit-content cockpit-content-workbench">
+    @if (_loading)
+    {
+        <section class="card empty-workbench"><div class="loading-pane"><span class="spinner"></span> Loading documents…</div></section>
+    }
+    else if (_documents.Count == 0)
+    {
+        <section class="card empty-workbench">
+            <div class="empty-state">
+                <span class="empty-ic"><Icon Name="inbox" Size="44" /></span>
+                <h3>No documents yet</h3>
+                <p>Upload your first file to get started.</p>
+                <a class="btn btn-primary" href="/"><Icon Name="plus" Size="18" /> Upload a document</a>
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="card card-pad-0">
+            <div class="card-head">
+                <div class="head-title"><Icon Name="queue" Size="20" /><h2>All documents</h2><span class="pill tone-slate">@Filtered.Count of @_documents.Count</span></div>
+            </div>
+            <div class="table-scroll">
+                <table class="data-table">
+                    <caption class="visually-hidden">All documents</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Document</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Review</th>
+                            <th scope="col">Confidence</th>
+                            <th scope="col">Checks</th>
+                            <th scope="col">Updated</th>
+                            <th scope="col"><span class="visually-hidden">Open</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var doc in Filtered)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="cell-file">
+                                        <span class="file-ic"><Icon Name="file" Size="18" /></span>
+                                        <a class="cell-strong" href="@ReviewHref(doc.Id)">@doc.FileName</a>
+                                    </div>
+                                </td>
+                                <td class="cell-sub">@CockpitFormat.DocumentTypeLabel(doc.DocumentType)</td>
+                                <td><StatusPill Status="doc.Status" /></td>
+                                <td><ReviewPill State="doc.ReviewState" /></td>
+                                <td><ConfidenceBadge Value="doc.Confidence" /></td>
+                                <td><span class="pill @CockpitFormat.ExceptionTone(doc.ExceptionCount)">@doc.ExceptionCount</span></td>
+                                <td class="cell-sub">@CockpitFormat.RelativeTime(doc.UpdatedAt, _now)</td>
+                                <td><a class="btn btn-subtle" href="@ReviewHref(doc.Id)">Open <Icon Name="arrow-right" Size="16" /></a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private List<DocumentSummary> _documents = [];
+    private string _search = string.Empty;
+    private bool _loading = true;
+    private DateTimeOffset _now = DateTimeOffset.UtcNow;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _documents = [.. (await Workflow.ListAsync(CancellationToken.None)).OrderByDescending(document => document.UpdatedAt)];
+            _now = DateTimeOffset.UtcNow;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private List<DocumentSummary> Filtered => string.IsNullOrWhiteSpace(_search)
+        ? _documents
+        : [.. _documents.Where(document =>
+            document.FileName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+            CockpitFormat.DocumentTypeLabel(document.DocumentType).Contains(_search, StringComparison.OrdinalIgnoreCase))];
+
+    private static string ReviewHref(Guid id) => $"review/{id}";
+}

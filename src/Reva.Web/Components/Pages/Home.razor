@@ -5,24 +5,23 @@
 
 <PageTitle>@Brand.Cockpit</PageTitle>
 
-<header class="cockpit-topbar cockpit-topbar-workbench" id="intake">
+<header class="cockpit-topbar cockpit-topbar-workbench">
     <div class="topbar-titles">
-        <h1>@Brand.Cockpit</h1>
-        <p>@Brand.Tagline</p>
+        <h1>Workspace</h1>
+        <p>Import a document and Reve turns it into clean, checked, exportable data.</p>
     </div>
     <div class="topbar-tools">
         <div class="searchbox">
             <Icon Name="search" Size="18" />
-            <input type="search" placeholder="Search documents, contracts, cedents…"
+            <input type="search" placeholder="Search your documents…"
                    aria-label="Search documents" @bind="_search" @bind:event="oninput" />
         </div>
-        <label class="btn btn-primary upload-control upload-main">
+        <label class="btn btn-primary upload-control">
             <Icon Name="plus" Size="18" />
-            <span>@(_uploading ? "Uploading…" : "Upload Documents")</span>
-            <InputFile OnChange="OnUpload" disabled="@_uploading" aria-label="Upload document" />
+            <span>@(_uploading ? "Importing…" : "Import")</span>
+            <InputFile OnChange="OnUpload" disabled="@_uploading" aria-label="Import a document" />
         </label>
-        <span class="topbar-divider" aria-hidden="true"></span>
-        <a class="icon-btn" href="#exceptions" aria-label="Jump to exceptions">
+        <a class="icon-btn" href="/documents" aria-label="Documents">
             <Icon Name="bell" Size="20" />
             @if (_metrics.TotalExceptions > 0)
             {
@@ -33,7 +32,7 @@
     </div>
 </header>
 
-<div class="cockpit-content cockpit-content-workbench">
+<div class="cockpit-content workspace">
     @if (_toast is not null)
     {
         <div class="toast @_toast.Value.Kind" role="status">
@@ -42,314 +41,149 @@
         </div>
     }
 
-    <section class="kpi-grid" aria-label="Key metrics">
-        <KpiCard Tone="blue" IconName="file" Label="Documents Processed"
-                 Value="@_metrics.Total.ToString("N0")" Foot="@DocumentsFoot" Series="@DocumentsSeries" />
-        <KpiCard Tone="teal" IconName="shield" Label="AI Confidence"
-                 Value="@ConfidenceValue" Foot="@ConfidenceFoot" Series="@ConfidenceSeries" />
-        <KpiCard Tone="amber" IconName="alert" Label="Exceptions"
-                 Value="@_metrics.TotalExceptions.ToString("N0")" Foot="@ExceptionsFoot" Series="@ExceptionsSeries" />
-        <KpiCard Tone="violet" IconName="clock" Label="Pending Review"
-                 Value="@_metrics.Pending.ToString("N0")" Foot="@PendingFoot" Series="@PendingSeries" />
-    </section>
-
     @if (_loading)
     {
-        <div class="card"><div class="loading-pane"><span class="spinner"></span> Loading cockpit…</div></div>
+        <section class="card"><div class="loading-pane"><span class="spinner"></span> Loading workspace…</div></section>
     }
     else if (_documents.Count == 0)
     {
-        <section class="card empty-workbench">
-            <div class="empty-state">
-                <span class="empty-ic"><Icon Name="inbox" Size="44" /></span>
-                <h3>No documents yet</h3>
-                <p>Upload a treaty, bordereau, statement of account, loss run, or claim notice to open the Reva workbench.</p>
-                <label class="btn btn-primary upload-control">
-                    <Icon Name="plus" Size="18" /> Upload Documents
-                    <InputFile OnChange="OnUpload" disabled="@_uploading"
-                               accept=".txt,.csv,.pdf,.png,.jpg,.jpeg,.tif,.tiff,.md" aria-label="Upload reinsurance document" />
-                </label>
+        <section class="onboard-grid" aria-label="Get started">
+            <div class="onboard-copy">
+                <span class="eyebrow">Welcome</span>
+                <h2>Turn any insurance document into clean, trusted data.</h2>
+                <p>Drop in a bordereau, statement of account, slip, or loss run. Reve reads it,
+                   checks every figure against the detail, and gets it ready to export — in three steps.</p>
+                <ol class="onboard-steps">
+                    <li><span class="step-n">1</span><div><strong>Import</strong><span>Any format — Excel, PDF, scan, email.</span></div></li>
+                    <li><span class="step-n">2</span><div><strong>Review &amp; adjust</strong><span>Fix fields, resolve the flagged checks.</span></div></li>
+                    <li><span class="step-n">3</span><div><strong>Export</strong><span>Send out clean data in your format.</span></div></li>
+                </ol>
             </div>
+            <label class="dropzone @(_uploading ? "is-busy" : null)">
+                <InputFile OnChange="OnUpload" disabled="@_uploading" aria-label="Import a document" />
+                <span class="dropzone-mark">
+                    @if (_uploading)
+                    {
+                        <span class="spinner"></span>
+                    }
+                    else
+                    {
+                        <Icon Name="export" Size="28" />
+                    }
+                </span>
+                <strong>@(_uploading ? "Reading your document…" : "Drop a document to import")</strong>
+                <span class="dropzone-sub">or click to browse — no file is ever rejected</span>
+            </label>
         </section>
     }
     else
     {
-        <section class="workbench-grid" aria-label="Document intelligence workbench">
-            <article class="card card-pad-0 document-preview-card">
-                <div class="card-head preview-head">
-                    <div class="head-title">
-                        <Icon Name="file" Size="20" />
-                        <h2>Document Preview</h2>
-                    </div>
-                    <span class="pill tone-slate">@ActiveDocumentFile</span>
-                </div>
-                <div class="preview-toolbar" aria-label="Document preview controls">
-                    <button class="tool-btn" type="button" aria-label="Zoom out"><Icon Name="search" Size="16" /></button>
-                    <button class="tool-btn" type="button" aria-label="Zoom in"><Icon Name="search" Size="18" /></button>
-                    <span class="toolbar-sep"></span>
-                    <button class="tool-btn" type="button" aria-label="Previous page"><Icon Name="arrow-left" Size="16" /></button>
-                    <span class="page-chip">1 / @Math.Max(1, PreviewPageCount)</span>
-                    <button class="tool-btn" type="button" aria-label="Next page"><Icon Name="arrow-right" Size="16" /></button>
-                    <span class="zoom-chip">100%</span>
-                    <span class="toolbar-spacer"></span>
-                    <a class="tool-btn" href="@ActiveReviewHref" aria-label="Open review"><Icon Name="export" Size="16" /></a>
-                    <button class="tool-btn" type="button" aria-label="Refresh" @onclick="ReloadAsync"><Icon Name="sparkle" Size="16" /></button>
-                </div>
-                <div class="document-stage">
-                    <div class="document-paper">
-                        @if (_activeDetail is null)
-                        {
-                            <div class="empty-state compact-empty">
-                                <h3>Select a document</h3>
-                                <p>Upload or open a document to preview extracted reinsurance data.</p>
-                            </div>
-                        }
-                        else if (ActiveFields.Count > 0)
-                        {
-                            <div class="paper-doc-title">@_activeDetail.FileName</div>
-                            <div class="paper-doc-subtitle">@CockpitFormat.DocumentTypeLabel(_activeDetail.DocumentType) · parsed via @_activeDetail.ParserProfile</div>
-                            <dl class="paper-facts">
-                                @foreach (var extracted in ActiveFields.Take(7))
-                                {
-                                    <div>
-                                        <dt>@extracted.Name</dt>
-                                        <dd>@extracted.Value</dd>
-                                    </div>
-                                }
-                            </dl>
-                            @if (PreviewTable is { } table)
-                            {
-                                <table class="paper-table" aria-label="Document line items">
-                                    <thead>
-                                        <tr>
-                                            @foreach (var header in table.Headers.Take(5))
-                                            {
-                                                <th>@header</th>
-                                            }
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var row in table.Rows.Take(4))
-                                        {
-                                            <tr>
-                                                @foreach (var header in table.Headers.Take(5))
-                                                {
-                                                    <td>@(row.TryGetValue(header, out var cell) ? cell : string.Empty)</td>
-                                                }
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            }
-                        }
-                        else
-                        {
-                            <pre>@PreviewText</pre>
-                        }
-                    </div>
-                    <div class="thumbnail-strip" aria-label="Document pages">
-                        @for (var index = 1; index <= PreviewPageCount; index++)
-                        {
-                            <span class="thumb @(index == 1 ? "active" : string.Empty)"><span></span><b>@index</b></span>
-                        }
-                    </div>
-                </div>
-            </article>
-
-            <article class="card card-pad-0 extracted-card">
-                <div class="card-head">
-                    <div class="head-title">
-                        <Icon Name="sparkle" Size="20" />
-                        <h2>Extracted Reinsurance Fields</h2>
-                    </div>
-                    <div class="head-tools">
-                        <span class="pill tone-green">AI Confidence: @CockpitFormat.PercentWhole(_activeDetail?.Confidence ?? 0)</span>
-                        <a class="tool-btn" href="@ActiveReviewHref" aria-label="Open field editor"><Icon Name="edit" Size="16" /></a>
-                    </div>
-                </div>
-                <div class="field-list compact-field-list">
-                    @if (ActiveFields.Count == 0)
-                    {
-                        <div class="empty-state compact-empty">
-                            <h3>No canonical fields</h3>
-                            <p>This document has not produced trusted reinsurance fields yet.</p>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var extracted in ActiveFields.Take(9))
-                        {
-                            <div class="field-row readonly-field-row">
-                                <span class="field-label">@extracted.Name</span>
-                                <span class="field-value-text">@extracted.Value</span>
-                                <ConfidenceBadge Value="extracted.Confidence" />
-                            </div>
-                        }
-                    }
-                </div>
-                <div class="card-actions">
-                    <a class="inline-action" href="@ActiveReviewHref"><Icon Name="edit" Size="16" /> Edit Fields</a>
-                    <a class="inline-action" href="@ActiveReviewHref"><Icon Name="chart" Size="16" /> View Field Confidence</a>
-                </div>
-            </article>
-
-            <aside class="card card-pad-0 exceptions-panel" id="exceptions">
-                <div class="card-head">
-                    <div class="head-title">
-                        <Icon Name="alert" Size="20" />
-                        <h2>Exceptions</h2>
-                    </div>
-                    <div class="head-tools">
-                        <span class="pill @CockpitFormat.ExceptionTone(ActiveExceptions.Count)">@ActiveExceptions.Count for this document</span>
-                        <button class="tool-btn" type="button" aria-label="Filter exceptions"><Icon Name="filter" Size="16" /></button>
-                    </div>
-                </div>
-                <div class="exception-review-list">
-                    @if (ActiveExceptions.Count == 0)
-                    {
-                        <div class="empty-state compact-empty">
-                            <span class="empty-ic"><Icon Name="check-circle" Size="34" /></span>
-                            <h3>All clear</h3>
-                            <p>Every stated value reconciles with the line items.</p>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var issue in ActiveExceptions)
-                        {
-                            <ExceptionCard Issue="issue" Href="@ActiveReviewHref" />
-                        }
-                    }
-                </div>
-                <div class="panel-footer">
-                    <a class="btn btn-ghost" href="#review-queue">View All in Review Queue <Icon Name="arrow-right" Size="16" /></a>
-                </div>
-            </aside>
+        <section class="stat-row" aria-label="Overview">
+            <KpiCard Tone="blue" IconName="file" Label="Documents" Value="@_metrics.Total.ToString("N0")" Foot="@DocumentsFoot" />
+            <KpiCard Tone="teal" IconName="shield" Label="Avg. confidence" Value="@ConfidenceValue" Foot="@ConfidenceFoot" />
+            <KpiCard Tone="amber" IconName="alert" Label="Open checks" Value="@_metrics.TotalExceptions.ToString("N0")" Foot="@ExceptionsFoot" />
+            <KpiCard Tone="violet" IconName="clock" Label="Pending review" Value="@_metrics.Pending.ToString("N0")" Foot="@PendingFoot" />
         </section>
 
-        <section class="card card-pad-0 normalized-card" id="normalized-rows">
+        <label class="import-bar @(_uploading ? "is-busy" : null)">
+            <InputFile OnChange="OnUpload" disabled="@_uploading" aria-label="Import a document" />
+            <span class="import-bar-mark">
+                @if (_uploading)
+                {
+                    <span class="spinner"></span>
+                }
+                else
+                {
+                    <Icon Name="export" Size="20" />
+                }
+            </span>
+            <span class="import-bar-text">
+                <strong>@(_uploading ? "Reading your document…" : "Drop a document to import")</strong>
+                <span>Excel, PDF, scan, Word, email — anything. No file is ever rejected.</span>
+            </span>
+            <span class="import-bar-cta">Browse <Icon Name="arrow-right" Size="16" /></span>
+        </label>
+
+        <section class="card card-pad-0 queue-card" aria-label="Work queue">
             <div class="card-head">
                 <div class="head-title">
-                    <Icon Name="table" Size="20" />
-                    <h2>Normalized Reinsurance Rows</h2>
-                    <span class="pill tone-blue">@NormalizedRows.Count rows</span>
+                    <Icon Name="queue" Size="20" />
+                    <h2>Work queue</h2>
+                    <span class="pill tone-slate">@Filtered.Count of @_documents.Count</span>
                 </div>
-                <div class="head-tools">
-                    <a class="btn btn-ghost" href="@ActiveReviewHref"><Icon Name="shield" Size="16" /> Validate All</a>
-                    <a class="btn btn-ghost" href="@ActiveExportHref"><Icon Name="export" Size="16" /> Export</a>
+                <div class="head-tools seg-filter" role="group" aria-label="Filter documents">
+                    <button class="seg @(_filter == QueueFilter.All ? "is-on" : null)" type="button" @onclick="@(() => SetFilter(QueueFilter.All))">All</button>
+                    <button class="seg @(_filter == QueueFilter.NeedsReview ? "is-on" : null)" type="button" @onclick="@(() => SetFilter(QueueFilter.NeedsReview))">Needs review</button>
+                    <button class="seg @(_filter == QueueFilter.Clean ? "is-on" : null)" type="button" @onclick="@(() => SetFilter(QueueFilter.Clean))">Clean</button>
                 </div>
             </div>
-            <div class="table-scroll">
-                <table class="data-table normalized-table">
-                    <caption class="visually-hidden">Normalized reinsurance rows</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col"><input type="checkbox" aria-label="Select all rows" /></th>
-                            <th scope="col">Line No.</th>
-                            <th scope="col">Member</th>
-                            <th scope="col">Premium (USD)</th>
-                            <th scope="col">Claims (USD)</th>
-                            <th scope="col">Commission (USD)</th>
-                            <th scope="col">Ceded (USD)</th>
-                            <th scope="col">Cession %</th>
-                            <th scope="col">AI Confidence</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var row in NormalizedRows)
-                        {
+            @if (Filtered.Count == 0)
+            {
+                <div class="empty-state compact-empty">
+                    <span class="empty-ic"><Icon Name="check-circle" Size="34" /></span>
+                    <h3>Nothing here</h3>
+                    <p>No documents match this filter.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-scroll">
+                    <table class="data-table queue-table">
+                        <caption class="visually-hidden">Document work queue</caption>
+                        <thead>
                             <tr>
-                                <td><input type="checkbox" aria-label="@($"Select row {row.LineNumber}")" /></td>
-                                <td>@row.LineNumber</td>
-                                <td>@row.Member</td>
-                                <td>@row.Premium</td>
-                                <td>@row.Claims</td>
-                                <td>@row.Commission</td>
-                                <td>@row.Ceded</td>
-                                <td>@row.Cession</td>
-                                <td><span class="confidence lvl-high">@row.Confidence</span></td>
+                                <th scope="col">Document</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Confidence</th>
+                                <th scope="col">Checks</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Review</th>
+                                <th scope="col">Updated</th>
+                                <th scope="col"><span class="visually-hidden">Open</span></th>
                             </tr>
-                        }
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="3">Total</td>
-                            <td>@ColumnTotal("Premium", "Premium (USD)")</td>
-                            <td>@ColumnTotal("Claims", "Claims (USD)")</td>
-                            <td>@ColumnTotal("Commission", "Commission (USD)")</td>
-                            <td>@ColumnTotal("Net Ceded", "Ceded", "Ceded (USD)")</td>
-                            <td>@RepresentativeCession</td>
-                            <td>@CockpitFormat.PercentWhole(_activeDetail?.Confidence ?? 0)</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </section>
-
-        <section class="card card-pad-0 review-queue-compact" id="review-queue">
-            <div class="card-head">
-                <div class="head-title"><Icon Name="queue" Size="20" /><h2>Review Queue</h2></div>
-                <div class="head-tools"><span class="pill tone-slate">@Filtered.Count of @_documents.Count</span></div>
-            </div>
-            <div class="table-scroll">
-                <table class="data-table">
-                    <caption class="visually-hidden">Document review queue</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">Document</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Review</th>
-                            <th scope="col">Confidence</th>
-                            <th scope="col">Exceptions</th>
-                            <th scope="col">Updated</th>
-                            <th scope="col"><span class="visually-hidden">Actions</span></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var doc in Filtered)
-                        {
-                            <tr>
-                                <td>
-                                    <div class="cell-file">
-                                        <span class="file-ic"><Icon Name="file" Size="18" /></span>
-                                        <div class="cell-stack">
-                                            <a class="cell-strong" href="@ReviewHref(doc.Id)">@doc.FileName</a>
-                                            <span class="cell-sub">@CockpitFormat.DocumentTypeLabel(doc.DocumentType)</span>
+                        </thead>
+                        <tbody>
+                            @foreach (var doc in Filtered)
+                            {
+                                <tr class="row-link" @onclick="@(() => Open(doc.Id))">
+                                    <td>
+                                        <div class="cell-file">
+                                            <span class="file-ic"><Icon Name="file" Size="18" /></span>
+                                            <span class="cell-strong">@doc.FileName</span>
                                         </div>
-                                    </div>
-                                </td>
-                                <td><StatusPill Status="doc.Status" /></td>
-                                <td><ReviewPill State="doc.ReviewState" /></td>
-                                <td><ConfidenceBadge Value="doc.Confidence" /></td>
-                                <td><span class="pill @CockpitFormat.ExceptionTone(doc.ExceptionCount)">@doc.ExceptionCount</span></td>
-                                <td class="cell-sub">@CockpitFormat.RelativeTime(doc.UpdatedAt, _now)</td>
-                                <td><a class="btn btn-subtle" href="@ReviewHref(doc.Id)">Open <Icon Name="arrow-right" Size="16" /></a></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                                    </td>
+                                    <td class="cell-sub">@CockpitFormat.DocumentTypeLabel(doc.DocumentType)</td>
+                                    <td><ConfidenceBadge Value="doc.Confidence" /></td>
+                                    <td><span class="pill @CockpitFormat.ExceptionTone(doc.ExceptionCount)">@doc.ExceptionCount</span></td>
+                                    <td><StatusPill Status="doc.Status" /></td>
+                                    <td><ReviewPill State="doc.ReviewState" /></td>
+                                    <td class="cell-sub">@CockpitFormat.RelativeTime(doc.UpdatedAt, _now)</td>
+                                    <td><a class="btn btn-subtle" href="@ReviewHref(doc.Id)" @onclick:stopPropagation="true">Open <Icon Name="arrow-right" Size="16" /></a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </section>
     }
 </div>
 
 @code {
+    private enum QueueFilter { All, NeedsReview, Clean }
+
     private readonly record struct Toast(string Kind, string Message);
-    private readonly record struct NormalizedRow(int LineNumber, string Member, string Premium, string Claims, string Commission, string Ceded, string Cession, string Confidence);
 
     private List<DocumentSummary> _documents = [];
-    private DocumentDetail? _activeDetail;
     private Metrics _metrics = Metrics.Empty;
     private string _search = string.Empty;
+    private QueueFilter _filter = QueueFilter.All;
     private bool _loading = true;
     private bool _uploading;
     private Toast? _toast;
     private DateTimeOffset _now = DateTimeOffset.UtcNow;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await ReloadAsync();
-    }
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
 
     private async Task ReloadAsync()
     {
@@ -357,12 +191,9 @@
         StateHasChanged();
         try
         {
-            _documents = [.. (await Workflow.ListAsync(CancellationToken.None)).OrderByDescending(d => d.UpdatedAt)];
+            _documents = [.. (await Workflow.ListAsync(CancellationToken.None)).OrderByDescending(document => document.UpdatedAt)];
             _metrics = Metrics.From(_documents);
             _now = DateTimeOffset.UtcNow;
-            var activeSummary = _documents.FirstOrDefault(document => document.Status == DocumentStatus.Extracted)
-                ?? _documents.FirstOrDefault();
-            _activeDetail = activeSummary is null ? null : await Workflow.GetAsync(activeSummary.Id, CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -393,231 +224,59 @@
             buffer.Position = 0;
 
             var result = await Workflow.IngestAsync(file.Name, file.ContentType, buffer, CancellationToken.None);
-            _toast = new Toast("ok", $"{result.FileName} uploaded");
-            await ReloadAsync();
+            _toast = new Toast("ok", $"{result.FileName} imported — opening review…");
+            Nav.NavigateTo($"review/{result.Id}");
         }
         catch (Exception ex)
         {
-            _toast = new Toast("err", $"Upload failed: {ex.Message}");
-        }
-        finally
-        {
+            _toast = new Toast("err", $"Import failed: {ex.Message}");
             _uploading = false;
         }
     }
 
+    private void SetFilter(QueueFilter filter) => _filter = filter;
+
+    private void Open(Guid id) => Nav.NavigateTo($"review/{id}");
+
     private string ConfidenceValue => _metrics.Extracted == 0 ? "—" : CockpitFormat.Percent(_metrics.AvgConfidence);
 
-    private string DocumentsFoot => _metrics.Extracted == 0 ? "Ready for intake" : $"{_metrics.Extracted} extracted";
+    private string DocumentsFoot => _metrics.Extracted == 0 ? "ready" : $"{_metrics.Extracted} processed";
 
-    private string ConfidenceFoot => _metrics.Extracted == 0 ? "No extracted documents" : $"across {_metrics.Extracted} documents";
+    private string ConfidenceFoot => _metrics.Extracted == 0 ? "no data yet" : $"across {_metrics.Extracted}";
 
-    private string ExceptionsFoot => _metrics.TotalExceptions == 0 ? "No open exceptions" : $"{_metrics.Flagged} documents flagged";
+    private string ExceptionsFoot => _metrics.TotalExceptions == 0 ? "all clear" : $"{_metrics.Flagged} flagged";
 
-    private string PendingFoot => _metrics.Pending == 0 ? "Nothing pending" : $"{_metrics.Approved} approved so far";
+    private string PendingFoot => _metrics.Pending == 0 ? "all caught up" : $"{_metrics.Approved} approved";
 
-    private IReadOnlyList<DocumentSummary> Chronological => [.. _documents.OrderBy(document => document.CreatedAt)];
-
-    // Sparklines are drawn from REAL document data (or hidden when there are too few documents).
-    private IReadOnlyList<double>? DocumentsSeries => ToSeries(Chronological.Select((_, index) => (double)(index + 1)));
-
-    private IReadOnlyList<double>? ConfidenceSeries =>
-        ToSeries(Chronological.Where(document => document.Status == DocumentStatus.Extracted).Select(document => document.Confidence * 100));
-
-    private IReadOnlyList<double>? ExceptionsSeries => ToSeries(Chronological.Select(document => (double)document.ExceptionCount));
-
-    private IReadOnlyList<double>? PendingSeries
+    private List<DocumentSummary> Filtered
     {
         get
         {
-            var running = 0;
-            return ToSeries(Chronological.Select(document =>
-            {
-                if (document.ReviewState == ReviewState.Pending)
-                {
-                    running++;
-                }
+            IEnumerable<DocumentSummary> query = _documents;
 
-                return (double)running;
-            }));
+            query = _filter switch
+            {
+                QueueFilter.NeedsReview => query.Where(document => document.ExceptionCount > 0 || document.ReviewState == ReviewState.Pending),
+                QueueFilter.Clean => query.Where(document => document.ExceptionCount == 0),
+                _ => query
+            };
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                query = query.Where(document =>
+                    document.FileName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                    CockpitFormat.DocumentTypeLabel(document.DocumentType).Contains(_search, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return [.. query];
         }
     }
 
-    private static IReadOnlyList<double>? ToSeries(IEnumerable<double> values)
+    private static string ReviewHref(Guid id) => $"review/{id}";
+
+    private readonly record struct Metrics(int Total, int Extracted, double AvgConfidence, int TotalExceptions, int Flagged, int Pending, int Approved)
     {
-        var list = values.ToList();
-        return list.Count >= 2 ? list : null;
-    }
-
-    private string ActiveDocumentFile => _activeDetail?.FileName ?? "No active document";
-
-    private string ActiveReviewHref => _activeDetail is null ? "#review-queue" : ReviewHref(_activeDetail.Id);
-
-    private string ActiveExportHref => _activeDetail is null ? "#" : $"api/documents/{_activeDetail.Id}/export?format=csv";
-
-    private int PreviewPageCount => Math.Clamp((_activeDetail?.Tables.Count ?? 0) + 1, 1, 6);
-
-    private string PreviewText => string.IsNullOrWhiteSpace(_activeDetail?.ParsedMarkdown)
-        ? "No preview text available."
-        : _activeDetail.ParsedMarkdown;
-
-    private ExtractedTable? PreviewTable => _activeDetail?.Tables.FirstOrDefault(table => table.Rows.Count > 0);
-
-    private List<ExtractedField> ActiveFields => _activeDetail?.Fields
-        .Where(extracted => !string.IsNullOrWhiteSpace(extracted.Value))
-        .OrderByDescending(extracted => extracted.Confidence)
-        .ToList() ?? [];
-
-    // The active document's findings, worst agreement first: reconciliation breaks lead,
-    // generic notes follow. This is what the dashboard exception panel shows.
-    private IReadOnlyList<ExtractionIssue> ActiveExceptions => _activeDetail is null
-        ? []
-        : [.. _activeDetail.Exceptions
-            .OrderByDescending(issue => issue.IsReconciliation)
-            .ThenBy(issue => issue.Confidence)
-            .Take(8)];
-
-    private IReadOnlyList<NormalizedRow> NormalizedRows
-    {
-        get
-        {
-            if (_activeDetail is null)
-            {
-                return [];
-            }
-
-            var table = _activeDetail.Tables.FirstOrDefault(candidate => candidate.Rows.Count > 0);
-            if (table is not null)
-            {
-                return table.Rows.Select((row, index) => new NormalizedRow(
-                    index + 1,
-                    RowValue(row, "Member", "Cedent", "Line of Business"),
-                    MoneyFormatter.Money(RowValue(row, "Premium", "Premium (USD)")),
-                    MoneyFormatter.Money(RowValue(row, "Claims", "Claims (USD)")),
-                    MoneyFormatter.Money(RowValue(row, "Commission", "Commission (USD)")),
-                    MoneyFormatter.Money(RowValue(row, "Net Ceded", "Ceded", "Ceded (USD)")),
-                    RowValue(row, "Cession %", "Cession", "Share"),
-                    CockpitFormat.PercentWhole(_activeDetail.Confidence))).ToList();
-            }
-
-            if (ActiveFields.Count == 0)
-            {
-                return [];
-            }
-
-            return [new NormalizedRow(
-                1,
-                FinancialField("Line of Business"),
-                MoneyFormatter.Money(FinancialField("Premium")),
-                MoneyFormatter.Money(FinancialField("Claims")),
-                MoneyFormatter.Money(FinancialField("Commission")),
-                EstimatedCeded,
-                FinancialField("Cession %", "Cession"),
-                CockpitFormat.PercentWhole(_activeDetail.Confidence))];
-        }
-    }
-
-    // Single-row fallback (document has fields but no line-item table): ceded ≈ premium × cession.
-    private string EstimatedCeded =>
-        MoneyFormatter.TryParseAmount(FinancialField("Premium"), out var premium)
-        && MoneyFormatter.TryParsePercent(FinancialField("Cession %", "Cession"), out var cession)
-            ? MoneyFormatter.Money(premium * cession / 100m)
-            : "—";
-
-    private List<DocumentSummary> Filtered => string.IsNullOrWhiteSpace(_search)
-        ? _documents
-        : [.. _documents.Where(d =>
-            d.FileName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
-            CockpitFormat.DocumentTypeLabel(d.DocumentType).Contains(_search, StringComparison.OrdinalIgnoreCase))];
-
-    private string ReviewHref(Guid id) => $"review/{id}";
-
-    private string FinancialField(params string[] names)
-    {
-        if (_activeDetail is null)
-        {
-            return "—";
-        }
-
-        foreach (var name in names)
-        {
-            var extractedField = _activeDetail.Fields.FirstOrDefault(candidate => candidate.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(extractedField?.Value))
-            {
-                return extractedField.Value;
-            }
-        }
-
-        return "—";
-    }
-
-    // Sums a money column across the active document's line items (the honest table total).
-    private string ColumnTotal(params string[] names)
-    {
-        var table = PreviewTable;
-        var column = table?.Headers.FirstOrDefault(header => names.Any(name => header.Equals(name, StringComparison.OrdinalIgnoreCase)));
-        if (table is null || column is null)
-        {
-            return "—";
-        }
-
-        var total = 0m;
-        var any = false;
-        foreach (var row in table.Rows)
-        {
-            if (row.TryGetValue(column, out var cell) && MoneyFormatter.TryParseAmount(cell, out var amount))
-            {
-                total += amount;
-                any = true;
-            }
-        }
-
-        return any ? MoneyFormatter.Money(total) : "—";
-    }
-
-    // The cession rate the line items carry (first non-empty value).
-    private string RepresentativeCession
-    {
-        get
-        {
-            var table = PreviewTable;
-            var column = table?.Headers.FirstOrDefault(header =>
-                header.Equals("Cession %", StringComparison.OrdinalIgnoreCase)
-                || header.Equals("Cession", StringComparison.OrdinalIgnoreCase)
-                || header.Equals("Share", StringComparison.OrdinalIgnoreCase));
-            if (table is null || column is null)
-            {
-                return "—";
-            }
-
-            foreach (var row in table.Rows)
-            {
-                if (row.TryGetValue(column, out var cell) && !string.IsNullOrWhiteSpace(cell))
-                {
-                    return MoneyFormatter.Percent(cell);
-                }
-            }
-
-            return "—";
-        }
-    }
-
-    private static string RowValue(IReadOnlyDictionary<string, string> row, params string[] names)
-    {
-        foreach (var name in names)
-        {
-            if (row.TryGetValue(name, out var value) && !string.IsNullOrWhiteSpace(value))
-            {
-                return value;
-            }
-        }
-
-        return "—";
-    }
-
-    private readonly record struct Metrics(int Total, int Extracted, double AvgConfidence, int TotalExceptions, int Flagged, int Pending, int Approved, int NeedsAttention)
-    {
-        public static Metrics Empty => new(0, 0, 0, 0, 0, 0, 0, 0);
+        public static Metrics Empty => new(0, 0, 0, 0, 0, 0, 0);
 
         public static Metrics From(IReadOnlyList<DocumentSummary> docs)
         {
@@ -626,16 +285,15 @@
                 return Empty;
             }
 
-            var extracted = docs.Where(d => d.Status == DocumentStatus.Extracted).ToList();
+            var extracted = docs.Where(document => document.Status == DocumentStatus.Extracted).ToList();
             return new Metrics(
                 docs.Count,
                 extracted.Count,
-                extracted.Count > 0 ? extracted.Average(d => d.Confidence) : 0,
-                docs.Sum(d => d.ExceptionCount),
-                docs.Count(d => d.ExceptionCount > 0),
-                docs.Count(d => d.ReviewState == ReviewState.Pending),
-                docs.Count(d => d.ReviewState == ReviewState.Approved),
-                docs.Count(d => !CockpitFormat.IsActionable(d.Status)));
+                extracted.Count > 0 ? extracted.Average(document => document.Confidence) : 0,
+                docs.Sum(document => document.ExceptionCount),
+                docs.Count(document => document.ExceptionCount > 0),
+                docs.Count(document => document.ReviewState == ReviewState.Pending),
+                docs.Count(document => document.ReviewState == ReviewState.Approved));
         }
     }
 }

@@ -7,28 +7,12 @@
     <div class="rail-nav">
         <NavLink class="rail-link" href="/" Match="NavLinkMatch.All">
             <Icon Name="dashboard" Class="rail-icon" />
-            <span>Dashboard</span>
+            <span>Home</span>
         </NavLink>
-        <a class="rail-link" href="/#intake">
-            <Icon Name="intake" Class="rail-icon" />
-            <span>Intake</span>
-        </a>
-        <a class="rail-link" href="/#review-queue">
+        <NavLink class="rail-link" href="/documents" Match="NavLinkMatch.Prefix">
             <Icon Name="queue" Class="rail-icon" />
-            <span>Review Queue</span>
-        </a>
-        <a class="rail-link" href="/#normalized-rows">
-            <Icon Name="table" Class="rail-icon" />
-            <span>Bordereaux</span>
-        </a>
-        <a class="rail-link" href="/#normalized-rows">
-            <Icon Name="export" Class="rail-icon" />
-            <span>Exports</span>
-        </a>
-        <a class="rail-link" href="/#exceptions">
-            <Icon Name="alert" Class="rail-icon" />
-            <span>Exceptions</span>
-        </a>
+            <span>Documents</span>
+        </NavLink>
     </div>
 
     <div class="rail-spacer"></div>

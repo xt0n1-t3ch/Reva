@@ -273,3 +273,318 @@ h3 {
         scroll-behavior: auto !important;
     }
 }
+
+/* ── Workspace (epic #26): dense operations dashboard + guided empty state ── */
+.workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 1240px;
+}
+
+/* KPI strip — keep meta readable, cap the sparkline so foot text never wraps oddly */
+.stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.stat-row .kpi-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.stat-row .kpi-label,
+.stat-row .kpi-foot {
+    white-space: nowrap;
+}
+
+/* Slim import bar (populated state) */
+.import-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: var(--r-card);
+    border: 1.5px dashed var(--border-strong);
+    background:
+        linear-gradient(90deg, var(--accent-soft), transparent 38%),
+        var(--surface-card);
+    cursor: pointer;
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.import-bar:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-card);
+}
+
+.import-bar input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.import-bar.is-busy {
+    pointer-events: none;
+    border-style: solid;
+    border-color: var(--accent);
+}
+
+.import-bar-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: 11px;
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.import-bar-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.import-bar-text strong {
+    color: var(--text-strong);
+    font-size: 14px;
+}
+
+.import-bar-text span {
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.import-bar-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+/* Work queue */
+.queue-card .card-head {
+    border-bottom: 1px solid var(--border);
+}
+
+.seg-filter {
+    display: inline-flex;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--r-control);
+    padding: 3px;
+    gap: 2px;
+}
+
+.seg {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.seg:hover {
+    color: var(--text-strong);
+}
+
+.seg.is-on {
+    background: var(--surface-card);
+    color: var(--accent);
+    box-shadow: var(--shadow-card);
+}
+
+.queue-table tbody tr.row-link {
+    cursor: pointer;
+}
+
+.cell-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.file-ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 9px;
+    background: var(--surface-inset);
+    color: var(--accent);
+    border: 1px solid var(--border);
+}
+
+.cell-strong {
+    color: var(--text-strong);
+    font-weight: 600;
+}
+
+/* Guided empty / onboarding state */
+.onboard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(330px, 0.9fr);
+    gap: 24px;
+    align-items: center;
+    padding: 14px 6px;
+}
+
+.onboard-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.onboard-copy .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.onboard-copy h2 {
+    font-size: 28px;
+    line-height: 1.16;
+    margin: 0;
+    max-width: 18ch;
+}
+
+.onboard-copy > p {
+    color: var(--text-muted);
+    font-size: 14.5px;
+    margin: 0;
+    max-width: 54ch;
+}
+
+.onboard-steps {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.onboard-steps li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.step-n {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.onboard-steps li div {
+    display: flex;
+    flex-direction: column;
+}
+
+.onboard-steps strong {
+    font-size: 14px;
+    color: var(--text-strong);
+}
+
+.onboard-steps span {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* The big dropzone (empty state) */
+.dropzone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    padding: 42px 28px;
+    border-radius: var(--r-card);
+    border: 1.5px dashed var(--border-strong);
+    background:
+        radial-gradient(420px 200px at 50% 0%, var(--accent-soft), transparent 70%),
+        var(--surface-card);
+    cursor: pointer;
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.dropzone:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-card);
+    transform: translateY(-1px);
+}
+
+.dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.dropzone.is-busy {
+    pointer-events: none;
+    border-style: solid;
+    border-color: var(--accent);
+}
+
+.dropzone-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.dropzone strong {
+    font-size: 16px;
+    color: var(--text-strong);
+}
+
+.dropzone-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+@media (max-width: 1080px) {
+    .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .onboard-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+    .stat-row { grid-template-columns: 1fr; }
+    .import-bar-cta { display: none; }
+}
