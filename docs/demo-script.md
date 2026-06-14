@@ -37,8 +37,9 @@ notices. See `docs/research/reinsurance-landscape.md` for the domain grounding.
    Edit a field; it shows as *Reviewed* once approved.
 4. **Checks** — the Detected-vs-Expected reconciliation cards, computed from the data, ranked
    by how badly they disagree.
-5. **Export** — JSON or CSV in one click. (Customizable export templates + Lloyd's CRS 5.2 are
-   on the roadmap, issues #28/#34.)
+5. **Export** — pick a template from the Export menu (Bordereau line items, Lloyd's CRS 5.2,
+   Canonical CSV, Full JSON) and download as Excel/CSV/JSON. Build your own on the **Export
+   templates** page: choose columns, rename headers, pick the format, watch the live preview.
 
 ## Why it is built well (talking points)
 

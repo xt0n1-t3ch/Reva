@@ -893,3 +893,222 @@ mark.cite {
     .review-side { position: static; }
     .decision-form-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Export templates (epic #28) ───────────────────────────────────────── */
+.templates-content {
+    max-width: 1320px;
+}
+
+.templates-grid {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.tpl-list {
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tpl-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 13px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.tpl-item:hover {
+    background: var(--surface-muted);
+}
+
+.tpl-item.is-active {
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.tpl-item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.tpl-item-main strong {
+    color: var(--text-strong);
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.tpl-item-main span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.tpl-badges {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.templates-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.editor-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.editor-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+}
+
+.columns-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.columns-head h3 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.columns-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.column-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.column-from {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.icon-btn-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    background: var(--surface-card);
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.icon-btn-sm:hover {
+    color: var(--red-600);
+    border-color: var(--red-600);
+}
+
+.editor-danger {
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+}
+
+.btn.danger {
+    color: var(--red-600);
+    border-color: color-mix(in srgb, var(--red-600) 35%, transparent);
+}
+
+.btn.danger:hover {
+    background: var(--red-soft);
+}
+
+.preview-foot {
+    margin: 0;
+    padding: 12px 18px 16px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+/* Export dropdown (native <details>) */
+.export-menu {
+    position: relative;
+}
+
+.export-menu > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.export-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.export-menu-panel {
+    position: absolute;
+    right: 0;
+    margin-top: 6px;
+    min-width: 280px;
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-control);
+    box-shadow: var(--shadow-raised);
+    padding: 8px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.export-menu-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-soft);
+    font-weight: 700;
+    padding: 8px 10px 4px;
+}
+
+.export-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    color: var(--text-body);
+    font-size: 13px;
+    transition: background var(--dur) var(--ease);
+}
+
+.export-menu-item:hover {
+    background: var(--surface-muted);
+    color: var(--text-strong);
+}
+
+@media (max-width: 1080px) {
+    .templates-grid { grid-template-columns: 1fr; }
+    .editor-row { grid-template-columns: 1fr; }
+    .column-row { grid-template-columns: 1fr; }
+}

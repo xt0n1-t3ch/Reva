@@ -1,4 +1,5 @@
 using Reva.Core.Documents;
+using Reva.Core.Export;
 using Reva.Core.Reinsurance;
 
 namespace Reva.Core.Contracts;
@@ -67,5 +68,27 @@ public sealed record ExportRecord(
     ReviewState ReviewState,
     IReadOnlyDictionary<string, string> Fields,
     DateTimeOffset ExportedAt);
+
+// One output column: the header the company wants, and the canonical field or table column
+// it pulls from.
+public sealed record ExportColumn(string Header, string Source);
+
+// A reusable, customizable export layout. Built-in templates ship with the app and cannot be
+// deleted; user templates are fully editable.
+public sealed record ExportTemplate(
+    Guid Id,
+    string Name,
+    ExportFormat Format,
+    IReadOnlyList<ExportColumn> Columns,
+    bool IsBuiltIn);
+
+// The editable shape used to create or update a template.
+public sealed record ExportTemplateDraft(string Name, ExportFormat Format, IReadOnlyList<ExportColumn> Columns);
+
+// A small rendered sample of what a template will produce, for the live preview.
+public sealed record ExportPreview(IReadOnlyList<string> Headers, IReadOnlyList<IReadOnlyList<string>> Rows);
+
+// A rendered export ready to download.
+public sealed record ExportFile(byte[] Content, string ContentType, string FileName);
 
 

@@ -2,6 +2,7 @@
 @rendermode @(new InteractiveServerRenderMode(false))
 @inject NavigationManager Nav
 @inject IDocumentWorkflow Workflow
+@inject IExportTemplateStore Templates
 
 <PageTitle>@(_detail is null ? "Review" : $"Review · {_detail.FileName}")</PageTitle>
 
@@ -17,6 +18,21 @@
     @if (_detail is not null && CanAct)
     {
         <div class="topbar-tools review-topbar-tools">
+            <details class="export-menu">
+                <summary class="btn btn-ghost"><Icon Name="export" Size="16" /> Export <Icon Name="chevron-down" Size="14" /></summary>
+                <div class="export-menu-panel">
+                    <span class="export-menu-label">Templates</span>
+                    @foreach (var template in _templates)
+                    {
+                        <a class="export-menu-item" href="@TemplateExportHref(template.Id)" download>
+                            <span>@template.Name</span>
+                            <span class="pill tone-blue">@template.Format.ToString().ToUpperInvariant()</span>
+                        </a>
+                    }
+                    <span class="export-menu-label">Quick</span>
+                    <a class="export-menu-item" href="@ExportHref("raw")" download><span>Raw parsed text</span><span class="pill tone-slate">TXT</span></a>
+                </div>
+            </details>
             <a class="btn btn-ghost" href="@ExportHref("json")" download aria-label="Export as JSON"><Icon Name="download" Size="16" /> JSON</a>
             <a class="btn btn-ghost" href="@ExportHref("csv")" download aria-label="Export as CSV"><Icon Name="download" Size="16" /> CSV</a>
             <button class="btn btn-primary" type="button" @onclick="ApproveAsync" disabled="@(_submitting || !CanSubmit)"><Icon Name="check" Size="16" /> Approve</button>
@@ -233,6 +249,7 @@
 
     private DocumentDetail? _detail;
     private List<FieldEdit> _fields = [];
+    private List<ExportTemplate> _templates = [];
     private string _reviewer = "Underwriting Team";
     private string _notes = string.Empty;
     private bool _loading = true;
@@ -247,6 +264,8 @@
 
     private string ExportHref(string format) => $"api/documents/{Id}/export?format={format}";
 
+    private string TemplateExportHref(Guid templateId) => $"api/documents/{Id}/export?templateId={templateId}";
+
     private async Task LoadAsync()
     {
         _loading = true;
@@ -255,6 +274,7 @@
         try
         {
             _detail = await Workflow.GetAsync(Id, CancellationToken.None);
+            _templates = [.. await Templates.ListAsync(CancellationToken.None)];
             BindFields();
         }
         catch (Exception ex)

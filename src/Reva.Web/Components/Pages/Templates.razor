@@ -1,0 +1,368 @@
+@page "/templates"
+@rendermode @(new InteractiveServerRenderMode(false))
+@inject IExportTemplateStore Store
+@inject IDocumentExporter Exporter
+@inject IDocumentWorkflow Workflow
+
+<PageTitle>Export templates · @Brand.Product</PageTitle>
+
+<header class="cockpit-topbar cockpit-topbar-workbench">
+    <div class="topbar-titles">
+        <h1>Export templates</h1>
+        <p>Decide exactly how your data leaves Reve — columns, labels, and format. Fully customizable.</p>
+    </div>
+    <div class="topbar-tools">
+        <button class="btn btn-primary" type="button" @onclick="NewTemplate"><Icon Name="plus" Size="18" /> New template</button>
+    </div>
+</header>
+
+<div class="cockpit-content templates-content">
+    @if (_toast is not null)
+    {
+        <div class="toast @_toast.Value.Kind" role="status">
+            <Icon Name="@(_toast.Value.Kind == "ok" ? "check-circle" : "alert")" Size="18" />
+            <span>@_toast.Value.Message</span>
+        </div>
+    }
+
+    <div class="templates-grid">
+        <aside class="card card-pad-0 templates-list" aria-label="Templates">
+            <div class="card-head"><div class="head-title"><Icon Name="export" Size="20" /><h2>Templates</h2></div></div>
+            <ul class="tpl-list">
+                @foreach (var template in _templates)
+                {
+                    <li>
+                        <button type="button" class="tpl-item @(IsCurrent(template) ? "is-active" : null)" @onclick="() => Select(template)">
+                            <span class="tpl-item-main">
+                                <strong>@template.Name</strong>
+                                <span>@template.Columns.Count column@(template.Columns.Count == 1 ? "" : "s")</span>
+                            </span>
+                            <span class="tpl-badges">
+                                <span class="pill tone-blue">@template.Format.ToString().ToUpperInvariant()</span>
+                                @if (template.IsBuiltIn)
+                                {
+                                    <span class="pill tone-slate">Built-in</span>
+                                }
+                            </span>
+                        </button>
+                    </li>
+                }
+            </ul>
+        </aside>
+
+        <section class="templates-editor">
+            <article class="card editor-card">
+                <div class="card-head">
+                    <div class="head-title"><Icon Name="edit" Size="20" /><h2>@(_isNew ? "New template" : _name)</h2></div>
+                    <div class="head-tools">
+                        @if (!_isNew && _selected is not null)
+                        {
+                            <button class="btn btn-ghost" type="button" @onclick="DuplicateAsync"><Icon Name="file" Size="16" /> Duplicate</button>
+                        }
+                        @if (CanEdit)
+                        {
+                            <button class="btn btn-primary" type="button" @onclick="SaveAsync" disabled="@(!CanSave)"><Icon Name="check" Size="16" /> Save</button>
+                        }
+                    </div>
+                </div>
+
+                @if (!CanEdit)
+                {
+                    <p class="review-help"><Icon Name="shield" Size="14" /> This is a built-in template. Duplicate it to customize the copy.</p>
+                }
+
+                <div class="editor-row">
+                    <label class="decision-input-group" for="tpl-name">
+                        <span>Name</span>
+                        <input id="tpl-name" class="field-input" @bind="_name" @bind:event="oninput" disabled="@(!CanEdit)" />
+                    </label>
+                    <label class="decision-input-group" for="tpl-format">
+                        <span>Format</span>
+                        <select id="tpl-format" class="field-input" @bind="_format" disabled="@(!CanEdit)">
+                            <option value="@ExportFormat.Csv">CSV (.csv)</option>
+                            <option value="@ExportFormat.Excel">Excel (.xlsx)</option>
+                            <option value="@ExportFormat.Json">JSON (.json)</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="columns-head">
+                    <h3>Columns</h3>
+                    @if (CanEdit)
+                    {
+                        <button class="btn btn-subtle" type="button" @onclick="AddColumn"><Icon Name="plus" Size="14" /> Add column</button>
+                    }
+                </div>
+                <div class="columns-editor">
+                    @for (var i = 0; i < _columns.Count; i++)
+                    {
+                        var index = i;
+                        var col = _columns[index];
+                        <div class="column-row">
+                            <input class="field-input" placeholder="Column header" @bind="col.Header" @bind:event="oninput" disabled="@(!CanEdit)" aria-label="Column header" />
+                            <span class="column-from">from</span>
+                            <select class="field-input" @bind="col.Source" disabled="@(!CanEdit)" aria-label="Source field">
+                                @if (!_sourceOptions.Contains(col.Source) && !string.IsNullOrWhiteSpace(col.Source))
+                                {
+                                    <option value="@col.Source">@col.Source</option>
+                                }
+                                @foreach (var option in _sourceOptions)
+                                {
+                                    <option value="@option">@option</option>
+                                }
+                            </select>
+                            @if (CanEdit)
+                            {
+                                <button class="icon-btn-sm" type="button" @onclick="() => RemoveColumn(index)" aria-label="Remove column"><Icon Name="x-circle" Size="18" /></button>
+                            }
+                        </div>
+                    }
+                    @if (_columns.Count == 0)
+                    {
+                        <p class="review-help">No columns yet. Add one to start shaping the export.</p>
+                    }
+                </div>
+
+                @if (CanEdit && !_isNew && _selected is not null)
+                {
+                    <div class="editor-danger">
+                        <button class="btn btn-ghost danger" type="button" @onclick="DeleteAsync"><Icon Name="x-circle" Size="16" /> Delete template</button>
+                    </div>
+                }
+            </article>
+
+            <article class="card card-pad-0 preview-card">
+                <div class="card-head">
+                    <div class="head-title"><Icon Name="table" Size="20" /><h2>Live preview</h2></div>
+                    <div class="head-tools">
+                        @if (_sample is not null)
+                        {
+                            <span class="pill tone-slate">@_sample.FileName</span>
+                        }
+                    </div>
+                </div>
+                @if (_sample is null)
+                {
+                    <div class="empty-state compact-empty">
+                        <span class="empty-ic"><Icon Name="inbox" Size="34" /></span>
+                        <h3>No sample document</h3>
+                        <p>Import a document to preview templates against it.</p>
+                    </div>
+                }
+                else if (Preview is { } preview && preview.Headers.Count > 0)
+                {
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    @foreach (var header in preview.Headers)
+                                    {
+                                        <th scope="col">@header</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in preview.Rows)
+                                {
+                                    <tr>
+                                        @foreach (var cell in row)
+                                        {
+                                            <td>@(string.IsNullOrWhiteSpace(cell) ? "—" : cell)</td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="preview-foot">Showing @preview.Rows.Count row@(preview.Rows.Count == 1 ? "" : "s") · @preview.Headers.Count column@(preview.Headers.Count == 1 ? "" : "s") · @_format.ToString().ToUpperInvariant()</p>
+                }
+                else
+                {
+                    <div class="empty-state compact-empty">
+                        <h3>Add a column</h3>
+                        <p>The preview appears once the template has at least one column.</p>
+                    </div>
+                }
+            </article>
+        </section>
+    </div>
+</div>
+
+@code {
+    private sealed class ColumnEdit
+    {
+        public string Header { get; set; } = "";
+        public string Source { get; set; } = "";
+    }
+
+    private readonly record struct Toast(string Kind, string Message);
+
+    private List<ExportTemplate> _templates = [];
+    private ExportTemplate? _selected;
+    private bool _isNew;
+    private string _name = string.Empty;
+    private ExportFormat _format = ExportFormat.Csv;
+    private List<ColumnEdit> _columns = [];
+    private DocumentDetail? _sample;
+    private List<string> _sourceOptions = [];
+    private Toast? _toast;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+        await LoadSampleAsync();
+        if (_templates.Count > 0)
+        {
+            Select(_templates[0]);
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        _templates = [.. await Store.ListAsync(CancellationToken.None)];
+    }
+
+    private async Task LoadSampleAsync()
+    {
+        var summaries = await Workflow.ListAsync(CancellationToken.None);
+        // Prefer a document that has line items, so previews show multiple rows.
+        foreach (var summary in summaries.OrderByDescending(document => document.UpdatedAt))
+        {
+            var detail = await Workflow.GetAsync(summary.Id, CancellationToken.None);
+            if (detail is null)
+            {
+                continue;
+            }
+
+            _sample ??= detail;
+            if (detail.Tables.Any(table => table.Rows.Count > 0))
+            {
+                _sample = detail;
+                break;
+            }
+        }
+
+        BuildSourceOptions();
+    }
+
+    private void BuildSourceOptions()
+    {
+        var options = new List<string>(ReinsuranceFieldNames.Canonical);
+        var tableHeaders = _sample?.Tables.FirstOrDefault(table => table.Rows.Count > 0)?.Headers ?? [];
+        foreach (var header in tableHeaders)
+        {
+            if (!options.Contains(header, StringComparer.OrdinalIgnoreCase))
+            {
+                options.Add(header);
+            }
+        }
+
+        _sourceOptions = options;
+    }
+
+    private bool IsCurrent(ExportTemplate template) => !_isNew && _selected?.Id == template.Id;
+
+    private bool CanEdit => _isNew || (_selected is not null && !_selected.IsBuiltIn);
+
+    private bool CanSave => CanEdit && !string.IsNullOrWhiteSpace(_name) && _columns.Count > 0 && _columns.All(column => !string.IsNullOrWhiteSpace(column.Header));
+
+    private void Select(ExportTemplate template)
+    {
+        _isNew = false;
+        _selected = template;
+        _name = template.Name;
+        _format = template.Format;
+        _columns = [.. template.Columns.Select(column => new ColumnEdit { Header = column.Header, Source = column.Source })];
+    }
+
+    private void NewTemplate()
+    {
+        _isNew = true;
+        _selected = null;
+        _name = "New template";
+        _format = ExportFormat.Csv;
+        _columns = [new ColumnEdit { Header = ReinsuranceFieldNames.Cedent, Source = ReinsuranceFieldNames.Cedent }];
+    }
+
+    private void AddColumn() => _columns.Add(new ColumnEdit { Header = _sourceOptions.FirstOrDefault() ?? "", Source = _sourceOptions.FirstOrDefault() ?? "" });
+
+    private void RemoveColumn(int index)
+    {
+        if (index >= 0 && index < _columns.Count)
+        {
+            _columns.RemoveAt(index);
+        }
+    }
+
+    private ExportTemplate DraftTemplate => new(
+        _selected?.Id ?? Guid.Empty,
+        _name,
+        _format,
+        [.. _columns.Select(column => new ExportColumn(column.Header, column.Source))],
+        false);
+
+    private ExportPreview? Preview => _sample is null ? null : Exporter.Preview(_sample, DraftTemplate);
+
+    private async Task SaveAsync()
+    {
+        if (!CanSave)
+        {
+            return;
+        }
+
+        var draft = new ExportTemplateDraft(_name.Trim(), _format, [.. _columns.Select(column => new ExportColumn(column.Header.Trim(), column.Source))]);
+        try
+        {
+            var saved = _isNew
+                ? await Store.CreateAsync(draft, CancellationToken.None)
+                : await Store.UpdateAsync(_selected!.Id, draft, CancellationToken.None);
+
+            await ReloadAsync();
+            if (saved is not null)
+            {
+                Select(saved);
+                _toast = new Toast("ok", $"Saved “{saved.Name}”.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _toast = new Toast("err", $"Could not save: {ex.Message}");
+        }
+    }
+
+    private async Task DuplicateAsync()
+    {
+        if (_selected is null)
+        {
+            return;
+        }
+
+        var copy = await Store.DuplicateAsync(_selected.Id, CancellationToken.None);
+        await ReloadAsync();
+        if (copy is not null)
+        {
+            Select(copy);
+            _toast = new Toast("ok", $"Duplicated to “{copy.Name}”.");
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_selected is null || _selected.IsBuiltIn)
+        {
+            return;
+        }
+
+        await Store.DeleteAsync(_selected.Id, CancellationToken.None);
+        await ReloadAsync();
+        _toast = new Toast("ok", "Template deleted.");
+        if (_templates.Count > 0)
+        {
+            Select(_templates[0]);
+        }
+        else
+        {
+            NewTemplate();
+        }
+    }
+}

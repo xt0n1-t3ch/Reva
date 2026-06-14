@@ -42,12 +42,17 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
 }
 
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+// Re-execute to the friendly not-found page for UI navigation only. API routes must keep their
+// raw status codes (otherwise a JSON 404 gets re-run against the Razor page and surfaces as 405).
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/api"),
+    branch => branch.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true));
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "Reva" }));
 app.MapDocumentEndpoints();
+app.MapTemplateEndpoints();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
