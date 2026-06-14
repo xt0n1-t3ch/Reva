@@ -8,7 +8,9 @@ using Reva.Web.Components;
 using Reva.Web.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
-var launchBrowser = !args.Contains("--no-open", StringComparer.OrdinalIgnoreCase)
+// Whether the end-user escape hatches permit auto-opening a browser. The actual open is
+// further restricted to Production below, so running locally or under tests never spawns a tab.
+var allowBrowserOpen = !args.Contains("--no-open", StringComparer.OrdinalIgnoreCase)
     && !string.Equals(Environment.GetEnvironmentVariable("REVA_NO_OPEN"), "1", StringComparison.OrdinalIgnoreCase);
 var seedDemo = args.Contains("--seed-demo", StringComparer.OrdinalIgnoreCase)
     || string.Equals(Environment.GetEnvironmentVariable("REVA_SEED_DEMO"), "1", StringComparison.OrdinalIgnoreCase);
@@ -51,7 +53,9 @@ app.MapRazorComponents<App>()
 
 await app.StartAsync();
 
-if (launchBrowser)
+// Only the packaged, end-user (Production) launch opens a browser. Local `dotnet run`,
+// integration tests, and the e2e harness all run in Development/Testing and stay quiet.
+if (allowBrowserOpen && app.Environment.IsProduction())
 {
     OpenBrowser(app);
 }
