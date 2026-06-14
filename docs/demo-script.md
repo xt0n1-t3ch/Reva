@@ -43,6 +43,9 @@ notices. See `docs/research/reinsurance-landscape.md` for the domain grounding.
 
 ## Why it is built well (talking points)
 
+- **Customizable**: Settings let you switch theme (light / dark / system), recolour the accent,
+  rename the product, set confidence thresholds, pick a default export template, and manage data
+  — all persisted and applied across the app.
 - **Modular**: parsing, OCR, classification, extraction, and reconciliation are separate,
   swappable pieces behind interfaces — add a parser or an LLM extractor without touching the UI.
 - **Extensible**: never hard-rejects; new document types and export templates slot in.

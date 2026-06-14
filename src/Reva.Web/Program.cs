@@ -30,6 +30,9 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<RevaDbContext>();
     await dbContext.Database.MigrateAsync();
 
+    // Load persisted settings into the runtime holder so the UI reflects them from the first render.
+    await scope.ServiceProvider.GetRequiredService<Reva.Infrastructure.Settings.ISettingsStore>().GetAsync(CancellationToken.None);
+
     if (seedDemo)
     {
         var workflow = scope.ServiceProvider.GetRequiredService<IDocumentWorkflow>();

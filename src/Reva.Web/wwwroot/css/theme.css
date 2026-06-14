@@ -1112,3 +1112,120 @@ mark.cite {
     .editor-row { grid-template-columns: 1fr; }
     .column-row { grid-template-columns: 1fr; }
 }
+
+/* ── Settings (epic #29) ───────────────────────────────────────────────── */
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 920px;
+}
+
+.settings-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.settings-section-head {
+    margin-bottom: 8px;
+}
+
+.settings-section-head h2 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.settings-section-head p {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.setting-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.setting-label strong {
+    color: var(--text-strong);
+    font-size: 14px;
+}
+
+.setting-label span {
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.setting-input {
+    max-width: 320px;
+    flex: 1;
+}
+
+.swatches {
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.swatch {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--surface-card);
+    background: var(--swatch);
+    cursor: pointer;
+    box-shadow: 0 0 0 1px var(--border-strong);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.swatch:hover {
+    transform: scale(1.08);
+}
+
+.swatch.is-on {
+    box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 4px var(--swatch);
+}
+
+.threshold-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 280px;
+}
+
+.threshold-controls label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-body);
+}
+
+.threshold-controls input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+}
+
+.threshold-controls b {
+    min-width: 42px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-strong);
+}

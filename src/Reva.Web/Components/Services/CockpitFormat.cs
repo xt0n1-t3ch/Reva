@@ -1,6 +1,7 @@
 using System.Globalization;
 using Reva.Core.Documents;
 using Reva.Core.Reinsurance;
+using Reva.Core.Settings;
 
 namespace Reva.Web.Components.Services;
 
@@ -12,12 +13,17 @@ public static class CockpitFormat
     public static string PercentWhole(double confidence) =>
         Math.Round(confidence * 100).ToString("0", CultureInfo.InvariantCulture) + "%";
 
-    public static string ConfidenceLevel(double confidence) => confidence switch
+    // Tier thresholds are user-configurable in Settings (RuntimeSettings).
+    public static string ConfidenceLevel(double confidence)
     {
-        >= 0.9 => "lvl-high",
-        >= 0.75 => "lvl-mid",
-        _ => "lvl-low"
-    };
+        var settings = RuntimeSettings.Current;
+        if (confidence < settings.ConfidenceLowMax)
+        {
+            return "lvl-low";
+        }
+
+        return confidence < settings.ConfidenceMediumMax ? "lvl-mid" : "lvl-high";
+    }
 
     public static string StatusTone(DocumentStatus status) => status switch
     {
@@ -64,19 +70,28 @@ public static class CockpitFormat
     };
 
     // Reconciliation agreement tier from a [0,1] score: Low (red), Medium (amber), High (green).
-    public static string AgreementTier(double score) => score switch
+    // Thresholds are user-configurable in Settings.
+    public static string AgreementTier(double score)
     {
-        < 0.6 => "tier-low",
-        < 0.85 => "tier-mid",
-        _ => "tier-high"
-    };
+        var settings = RuntimeSettings.Current;
+        if (score < settings.ConfidenceLowMax)
+        {
+            return "tier-low";
+        }
 
-    public static string AgreementLabel(double score) => score switch
+        return score < settings.ConfidenceMediumMax ? "tier-mid" : "tier-high";
+    }
+
+    public static string AgreementLabel(double score)
     {
-        < 0.6 => "Low",
-        < 0.85 => "Medium",
-        _ => "High"
-    };
+        var settings = RuntimeSettings.Current;
+        if (score < settings.ConfidenceLowMax)
+        {
+            return "Low";
+        }
+
+        return score < settings.ConfidenceMediumMax ? "Medium" : "High";
+    }
 
     public static string SeverityClass(ExceptionSeverity severity) => severity switch
     {
