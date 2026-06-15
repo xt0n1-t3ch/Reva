@@ -19,7 +19,9 @@ public sealed class DocumentWorkflow(
     IDocumentParser parser,
     IReinsuranceClassifier classifier,
     IReinsuranceExtractor extractor,
-    ISchemaMappingService schemaMapping) : IDocumentWorkflow
+    ISchemaMappingService schemaMapping,
+    ILlmFieldExtractor llmExtractor,
+    IExtractionMerger extractionMerger) : IDocumentWorkflow
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
@@ -161,7 +163,9 @@ public sealed class DocumentWorkflow(
 
             // Always run best-effort extraction. Unknown/low-confidence documents are still
             // ingested as reviewable records (the extractor flags them) — never quarantined.
-            var extraction = extractor.Extract(parsed, classification);
+            var deterministic = extractor.Extract(parsed, classification);
+            var proposal = await llmExtractor.ProposeAsync(parsed, deterministic, cancellationToken);
+            var extraction = extractionMerger.Merge(deterministic, proposal);
             var mapped = await schemaMapping.MapAsync(parsed, extraction.Fields, cancellationToken);
             record.Status = DocumentStatus.Extracted.ToString();
             record.DocumentType = extraction.DocumentType.ToString();

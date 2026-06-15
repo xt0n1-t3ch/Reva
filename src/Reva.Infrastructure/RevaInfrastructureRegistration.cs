@@ -19,6 +19,13 @@ public static class RevaInfrastructureRegistration
     public static IServiceCollection AddRevaInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<RevaStorageOptions>(storage => storage.UploadRoot = configuration[RevaConfigurationKeys.StorageUploadRoot] ?? storage.UploadRoot);
+        services.Configure<LlmExtractionOptions>(llm =>
+        {
+            llm.Provider = configuration[RevaConfigurationKeys.LlmProvider] ?? llm.Provider;
+            llm.BaseUrl = configuration[RevaConfigurationKeys.LlmBaseUrl] ?? llm.BaseUrl;
+            llm.Model = configuration[RevaConfigurationKeys.LlmModel] ?? llm.Model;
+            llm.DeterministicOnly = !bool.TryParse(configuration[RevaConfigurationKeys.LlmDeterministicOnly], out var deterministicOnly) || deterministicOnly;
+        });
         services.Configure<DoclingParserOptions>(parser =>
         {
             parser.PythonExecutable = configuration[RevaConfigurationKeys.ParserPythonExecutable] ?? parser.PythonExecutable;
@@ -49,6 +56,15 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IBdxReviewPayloadAssembler, BdxReviewPayloadAssembler>();
         services.AddSingleton<IReinsuranceClassifier, ReinsuranceClassifier>();
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();
+        services.AddSingleton<IExtractionMerger, ExtractionMerger>();
+        services.AddSingleton<ILlmFieldExtractor>(provider =>
+        {
+            var options = configuration[RevaConfigurationKeys.LlmProvider] ?? LlmExtractionOptions.ProviderNone;
+            var deterministicOnly = !bool.TryParse(configuration[RevaConfigurationKeys.LlmDeterministicOnly], out var value) || value;
+            return deterministicOnly || !string.Equals(options, LlmExtractionOptions.ProviderOllama, StringComparison.OrdinalIgnoreCase)
+                ? new DisabledLlmFieldExtractor()
+                : new OllamaLlmFieldExtractor();
+        });
         services.AddScoped<ISchemaMappingService, SchemaMappingService>();
         services.AddScoped<IDocumentWorkflow, DocumentWorkflow>();
         services.AddScoped<Export.IExportTemplateStore, Export.ExportTemplateStore>();

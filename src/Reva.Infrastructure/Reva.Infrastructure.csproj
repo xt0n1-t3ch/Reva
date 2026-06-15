@@ -12,6 +12,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.AI" Version="10.3.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.3.0" />
     <PackageReference Include="PDFtoImage" Version="5.1.0" />
     <!-- Pin patched version: EF Design pulls a vulnerable transitive 9.0.0 (NU1903). -->
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.9" />
