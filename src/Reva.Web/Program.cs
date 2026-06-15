@@ -15,6 +15,11 @@ var allowBrowserOpen = !args.Contains("--no-open", StringComparer.OrdinalIgnoreC
 var seedDemo = args.Contains("--seed-demo", StringComparer.OrdinalIgnoreCase)
     || string.Equals(Environment.GetEnvironmentVariable("REVA_SEED_DEMO"), "1", StringComparison.OrdinalIgnoreCase);
 
+const string FrontendCorsPolicy = "FrontendCorsPolicy";
+var frontendOrigin = builder.Configuration["Reva:Frontend:Origin"] ?? "http://localhost:3000";
+builder.Services.AddCors(options => options.AddPolicy(FrontendCorsPolicy, policy => policy.WithOrigins(frontendOrigin).AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddOpenApi();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -50,10 +55,12 @@ if (!app.Environment.IsDevelopment())
 app.UseWhen(
     context => !context.Request.Path.StartsWithSegments("/api"),
     branch => branch.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true));
+app.UseCors(FrontendCorsPolicy);
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "Reva" }));
+app.MapOpenApi();
 app.MapDocumentEndpoints();
 app.MapTemplateEndpoints();
 app.MapRazorComponents<App>()
