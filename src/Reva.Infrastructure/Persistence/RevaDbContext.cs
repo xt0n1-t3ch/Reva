@@ -7,6 +7,7 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
     public DbSet<DocumentRecord> Documents => Set<DocumentRecord>();
     public DbSet<ExportTemplateRecord> ExportTemplates => Set<ExportTemplateRecord>();
     public DbSet<AppSettingsRecord> AppSettings => Set<AppSettingsRecord>();
+    public DbSet<LearnedSchemaMappingRecord> LearnedSchemaMappings => Set<LearnedSchemaMappingRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +24,7 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
             entity.Property(document => document.ParserProfile).HasMaxLength(80);
             entity.HasMany(document => document.Fields).WithOne().HasForeignKey(field => field.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(document => document.Tables).WithOne().HasForeignKey(table => table.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(document => document.SchemaMappings).WithOne().HasForeignKey(mapping => mapping.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(document => document.Exceptions).WithOne().HasForeignKey(exception => exception.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(document => document.ReviewEvents).WithOne().HasForeignKey(review => review.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
         });
@@ -36,6 +38,16 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
         modelBuilder.Entity<DocumentTableRecord>(entity =>
         {
             entity.Property(table => table.Name).HasMaxLength(96);
+        });
+
+        modelBuilder.Entity<DocumentSchemaMappingRecord>(entity =>
+        {
+            entity.Property(mapping => mapping.SenderKey).HasMaxLength(160);
+            entity.Property(mapping => mapping.SourceHeader).HasMaxLength(160);
+            entity.Property(mapping => mapping.NormalizedSourceHeader).HasMaxLength(160);
+            entity.Property(mapping => mapping.CanonicalField).HasMaxLength(96);
+            entity.Property(mapping => mapping.NormalizedValue).HasMaxLength(256);
+            entity.Property(mapping => mapping.Source).HasMaxLength(32);
         });
 
         modelBuilder.Entity<DocumentIssueRecord>(entity =>
@@ -62,6 +74,16 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
             entity.Property(settings => settings.ProductName).HasMaxLength(80);
         });
 
+        modelBuilder.Entity<LearnedSchemaMappingRecord>(entity =>
+        {
+            entity.HasKey(mapping => mapping.Id);
+            entity.HasIndex(mapping => new { mapping.SenderKey, mapping.NormalizedSourceHeader }).IsUnique();
+            entity.Property(mapping => mapping.SenderKey).HasMaxLength(160);
+            entity.Property(mapping => mapping.SourceHeader).HasMaxLength(160);
+            entity.Property(mapping => mapping.NormalizedSourceHeader).HasMaxLength(160);
+            entity.Property(mapping => mapping.CanonicalField).HasMaxLength(96);
+        });
+
         modelBuilder.Entity<ReviewEventRecord>(entity =>
         {
             entity.Property(review => review.Decision).HasMaxLength(32);
@@ -70,4 +92,3 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
         });
     }
 }
-

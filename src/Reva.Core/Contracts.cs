@@ -36,11 +36,24 @@ public sealed record DocumentDetail(
     IReadOnlyList<ExtractedTable> Tables,
     IReadOnlyList<ExtractionIssue> Exceptions,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt)
+{
+    public IReadOnlyList<SchemaMapping> SchemaMappings { get; init; } = [];
+}
 
 public sealed record ExtractedField(string Name, string Value, double Confidence, string Source, bool IsCorrected);
 
 public sealed record ExtractedTable(string Name, IReadOnlyList<string> Headers, IReadOnlyList<IReadOnlyDictionary<string, string>> Rows);
+
+public sealed record SchemaMapping(
+    string SenderKey,
+    string SourceHeader,
+    string CanonicalField,
+    string NormalizedValue,
+    double Confidence,
+    string Source,
+    bool IsLearned,
+    bool IsCorrected);
 
 // An extraction or reconciliation finding. Generic findings (missing field, unclassified)
 // carry only Severity + Message. Reconciliation findings also carry the field that
@@ -60,7 +73,12 @@ public sealed record ExtractionIssue(
 
 public sealed record FieldCorrection(string Name, string Value);
 
-public sealed record ReviewDecision(string Decision, string Reviewer, string? Notes, IReadOnlyList<FieldCorrection> FieldCorrections);
+public sealed record SchemaMappingCorrection(string SourceHeader, string CanonicalField);
+
+public sealed record ReviewDecision(string Decision, string Reviewer, string? Notes, IReadOnlyList<FieldCorrection> FieldCorrections)
+{
+    public IReadOnlyList<SchemaMappingCorrection> MappingCorrections { get; init; } = [];
+}
 
 public sealed record ExportRecord(
     Guid DocumentId,
@@ -90,5 +108,4 @@ public sealed record ExportPreview(IReadOnlyList<string> Headers, IReadOnlyList<
 
 // A rendered export ready to download.
 public sealed record ExportFile(byte[] Content, string ContentType, string FileName);
-
 

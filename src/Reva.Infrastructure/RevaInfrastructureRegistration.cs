@@ -7,6 +7,7 @@ using Reva.Infrastructure.Hashing;
 using Reva.Infrastructure.Ocr;
 using Reva.Infrastructure.Parsing;
 using Reva.Infrastructure.Persistence;
+using Reva.Infrastructure.SchemaMapping;
 using Reva.Infrastructure.Storage;
 
 namespace Reva.Infrastructure;
@@ -44,6 +45,7 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IDocumentParser, ParserRouter>();
         services.AddSingleton<IReinsuranceClassifier, ReinsuranceClassifier>();
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();
+        services.AddScoped<ISchemaMappingService, SchemaMappingService>();
         services.AddScoped<IDocumentWorkflow, DocumentWorkflow>();
         services.AddScoped<Export.IExportTemplateStore, Export.ExportTemplateStore>();
         services.AddSingleton<Export.IDocumentExporter, Export.DocumentExporter>();
@@ -68,4 +70,3 @@ public static class RevaInfrastructureRegistration
         }
     }
 }
-

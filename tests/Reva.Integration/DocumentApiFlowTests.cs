@@ -143,6 +143,58 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
     }
 
     [Fact]
+    public async Task EmailBordereauUploadReturnsVisibleSchemaMappings()
+    {
+        using var client = factory.CreateClient();
+        using var multipart = new MultipartFormDataContent();
+        multipart.Add(new ByteArrayContent(BuildEmailBordereau("Schema variant", "Cedant Co,GWP,CCY\nOrion Specialty,1234,US Dollars\n")), "file", "schema-variant.eml");
+
+        var uploadResponse = await client.PostAsync("/api/documents/", multipart);
+        uploadResponse.EnsureSuccessStatusCode();
+        var upload = await uploadResponse.Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(upload);
+
+        var detail = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{upload.Id}", SerializerOptions);
+        Assert.NotNull(detail);
+        Assert.Contains(detail.SchemaMappings, mapping => mapping.SourceHeader == "Cedant Co" && mapping.CanonicalField == ReinsuranceFieldNames.Cedent);
+        Assert.Contains(detail.SchemaMappings, mapping => mapping.SourceHeader == "GWP" && mapping.CanonicalField == ReinsuranceFieldNames.Premium);
+        Assert.Contains(detail.SchemaMappings, mapping => mapping.SourceHeader == "CCY" && mapping.CanonicalField == ReinsuranceFieldNames.Currency && mapping.NormalizedValue == "USD");
+        Assert.Contains(detail.Fields, field => field.Name == ReinsuranceFieldNames.Premium && field.Value == "USD 1,234");
+    }
+
+    [Fact]
+    public async Task MappingCorrectionIsLearnedForNextDocumentFromSameSender()
+    {
+        using var client = factory.CreateClient();
+        using var firstMultipart = new MultipartFormDataContent();
+        firstMultipart.Add(new ByteArrayContent(BuildEmailBordereau("Loss mapping one", "GWP,CCY\n450,USD\n", "loss.example")), "file", "loss-map-one.eml");
+
+        var firstUpload = await (await client.PostAsync("/api/documents/", firstMultipart))
+            .Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(firstUpload);
+
+        var review = new ReviewDecision("RequestCorrection", "Underwriting Team", "Teach sender-specific loss header.", [])
+        {
+            MappingCorrections = [new SchemaMappingCorrection("GWP", ReinsuranceFieldNames.Claims)]
+        };
+        var reviewResponse = await client.PostAsJsonAsync($"/api/documents/{firstUpload.Id}/review", review, SerializerOptions);
+        reviewResponse.EnsureSuccessStatusCode();
+
+        using var secondMultipart = new MultipartFormDataContent();
+        secondMultipart.Add(new ByteArrayContent(BuildEmailBordereau("Loss mapping two", "GWP,CCY\n550,USD\n", "loss.example")), "file", "loss-map-two.eml");
+        var secondUpload = await (await client.PostAsync("/api/documents/", secondMultipart))
+            .Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(secondUpload);
+
+        var detail = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{secondUpload.Id}", SerializerOptions);
+        Assert.NotNull(detail);
+        Assert.Contains(detail.SchemaMappings, mapping => mapping.SourceHeader == "GWP"
+            && mapping.CanonicalField == ReinsuranceFieldNames.Claims
+            && mapping.IsLearned);
+        Assert.Contains(detail.Fields, field => field.Name == ReinsuranceFieldNames.Claims && field.Value == "USD 550");
+    }
+
+    [Fact]
     public async Task UnrecognizedFileIsIngestedBestEffortAndStaysExportable()
     {
         using var client = factory.CreateClient();
@@ -212,6 +264,32 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
         }
 
         throw new FileNotFoundException($"Sample file was not found: {name}.");
+    }
+
+    private static byte[] BuildEmailBordereau(string subject, string csv, string senderDomain = "orion.example")
+    {
+        var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(csv));
+        var message = $"""
+            From: Mapping Desk <bordereaux@{senderDomain}>
+            To: intake@reve.local
+            Subject: {subject}
+            MIME-Version: 1.0
+            Content-Type: multipart/mixed; boundary="reva-boundary"
+
+            --reva-boundary
+            Content-Type: text/plain; charset=utf-8
+
+            Please process the attached bordereau.
+
+            --reva-boundary
+            Content-Type: text/csv; name="bordereau.csv"
+            Content-Disposition: attachment; filename="bordereau.csv"
+            Content-Transfer-Encoding: base64
+
+            {encoded}
+            --reva-boundary--
+            """;
+        return Encoding.UTF8.GetBytes(message.Replace("\n", "\r\n", StringComparison.Ordinal));
     }
 
     private sealed record HealthPayload(string Status, string Service);

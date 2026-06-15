@@ -7,6 +7,7 @@ using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Hashing;
 using Reva.Infrastructure.Parsing;
 using Reva.Infrastructure.Persistence;
+using Reva.Infrastructure.SchemaMapping;
 using Reva.Infrastructure.Storage;
 
 namespace Reva.Infrastructure;
@@ -17,7 +18,8 @@ public sealed class DocumentWorkflow(
     IDocumentStorage storage,
     IDocumentParser parser,
     IReinsuranceClassifier classifier,
-    IReinsuranceExtractor extractor) : IDocumentWorkflow
+    IReinsuranceExtractor extractor,
+    ISchemaMappingService schemaMapping) : IDocumentWorkflow
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
@@ -106,6 +108,11 @@ public sealed class DocumentWorkflow(
             field.IsCorrected = true;
         }
 
+        if (decision.MappingCorrections.Count > 0)
+        {
+            await ApplyMappingCorrectionsAsync(document, decision.MappingCorrections, cancellationToken);
+        }
+
         document.ReviewState = decision.Decision switch
         {
             "Approve" => ReviewState.Approved.ToString(),
@@ -155,10 +162,11 @@ public sealed class DocumentWorkflow(
             // Always run best-effort extraction. Unknown/low-confidence documents are still
             // ingested as reviewable records (the extractor flags them) — never quarantined.
             var extraction = extractor.Extract(parsed, classification);
+            var mapped = await schemaMapping.MapAsync(parsed, extraction.Fields, cancellationToken);
             record.Status = DocumentStatus.Extracted.ToString();
             record.DocumentType = extraction.DocumentType.ToString();
             record.Confidence = extraction.Confidence;
-            record.Fields = extraction.Fields.Select(field => new DocumentFieldRecord
+            record.Fields = mapped.Fields.Select(field => new DocumentFieldRecord
             {
                 Name = field.Name,
                 Value = field.Value,
@@ -166,6 +174,7 @@ public sealed class DocumentWorkflow(
                 Source = field.Source,
                 IsCorrected = field.IsCorrected
             }).ToList();
+            record.SchemaMappings = mapped.Mappings.ToList();
             record.Tables = extraction.Tables.Select(table => new DocumentTableRecord
             {
                 Name = table.Name,
@@ -218,9 +227,58 @@ public sealed class DocumentWorkflow(
             .AsSplitQuery()
             .Include(document => document.Fields)
             .Include(document => document.Tables)
+            .Include(document => document.SchemaMappings)
             .Include(document => document.Exceptions)
             .Include(document => document.ReviewEvents)
             .FirstOrDefaultAsync(document => document.Id == id, cancellationToken);
+    }
+
+    private async Task ApplyMappingCorrectionsAsync(
+        DocumentRecord document,
+        IReadOnlyList<SchemaMappingCorrection> corrections,
+        CancellationToken cancellationToken)
+    {
+        var senderKey = document.SchemaMappings.FirstOrDefault()?.SenderKey ?? SchemaMappingService.UnknownSender;
+        await schemaMapping.LearnAsync(senderKey, corrections, cancellationToken);
+        foreach (var correction in corrections.Where(correction =>
+            !string.IsNullOrWhiteSpace(correction.SourceHeader)
+            && ReinsuranceFieldNames.Canonical.Contains(correction.CanonicalField, StringComparer.Ordinal)))
+        {
+            var normalized = SchemaMappingService.NormalizeHeader(correction.SourceHeader);
+            var mapping = document.SchemaMappings.FirstOrDefault(item =>
+                string.Equals(item.NormalizedSourceHeader, normalized, StringComparison.Ordinal));
+            if (mapping is null)
+            {
+                continue;
+            }
+
+            mapping.CanonicalField = correction.CanonicalField;
+            mapping.Confidence = 0.99;
+            mapping.Source = "learned";
+            mapping.IsLearned = true;
+            mapping.IsCorrected = true;
+            if (!string.IsNullOrWhiteSpace(mapping.NormalizedValue))
+            {
+                var field = document.Fields.FirstOrDefault(item => item.Name == correction.CanonicalField);
+                if (field is null)
+                {
+                    document.Fields.Add(new DocumentFieldRecord
+                    {
+                        Name = correction.CanonicalField,
+                        Value = mapping.NormalizedValue,
+                        Confidence = 1,
+                        Source = $"schema-learned:{mapping.SourceHeader}",
+                        IsCorrected = true
+                    });
+                    continue;
+                }
+
+                field.Value = mapping.NormalizedValue;
+                field.Confidence = 1;
+                field.Source = $"schema-learned:{mapping.SourceHeader}";
+                field.IsCorrected = true;
+            }
+        }
     }
 
     private static DocumentSummary ToSummary(DocumentRecord document)
@@ -259,7 +317,22 @@ public sealed class DocumentWorkflow(
                 exception.Expected,
                 exception.Confidence)).ToList(),
             document.CreatedAt,
-            document.UpdatedAt);
+            document.UpdatedAt)
+        {
+            SchemaMappings = document.SchemaMappings
+                .Select(mapping => new Reva.Core.Contracts.SchemaMapping(
+                    mapping.SenderKey,
+                    mapping.SourceHeader,
+                    mapping.CanonicalField,
+                    mapping.NormalizedValue,
+                    mapping.Confidence,
+                    mapping.Source,
+                    mapping.IsLearned,
+                    mapping.IsCorrected))
+                .OrderByDescending(mapping => mapping.Confidence)
+                .ThenBy(mapping => mapping.SourceHeader)
+                .ToList()
+        };
     }
 
     private static ExtractedTable ToExtractedTable(DocumentTableRecord table)

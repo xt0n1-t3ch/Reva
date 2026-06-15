@@ -1,9 +1,10 @@
 # Architecture
 
 Reve Intelligence is a backend-first Blazor Web App for reinsurance document operations. One
-workflow owns the whole path: ingest a document, parse it, classify it, extract canonical
-fields, reconcile stated figures against the line items, let an analyst review and correct,
-then export. There is one code path and it is easy to follow end to end.
+workflow owns the whole path: ingest a document, parse it, classify it, map each sender's
+headers to the canonical schema, extract canonical fields, reconcile stated figures against
+the line items, let an analyst review and correct, then export. There is one code path and it
+is easy to follow end to end.
 
 ## System shape
 
@@ -20,8 +21,10 @@ flowchart LR
   Router --> Pdf["PDF (PdfPig)"]
   Router --> Ocr["images / scans (PaddleOCR)"]
   Router --> Fallback["binary best-effort"]
-  Workflow --> Extractor["Classifier + field extractor + reconciliation"]
-  Extractor --> Review["Human review + export"]
+  Workflow --> Extractor["Classifier + field extractor"]
+  Extractor --> Mapper["Hybrid schema mapper"]
+  Mapper --> Reconcile["Reconciliation"]
+  Reconcile --> Review["Human review + export"]
 ```
 
 ## Boundaries
@@ -29,8 +32,8 @@ flowchart LR
 - `src/Reva.Core` — domain contracts (`Contracts.cs`), document states, reinsurance field
   names, and the single `MoneyFormatter`. No dependencies on the web or infrastructure layers.
 - `src/Reva.Infrastructure` — EF Core persistence, file storage, hashing, the `ParserRouter`
-  and typed parsers, the PaddleOCR engine, classification, extraction + reconciliation, and
-  `DocumentWorkflow` orchestration.
+  and typed parsers, the PaddleOCR engine, classification, extraction, learned schema mapping,
+  reconciliation, and `DocumentWorkflow` orchestration.
 - `src/Reva.Web` — the Blazor cockpit (which injects `IDocumentWorkflow` directly) and the
   Minimal API. `Branding.cs` owns the product name; `Formatting`/`MoneyFormatter` is reused
   from Core so money renders identically on every surface.
@@ -78,6 +81,10 @@ Server is selected by configuration:
 Field confidence is computed from how the value was located blended with a domain validation
 check — never a fixed constant. A field an analyst corrects is shown as **Reviewed** rather
 than an inflated AI score, because a human set it.
+
+Schema-mapping confidence is tracked separately. Cold-start mappings come from canonical
+reinsurance synonyms plus bounded fuzzy matching; analyst corrections persist as learned
+sender/domain overrides in EF and take precedence for the next document from that sender.
 
 ## Security and data handling
 

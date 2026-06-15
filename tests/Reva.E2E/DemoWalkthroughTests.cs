@@ -41,6 +41,8 @@ public sealed class DemoWalkthroughTests(RevaServerFixture server)
 
         await page.GotoAsync($"{server.BaseUrl}/review/{heroId}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Extracted fields" })).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Schema mapping" })).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator(".schema-map-row").Filter(new() { HasText = "Premium" }).First).ToBeVisibleAsync();
 
         // Hovering the Broker field highlights its value in the document — the source citation.
         // (Dispatched as a bubbling event so Blazor's root-level delegated handler receives it,

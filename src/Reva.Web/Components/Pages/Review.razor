@@ -169,6 +169,48 @@
                     </article>
                 }
 
+                @if (ShowMappings)
+                {
+                    <article class="card card-pad-0 schema-map-card">
+                        <div class="card-head">
+                            <div class="head-title"><Icon Name="sparkle" Size="20" /><h2>Schema mapping</h2></div>
+                            <span class="pill tone-blue">@_mappingEdits.Count mapped</span>
+                        </div>
+                        <div class="schema-map-list">
+                            @for (var i = 0; i < _mappingEdits.Count; i++)
+                            {
+                                var index = i;
+                                var mapping = _mappingEdits[index];
+                                <div class="schema-map-row @(mapping.IsEdited ? "is-edited" : null)">
+                                    <div class="schema-map-main">
+                                        <span class="schema-source">@mapping.SourceHeader</span>
+                                        <span class="schema-arrow"><Icon Name="arrow-right" Size="14" /></span>
+                                        <select class="field-input schema-select" value="@mapping.CanonicalField" @onchange="e => OnMappingInput(index, e.Value?.ToString())" aria-label="@($"Map {mapping.SourceHeader} to canonical field")">
+                                            <option value="">Unmapped</option>
+                                            @foreach (var field in ReinsuranceFieldNames.Canonical)
+                                            {
+                                                <option value="@field">@field</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="schema-map-meta">
+                                        <span class="pill @MappingTone(mapping)">@MappingLabel(mapping)</span>
+                                        <span>@CockpitFormat.PercentWhole(mapping.Confidence)</span>
+                                        @if (!string.IsNullOrWhiteSpace(mapping.NormalizedValue))
+                                        {
+                                            <span class="schema-value">@mapping.NormalizedValue</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-actions review-field-actions">
+                            <span>@MappingEditedCount mapping correction@(MappingEditedCount == 1 ? "" : "s") staged</span>
+                            <span class="schema-sender">Sender: @_mappingEdits.FirstOrDefault()?.SenderKey</span>
+                        </div>
+                    </article>
+                }
+
                 <article class="card card-pad-0 review-checks-card">
                     <div class="card-head">
                         <div class="head-title"><Icon Name="alert" Size="20" /><h2>Checks</h2></div>
@@ -253,8 +295,23 @@
         public bool IsEdited => !string.Equals(Value, Original, StringComparison.Ordinal);
     }
 
+    private sealed class MappingEdit
+    {
+        public string SenderKey { get; init; } = "";
+        public string SourceHeader { get; init; } = "";
+        public string OriginalCanonicalField { get; init; } = "";
+        public string CanonicalField { get; set; } = "";
+        public string NormalizedValue { get; init; } = "";
+        public double Confidence { get; init; }
+        public string Source { get; init; } = "";
+        public bool IsLearned { get; init; }
+        public bool IsCorrected { get; init; }
+        public bool IsEdited => !string.Equals(CanonicalField, OriginalCanonicalField, StringComparison.Ordinal);
+    }
+
     private DocumentDetail? _detail;
     private List<FieldEdit> _fields = [];
+    private List<MappingEdit> _mappingEdits = [];
     private List<ExportTemplate> _templates = [];
     private string _reviewer = "Underwriting Team";
     private string _notes = string.Empty;
@@ -283,6 +340,7 @@
             var defaultId = RuntimeSettings.Current.DefaultTemplateId;
             _templates = [.. (await Templates.ListAsync(CancellationToken.None)).OrderByDescending(template => template.Id == defaultId)];
             BindFields();
+            BindMappings();
         }
         catch (Exception ex)
         {
@@ -308,12 +366,38 @@
             })];
     }
 
+    private void BindMappings()
+    {
+        _mappingEdits = _detail is null
+            ? []
+            : [.. _detail.SchemaMappings.Select(mapping => new MappingEdit
+            {
+                SenderKey = mapping.SenderKey,
+                SourceHeader = mapping.SourceHeader,
+                OriginalCanonicalField = mapping.CanonicalField,
+                CanonicalField = mapping.CanonicalField,
+                NormalizedValue = mapping.NormalizedValue,
+                Confidence = mapping.Confidence,
+                Source = mapping.Source,
+                IsLearned = mapping.IsLearned,
+                IsCorrected = mapping.IsCorrected
+            })];
+    }
+
     private void OnFieldInput(int index, string? value)
     {
         if (index >= 0 && index < _fields.Count)
         {
             _fields[index].Value = value ?? string.Empty;
             SetActiveValue(_fields[index].Name, _fields[index].Value);
+        }
+    }
+
+    private void OnMappingInput(int index, string? value)
+    {
+        if (index >= 0 && index < _mappingEdits.Count)
+        {
+            _mappingEdits[index].CanonicalField = value ?? string.Empty;
         }
     }
 
@@ -358,9 +442,13 @@
 
     private int EditedCount => _fields.Count(candidate => candidate.IsEdited);
 
+    private int MappingEditedCount => _mappingEdits.Count(candidate => candidate.IsEdited);
+
     private bool CanAct => _detail is not null && CockpitFormat.IsActionable(_detail.Status);
 
     private bool ShowFields => CanAct && _fields.Count > 0;
+
+    private bool ShowMappings => CanAct && _mappingEdits.Count > 0;
 
     private bool CanSubmit => CanAct && !string.IsNullOrWhiteSpace(_reviewer);
 
@@ -400,9 +488,16 @@
                 .Where(candidate => candidate.IsEdited)
                 .Select(candidate => new FieldCorrection(candidate.Name, candidate.Value))
                 .ToList();
+            var mappingCorrections = _mappingEdits
+                .Where(candidate => candidate.IsEdited && !string.IsNullOrWhiteSpace(candidate.CanonicalField))
+                .Select(candidate => new SchemaMappingCorrection(candidate.SourceHeader, candidate.CanonicalField))
+                .ToList();
 
             var payload = new ReviewDecision(decision, _reviewer.Trim(),
-                string.IsNullOrWhiteSpace(_notes) ? null : _notes.Trim(), corrections);
+                string.IsNullOrWhiteSpace(_notes) ? null : _notes.Trim(), corrections)
+            {
+                MappingCorrections = mappingCorrections
+            };
 
             var updated = await Workflow.ReviewAsync(Id, payload, CancellationToken.None);
             if (updated is null)
@@ -414,6 +509,7 @@
                 _detail = updated;
                 _now = DateTimeOffset.UtcNow;
                 BindFields();
+                BindMappings();
                 _toast = new Toast("ok", $"Decision recorded: {DecisionLabel(decision)}.");
             }
         }
@@ -433,4 +529,22 @@
         "Reject" => "rejected",
         _ => "approved"
     };
+
+    private static string MappingTone(MappingEdit mapping) =>
+        mapping.IsEdited || mapping.IsCorrected || mapping.IsLearned ? "tone-violet" : mapping.Confidence >= 0.85 ? "tone-green" : mapping.Confidence >= 0.65 ? "tone-amber" : "tone-slate";
+
+    private static string MappingLabel(MappingEdit mapping)
+    {
+        if (mapping.IsEdited)
+        {
+            return "Will learn";
+        }
+
+        if (mapping.IsCorrected)
+        {
+            return "Corrected";
+        }
+
+        return mapping.IsLearned ? "Learned" : mapping.Source;
+    }
 }
