@@ -1,26 +1,238 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Institutional-calm design system. All color is defined once here as semantic
+  roles; components consume roles only (bg-background, text-muted-foreground,
+  border-border, bg-primary...). The accent is runtime-overridable: set --accent
+  to any color on :root (owner AccentColor) and every primary surface follows.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --accent-default: oklch(0.524 0.176 264);
+  --accent: var(--accent-default);
+
+  --background: oklch(0.985 0.003 255);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.968 0.004 255);
+  --surface-3: oklch(0.948 0.005 255);
+  --foreground: oklch(0.235 0.02 264);
+  --muted: oklch(0.955 0.004 255);
+  --muted-foreground: oklch(0.475 0.02 262);
+  --subtle-foreground: oklch(0.6 0.018 262);
+  --border: oklch(0.908 0.006 258);
+  --border-strong: oklch(0.855 0.008 258);
+  --input: oklch(0.9 0.006 258);
+  --ring: var(--accent);
+
+  --primary: var(--accent);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-soft: color-mix(in oklab, var(--accent) 12%, var(--surface));
+  --primary-border: color-mix(in oklab, var(--accent) 32%, var(--border));
+
+  --success: oklch(0.6 0.14 157);
+  --success-foreground: oklch(0.99 0 0);
+  --success-soft: color-mix(in oklab, oklch(0.6 0.14 157) 14%, var(--surface));
+  --warning: oklch(0.72 0.15 71);
+  --warning-foreground: oklch(0.27 0.05 71);
+  --warning-soft: color-mix(in oklab, oklch(0.72 0.15 71) 18%, var(--surface));
+  --danger: oklch(0.575 0.2 24);
+  --danger-foreground: oklch(0.99 0 0);
+  --danger-soft: color-mix(in oklab, oklch(0.575 0.2 24) 12%, var(--surface));
+  --info: var(--accent);
+  --info-soft: var(--primary-soft);
+
+  --confidence-high: var(--success);
+  --confidence-medium: var(--warning);
+  --confidence-low: var(--danger);
+
+  --citation: color-mix(in oklab, var(--accent) 22%, transparent);
+  --citation-active: color-mix(in oklab, var(--accent) 42%, transparent);
+  --citation-ring: var(--accent);
+
+  --radius: 0.55rem;
+  --radius-sm: 0.375rem;
+  --radius-lg: 0.85rem;
+
+  --shadow-soft: 0 1px 2px oklch(0.2 0.02 264 / 0.06), 0 1px 3px oklch(0.2 0.02 264 / 0.04);
+  --shadow-pop: 0 8px 28px oklch(0.2 0.02 264 / 0.14), 0 2px 6px oklch(0.2 0.02 264 / 0.08);
+}
+
+.dark {
+  --background: oklch(0.178 0.013 264);
+  --surface: oklch(0.212 0.015 264);
+  --surface-2: oklch(0.246 0.016 264);
+  --surface-3: oklch(0.285 0.017 264);
+  --foreground: oklch(0.94 0.008 255);
+  --muted: oklch(0.246 0.014 264);
+  --muted-foreground: oklch(0.7 0.014 258);
+  --subtle-foreground: oklch(0.6 0.014 258);
+  --border: oklch(0.31 0.015 264);
+  --border-strong: oklch(0.4 0.016 264);
+  --input: oklch(0.34 0.015 264);
+
+  --accent-default: oklch(0.64 0.16 264);
+  --primary-foreground: oklch(0.16 0.012 264);
+  --primary-soft: color-mix(in oklab, var(--accent) 22%, var(--surface));
+  --primary-border: color-mix(in oklab, var(--accent) 40%, var(--border));
+
+  --success: oklch(0.68 0.14 159);
+  --success-soft: color-mix(in oklab, oklch(0.68 0.14 159) 20%, var(--surface));
+  --warning: oklch(0.78 0.14 74);
+  --warning-foreground: oklch(0.2 0.04 74);
+  --warning-soft: color-mix(in oklab, oklch(0.78 0.14 74) 20%, var(--surface));
+  --danger: oklch(0.65 0.18 24);
+  --danger-soft: color-mix(in oklab, oklch(0.65 0.18 24) 22%, var(--surface));
+
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.4), 0 1px 3px oklch(0 0 0 / 0.3);
+  --shadow-pop: 0 10px 34px oklch(0 0 0 / 0.55), 0 2px 8px oklch(0 0 0 / 0.4);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-border: var(--primary-border);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  --color-confidence-high: var(--confidence-high);
+  --color-confidence-medium: var(--confidence-medium);
+  --color-confidence-low: var(--confidence-low);
+
+  --color-citation: var(--citation);
+  --color-citation-active: var(--citation-active);
+  --color-citation-ring: var(--citation-ring);
+
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-lg);
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-pop: var(--shadow-pop);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv05", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  :where(input, button, textarea, select) {
+    font: inherit;
+  }
+
+  /* Tabular numerals for every figure surface — money columns must align. */
+  .tabular,
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 26%, transparent);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--muted-foreground) 28%, transparent);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--muted-foreground) 46%, transparent);
+    background-clip: padding-box;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes reva-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reva-pulse-dot {
+  0%, 100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-rise {
+  animation: reva-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-pulse-dot {
+  animation: reva-pulse-dot 1.2s ease-in-out infinite;
 }
