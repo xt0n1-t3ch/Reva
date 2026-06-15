@@ -9,10 +9,11 @@ capabilities, not UI add-ons. The default path is keyless and offline.
 2. Route it through `ParserRouter` by sniffed content — never by extension alone.
 3. Get back text, Markdown, tables, a parser profile, and any warnings.
 4. Classify the reinsurance document type (bordereau-aware).
-5. Extract canonical fields with computed, explainable confidence.
-6. Reconcile stated figures against the line-item totals (see below).
-7. Surface field-level exceptions for human review.
-8. Export approved JSON or CSV.
+5. Map sender-specific headers to canonical fields with confidence.
+6. Extract canonical fields with computed, explainable confidence.
+7. Reconcile stated figures against the line-item totals (see below).
+8. Surface field-level exceptions for human review.
+9. Export approved JSON or CSV.
 
 ## Parsers (native .NET, no Python required)
 
@@ -33,6 +34,14 @@ capabilities, not UI add-ons. The default path is keyless and offline.
 cloud, no API key. Per-line confidence comes from the engine, so the scores are real. Models
 are loaded lazily and provisioned on first use; a missing model degrades gracefully instead of
 crashing.
+
+## Schema mapping
+
+The mapper combines static reinsurance aliases with learned EF overrides keyed by sender or
+email domain. It records every source header, canonical target, normalized value, confidence,
+and source (`alias`, `fuzzy`, `learned`, or `unmapped`) so Review can show why a column landed
+where it did. Analyst corrections persist as sender-specific rules and take precedence on the
+next document from that sender.
 
 ## Reconciliation
 

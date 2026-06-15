@@ -34,7 +34,9 @@ notices. See `docs/research/reinsurance-landscape.md` for the domain grounding.
    reviewable record and opens straight into review.
 3. **Review & adjust** — the split view: the document on the left, extracted fields on the
    right. **Hover a field and its value lights up in the document** (the source citation).
-   Edit a field; it shows as *Reviewed* once approved.
+   The Schema mapping panel shows each sender header mapped to the canonical layout with
+   confidence. Correct a mapping once and the sender-specific rule is remembered. Edit a field;
+   it shows as *Reviewed* once approved.
 4. **Checks** — the Detected-vs-Expected reconciliation cards, computed from the data, ranked
    by how badly they disagree.
 5. **Export** — pick a template from the Export menu (Bordereau line items, Lloyd's CRS 5.2,
@@ -49,8 +51,8 @@ notices. See `docs/research/reinsurance-landscape.md` for the domain grounding.
 - **Modular**: parsing, OCR, classification, extraction, and reconciliation are separate,
   swappable pieces behind interfaces — add a parser or an LLM extractor without touching the UI.
 - **Extensible**: never hard-rejects; new document types and export templates slot in.
-- **Trustworthy**: confidence is computed (not faked), every value is traceable to its source,
-  and corrections are audited.
+- **Trustworthy**: confidence is computed (not faked), every value and mapped header is
+  traceable to its source, and corrections are audited.
 - **Proven**: real Playwright end-to-end tests run this whole demo on every change.
 
 ## Architecture

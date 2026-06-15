@@ -19,7 +19,7 @@ public sealed class DocumentRecord
     public DateTimeOffset UpdatedAt { get; set; }
     public List<DocumentFieldRecord> Fields { get; set; } = [];
     public List<DocumentTableRecord> Tables { get; set; } = [];
+    public List<DocumentSchemaMappingRecord> SchemaMappings { get; set; } = [];
     public List<DocumentIssueRecord> Exceptions { get; set; } = [];
     public List<ReviewEventRecord> ReviewEvents { get; set; } = [];
 }
-

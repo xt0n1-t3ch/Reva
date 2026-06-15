@@ -3,7 +3,7 @@
   "$id": "https://reva.local/contracts/extraction-result.schema.json",
   "title": "ExtractionResult",
   "type": "object",
-  "required": ["documentId", "documentType", "confidence", "fields", "tables", "exceptions"],
+  "required": ["documentId", "documentType", "confidence", "fields", "tables", "schemaMappings", "exceptions"],
   "properties": {
     "documentId": { "type": "string", "format": "uuid" },
     "documentType": { "type": "string" },
@@ -22,6 +22,23 @@
       }
     },
     "tables": { "type": "array" },
+    "schemaMappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["senderKey", "sourceHeader", "canonicalField", "normalizedValue", "confidence", "source", "isLearned", "isCorrected"],
+        "properties": {
+          "senderKey": { "type": "string" },
+          "sourceHeader": { "type": "string", "minLength": 1 },
+          "canonicalField": { "type": "string" },
+          "normalizedValue": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "enum": ["learned", "alias", "fuzzy", "unmapped"] },
+          "isLearned": { "type": "boolean" },
+          "isCorrected": { "type": "boolean" }
+        }
+      }
+    },
     "exceptions": {
       "type": "array",
       "items": {
