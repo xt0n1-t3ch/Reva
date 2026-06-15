@@ -8,6 +8,8 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
     public DbSet<ExportTemplateRecord> ExportTemplates => Set<ExportTemplateRecord>();
     public DbSet<AppSettingsRecord> AppSettings => Set<AppSettingsRecord>();
     public DbSet<LearnedSchemaMappingRecord> LearnedSchemaMappings => Set<LearnedSchemaMappingRecord>();
+    public DbSet<DocumentSourceSpanRecord> DocumentSourceSpans => Set<DocumentSourceSpanRecord>();
+    public DbSet<DocumentPageRecord> DocumentPages => Set<DocumentPageRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +27,8 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
             entity.HasMany(document => document.Fields).WithOne().HasForeignKey(field => field.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(document => document.Tables).WithOne().HasForeignKey(table => table.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(document => document.SchemaMappings).WithOne().HasForeignKey(mapping => mapping.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(document => document.SourceSpans).WithOne().HasForeignKey(span => span.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(document => document.Pages).WithOne().HasForeignKey(page => page.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(document => document.Exceptions).WithOne().HasForeignKey(exception => exception.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(document => document.ReviewEvents).WithOne().HasForeignKey(review => review.DocumentRecordId).OnDelete(DeleteBehavior.Cascade);
         });
@@ -48,6 +52,19 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
             entity.Property(mapping => mapping.CanonicalField).HasMaxLength(96);
             entity.Property(mapping => mapping.NormalizedValue).HasMaxLength(256);
             entity.Property(mapping => mapping.Source).HasMaxLength(32);
+        });
+
+        modelBuilder.Entity<DocumentSourceSpanRecord>(entity =>
+        {
+            entity.Property(span => span.SpanId).HasMaxLength(80);
+            entity.Property(span => span.Text).HasMaxLength(2000);
+            entity.Property(span => span.BlockId).HasMaxLength(80);
+            entity.Property(span => span.TableId).HasMaxLength(80);
+        });
+
+        modelBuilder.Entity<DocumentPageRecord>(entity =>
+        {
+            entity.Property(page => page.ImagePath).HasMaxLength(512);
         });
 
         modelBuilder.Entity<DocumentIssueRecord>(entity =>

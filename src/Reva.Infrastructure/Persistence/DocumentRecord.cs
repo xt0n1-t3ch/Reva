@@ -20,6 +20,8 @@ public sealed class DocumentRecord
     public List<DocumentFieldRecord> Fields { get; set; } = [];
     public List<DocumentTableRecord> Tables { get; set; } = [];
     public List<DocumentSchemaMappingRecord> SchemaMappings { get; set; } = [];
+    public List<DocumentSourceSpanRecord> SourceSpans { get; set; } = [];
+    public List<DocumentPageRecord> Pages { get; set; } = [];
     public List<DocumentIssueRecord> Exceptions { get; set; } = [];
     public List<ReviewEventRecord> ReviewEvents { get; set; } = [];
 }

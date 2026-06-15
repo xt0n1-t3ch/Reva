@@ -8,6 +8,7 @@ using Reva.Infrastructure.Ocr;
 using Reva.Infrastructure.Parsing;
 using Reva.Infrastructure.Persistence;
 using Reva.Infrastructure.Rendering;
+using Reva.Infrastructure.Review;
 using Reva.Infrastructure.SchemaMapping;
 using Reva.Infrastructure.Storage;
 
@@ -45,6 +46,7 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IOcrEngine, PaddleOcrEngine>();
         services.AddSingleton<IPdfPageImageRenderer, PdfiumPageImageRenderer>();
         services.AddSingleton<IDocumentParser, ParserRouter>();
+        services.AddSingleton<IBdxReviewPayloadAssembler, BdxReviewPayloadAssembler>();
         services.AddSingleton<IReinsuranceClassifier, ReinsuranceClassifier>();
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();
         services.AddScoped<ISchemaMappingService, SchemaMappingService>();

@@ -175,6 +175,33 @@ public sealed class DocumentWorkflow(
                 IsCorrected = field.IsCorrected
             }).ToList();
             record.SchemaMappings = mapped.Mappings.ToList();
+            record.SourceSpans = parsed.SourceSpans.Select(span => new DocumentSourceSpanRecord
+            {
+                SpanId = span.Id,
+                Page = span.Page,
+                PageWidth = span.PageWidth,
+                PageHeight = span.PageHeight,
+                Rotation = span.Rotation,
+                X = span.Bbox.X,
+                Y = span.Bbox.Y,
+                Width = span.Bbox.Width,
+                Height = span.Bbox.Height,
+                PolygonJson = JsonSerializer.Serialize(span.Polygon ?? [], SerializerOptions),
+                Text = span.Text,
+                OcrConfidence = span.OcrConfidence,
+                BlockId = span.BlockId,
+                TableId = span.TableId,
+                RowIndex = span.RowIndex,
+                ColumnIndex = span.ColumnIndex
+            }).ToList();
+            record.Pages = parsed.Pages.Select(page => new DocumentPageRecord
+            {
+                Page = page.Page,
+                ImagePath = page.ImagePath,
+                Width = page.Width,
+                Height = page.Height,
+                Rotation = page.Rotation
+            }).ToList();
             record.Tables = extraction.Tables.Select(table => new DocumentTableRecord
             {
                 Name = table.Name,
@@ -228,6 +255,8 @@ public sealed class DocumentWorkflow(
             .Include(document => document.Fields)
             .Include(document => document.Tables)
             .Include(document => document.SchemaMappings)
+            .Include(document => document.SourceSpans)
+            .Include(document => document.Pages)
             .Include(document => document.Exceptions)
             .Include(document => document.ReviewEvents)
             .FirstOrDefaultAsync(document => document.Id == id, cancellationToken);

@@ -1,22 +1,20 @@
 using Reva.Infrastructure.Ocr;
+using Reva.Infrastructure.Rendering;
 
 namespace Reva.Infrastructure.Parsing;
 
-// The single entry point for parsing. Picks the first parser that claims the file by
-// extension; if none match, or a parser throws, it falls back to best-effort visible text.
-// It never throws (except on cancellation) — every file yields a ParsedDocument.
 public sealed class ParserRouter : IDocumentParser
 {
     private readonly IReadOnlyList<IFileParser> _parsers;
     private readonly BinaryFallbackParser _fallback = new();
 
-    public ParserRouter(IOcrEngine? ocr = null)
+    public ParserRouter(IOcrEngine? ocr = null, IPdfPageImageRenderer? renderer = null)
     {
         _parsers =
         [
             new TextFileParser(),
             new CsvFileParser(),
-            new PdfFileParser(),
+            new PdfFileParser(ocr, renderer),
             new WordFileParser(),
             new PowerPointFileParser(),
             new ExcelFileParser(),
