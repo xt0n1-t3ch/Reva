@@ -1,7 +1,9 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OpenAI;
 using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Hashing;
 using Reva.Infrastructure.Ingestion;
@@ -12,6 +14,7 @@ using Reva.Infrastructure.Rendering;
 using Reva.Infrastructure.Review;
 using Reva.Infrastructure.SchemaMapping;
 using Reva.Infrastructure.Storage;
+using System.ClientModel;
 
 namespace Reva.Infrastructure;
 
@@ -68,11 +71,11 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IExtractionMerger, ExtractionMerger>();
         services.AddSingleton<ILlmFieldExtractor>(provider =>
         {
-            var options = configuration[RevaConfigurationKeys.LlmProvider] ?? LlmExtractionOptions.ProviderNone;
+            var configuredProvider = configuration[RevaConfigurationKeys.LlmProvider] ?? LlmExtractionOptions.ProviderNone;
             var deterministicOnly = !bool.TryParse(configuration[RevaConfigurationKeys.LlmDeterministicOnly], out var value) || value;
-            return deterministicOnly || !string.Equals(options, LlmExtractionOptions.ProviderOllama, StringComparison.OrdinalIgnoreCase)
+            return deterministicOnly || !string.Equals(configuredProvider, LlmExtractionOptions.ProviderOllama, StringComparison.OrdinalIgnoreCase)
                 ? new DisabledLlmFieldExtractor()
-                : new OllamaLlmFieldExtractor();
+                : new OllamaLlmFieldExtractor(CreateOllamaChatClient(configuration), Microsoft.Extensions.Options.Options.Create(BuildLlmOptions(configuration)));
         });
         services.AddScoped<ISchemaMappingService, SchemaMappingService>();
         services.AddScoped<IDocumentWorkflow, DocumentWorkflow>();
@@ -82,6 +85,20 @@ public static class RevaInfrastructureRegistration
         services.AddScoped<Settings.IDataMaintenance, Settings.DataMaintenance>();
 
         return services;
+    }
+
+    private static LlmExtractionOptions BuildLlmOptions(IConfiguration configuration) => new()
+    {
+        Provider = configuration[RevaConfigurationKeys.LlmProvider] ?? LlmExtractionOptions.ProviderNone,
+        BaseUrl = configuration[RevaConfigurationKeys.LlmBaseUrl] ?? LlmExtractionOptions.DefaultBaseUrl,
+        Model = configuration[RevaConfigurationKeys.LlmModel] ?? LlmExtractionOptions.DefaultModel,
+        DeterministicOnly = !bool.TryParse(configuration[RevaConfigurationKeys.LlmDeterministicOnly], out var deterministicOnly) || deterministicOnly
+    };
+
+    private static IChatClient CreateOllamaChatClient(IConfiguration configuration)
+    {
+        var options = BuildLlmOptions(configuration);
+        return new OpenAI.Chat.ChatClient(options.Model, new ApiKeyCredential("ollama"), new OpenAIClientOptions { Endpoint = new Uri(options.BaseUrl) }).AsIChatClient();
     }
 
     private static void EnsureSqliteDirectory(string connectionString)
