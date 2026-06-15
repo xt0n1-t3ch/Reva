@@ -63,6 +63,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "Reva" }))
 app.MapOpenApi();
 app.MapDocumentEndpoints();
 app.MapTemplateEndpoints();
+app.MapApiSurfaceEndpoints();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
