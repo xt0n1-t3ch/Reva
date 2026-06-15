@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Hashing;
+using Reva.Infrastructure.Ingestion;
 using Reva.Infrastructure.Ocr;
 using Reva.Infrastructure.Parsing;
 using Reva.Infrastructure.Persistence;
@@ -19,6 +20,8 @@ public static class RevaInfrastructureRegistration
     public static IServiceCollection AddRevaInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<RevaStorageOptions>(storage => storage.UploadRoot = configuration[RevaConfigurationKeys.StorageUploadRoot] ?? storage.UploadRoot);
+        services.Configure<DoclingFeatureOptions>(feature => feature.Enabled = bool.TryParse(configuration[RevaConfigurationKeys.FeaturesDocling], out var doclingEnabled) && doclingEnabled);
+        services.Configure<FileEmailInboundOptions>(source => source.Directory = configuration[RevaConfigurationKeys.InboundFileEmailDirectory] ?? source.Directory);
         services.Configure<LlmExtractionOptions>(llm =>
         {
             llm.Provider = configuration[RevaConfigurationKeys.LlmProvider] ?? llm.Provider;
@@ -53,6 +56,12 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IOcrEngine, PaddleOcrEngine>();
         services.AddSingleton<IPdfPageImageRenderer, PdfiumPageImageRenderer>();
         services.AddSingleton<IDocumentParser, ParserRouter>();
+        services.AddSingleton<IDocumentParserAdapter, DefaultDocumentParserAdapter>();
+        services.AddSingleton<IDocumentParserAdapter, OptionalDoclingDocumentParser>();
+        services.AddSingleton<IInboundDocumentSource, FileEmailInboundDocumentSource>();
+        services.AddSingleton<IInboundDocumentSource>(new DisabledOAuthInboundDocumentSource("gmail"));
+        services.AddSingleton<IInboundDocumentSource>(new DisabledOAuthInboundDocumentSource("outlook"));
+        services.AddSingleton<IInboundSourceRegistry, InboundSourceRegistry>();
         services.AddSingleton<IBdxReviewPayloadAssembler, BdxReviewPayloadAssembler>();
         services.AddSingleton<IReinsuranceClassifier, ReinsuranceClassifier>();
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();
