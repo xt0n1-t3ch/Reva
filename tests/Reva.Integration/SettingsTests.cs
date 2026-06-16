@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Reva.Core.Contracts;
 using Reva.Core.Settings;
 using Reva.Infrastructure.Settings;
-using Reva.Web.Components.Services;
 
 namespace Reva.Integration;
 
@@ -45,20 +44,27 @@ public sealed class SettingsTests(RevaWebApplicationFactory factory) : IClassFix
     }
 
     [Fact]
-    public void ConfidenceTiersFollowRuntimeSettings()
+    public async Task SettingsApiReturnsDefaultsThenPersistsAndSanitizes()
     {
-        try
-        {
-            RuntimeSettings.Set(AppSettings.Default with { ConfidenceLowMax = 0.5, ConfidenceMediumMax = 0.8 });
-            Assert.Equal("Low", CockpitFormat.AgreementLabel(0.4));
-            Assert.Equal("Medium", CockpitFormat.AgreementLabel(0.7));
-            Assert.Equal("High", CockpitFormat.AgreementLabel(0.95));
-            Assert.Equal("lvl-high", CockpitFormat.ConfidenceLevel(0.9));
-        }
-        finally
-        {
-            RuntimeSettings.Set(AppSettings.Default);
-        }
+        using var client = factory.CreateClient();
+
+        var initial = await client.GetFromJsonAsync<AppSettings>("/api/settings", SerializerOptions);
+        Assert.NotNull(initial);
+        Assert.Equal(AppSettings.Default.ProductName, initial.ProductName);
+
+        var response = await client.PutAsJsonAsync(
+            "/api/settings",
+            new AppSettings(AppTheme.Dark, "not-a-hex", "Acme Reinsurance API", 0.95, 0.2, null),
+            SerializerOptions);
+        response.EnsureSuccessStatusCode();
+
+        var saved = await response.Content.ReadFromJsonAsync<AppSettings>(SerializerOptions);
+        Assert.NotNull(saved);
+        Assert.Equal(string.Empty, saved.AccentColor);
+        Assert.Equal("Acme Reinsurance API", saved.ProductName);
+        Assert.True(saved.ConfidenceLowMax <= saved.ConfidenceMediumMax);
+
+        await client.PutAsJsonAsync("/api/settings", AppSettings.Default, SerializerOptions);
     }
 
     [Fact]

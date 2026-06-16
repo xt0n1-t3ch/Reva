@@ -1,20 +1,15 @@
 using System.Diagnostics;
 using System.Net.Sockets;
-using Microsoft.Playwright;
 
 namespace Reva.E2E;
 
-// Launches the REAL application as a subprocess on a free port, against a throwaway database
-// seeded with the demo corpus, then exposes a Playwright browser pointed at it. This is a true
-// end-to-end harness: the same app a user runs, driven through a real browser.
 public sealed class RevaServerFixture : IAsyncLifetime
 {
     private Process? _server;
     private string _tempRoot = string.Empty;
-    private IPlaywright? _playwright;
 
     public string BaseUrl { get; private set; } = string.Empty;
-    public IBrowser Browser { get; private set; } = default!;
+    public HttpClient Client { get; private set; } = default!;
 
     public async Task InitializeAsync()
     {
@@ -27,35 +22,25 @@ public sealed class RevaServerFixture : IAsyncLifetime
         var startInfo = new ProcessStartInfo("dotnet")
         {
             UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
             WorkingDirectory = Path.GetDirectoryName(dll)!
         };
         startInfo.ArgumentList.Add(dll);
         startInfo.ArgumentList.Add("--seed-demo");
+        startInfo.ArgumentList.Add("--no-open");
         startInfo.Environment["ASPNETCORE_URLS"] = BaseUrl;
         startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
         startInfo.Environment["Reva__Database__Provider"] = "Sqlite";
         startInfo.Environment["Reva__Database__ConnectionString"] = $"Data Source={Path.Combine(_tempRoot, "e2e.db")}";
         startInfo.Environment["Reva__Storage__UploadRoot"] = Path.Combine(_tempRoot, "uploads");
 
-        _server = Process.Start(startInfo) ?? throw new InvalidOperationException("Could not start the Reve server.");
+        _server = Process.Start(startInfo) ?? throw new InvalidOperationException("Could not start the Reva server.");
+        Client = new HttpClient { BaseAddress = new Uri(BaseUrl), Timeout = TimeSpan.FromSeconds(10) };
 
         await WaitForHealthAsync(TimeSpan.FromSeconds(90));
-
-        _playwright = await Playwright.CreateAsync();
-        Browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-    }
-
-    public async Task<IPage> NewPageAsync()
-    {
-        var context = await Browser.NewContextAsync(new BrowserNewContextOptions { ViewportSize = new ViewportSize { Width = 1440, Height = 960 } });
-        return await context.NewPageAsync();
     }
 
     private async Task WaitForHealthAsync(TimeSpan timeout)
     {
-        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
         var deadline = DateTime.UtcNow + timeout;
         Exception? last = null;
         while (DateTime.UtcNow < deadline)
@@ -67,7 +52,7 @@ public sealed class RevaServerFixture : IAsyncLifetime
 
             try
             {
-                var response = await client.GetAsync($"{BaseUrl}/health");
+                var response = await Client.GetAsync("/health");
                 if (response.IsSuccessStatusCode)
                 {
                     return;
@@ -81,7 +66,7 @@ public sealed class RevaServerFixture : IAsyncLifetime
             await Task.Delay(500);
         }
 
-        throw new TimeoutException($"Reve server did not become healthy at {BaseUrl}.", last);
+        throw new TimeoutException($"Reva server did not become healthy at {BaseUrl}.", last);
     }
 
     private static int FreePort()
@@ -93,7 +78,6 @@ public sealed class RevaServerFixture : IAsyncLifetime
         return port;
     }
 
-    // The built web app DLL — prefer Release, fall back to Debug.
     private static string LocateWebDll()
     {
         var root = FindRepositoryRoot();
@@ -126,14 +110,9 @@ public sealed class RevaServerFixture : IAsyncLifetime
         throw new DirectoryNotFoundException("Repository root containing Reva.slnx was not found.");
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
-        if (Browser is not null)
-        {
-            await Browser.CloseAsync();
-        }
-
-        _playwright?.Dispose();
+        Client?.Dispose();
 
         try
         {
@@ -143,26 +122,17 @@ public sealed class RevaServerFixture : IAsyncLifetime
                 _server.WaitForExit(5000);
             }
         }
-        catch
-        {
-            // Best-effort teardown.
-        }
         finally
         {
             _server?.Dispose();
         }
 
-        try
+        if (Directory.Exists(_tempRoot))
         {
-            if (Directory.Exists(_tempRoot))
-            {
-                Directory.Delete(_tempRoot, recursive: true);
-            }
+            Directory.Delete(_tempRoot, recursive: true);
         }
-        catch
-        {
-            // Temp files are best-effort.
-        }
+
+        return Task.CompletedTask;
     }
 }
 
