@@ -41,6 +41,21 @@ export const IconExport = (p: IconProps) => (
   </svg>
 );
 
+export const IconMappings = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 7h7" />
+    <path d="M13 7h7" />
+    <path d="M4 17h7" />
+    <path d="M13 17h7" />
+    <path d="M9 7c2 0 4 10 6 10" />
+    <path d="M15 7c-2 0-4 10-6 10" />
+    <circle cx="4" cy="7" r="1.5" />
+    <circle cx="20" cy="7" r="1.5" />
+    <circle cx="4" cy="17" r="1.5" />
+    <circle cx="20" cy="17" r="1.5" />
+  </svg>
+);
+
 export const IconSettings = (p: IconProps) => (
   <svg {...base(p)}>
     <circle cx="12" cy="12" r="3" />
@@ -158,3 +173,4 @@ export const IconHelp = (p: IconProps) => (
     <path d="M12 17h.01" />
   </svg>
 );
+

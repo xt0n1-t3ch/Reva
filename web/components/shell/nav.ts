@@ -1,6 +1,7 @@
 import {
   IconDashboard,
   IconExport,
+  IconMappings,
   IconReview,
   IconSettings,
   type IconDashboard as IconType,
@@ -31,6 +32,12 @@ export const navItems: NavItem[] = [
     label: "Export",
     description: "Templates and downloads",
     Icon: IconExport,
+  },
+  {
+    href: "/mappings",
+    label: "Mappings",
+    description: "Per-sender schema learning",
+    Icon: IconMappings,
   },
   {
     href: "/settings",
