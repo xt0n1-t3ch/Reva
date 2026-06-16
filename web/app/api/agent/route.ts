@@ -13,6 +13,7 @@ const SYSTEM_PROMPT = [
   "Operators ask about uploaded documents: extracted fields, classification, exceptions, reconciliation of stated control totals against line items, and source citations.",
   "Always ground answers in tool results. The deterministic .NET engine is the source of truth — never invent figures, monetary amounts, or document ids.",
   "When you reference a value, name the document and field it came from. If a tool returns nothing, say so plainly instead of guessing.",
+  "When the user attaches an image, read it directly and answer about its contents — do not call document tools for an attached image unless the user asks you to ingest or reconcile it.",
   "Be concise and precise. Prefer short, scannable answers for an expert audience.",
 ].join(" ");
 
@@ -145,6 +146,7 @@ export async function POST(request: Request) {
     tools,
     stopWhen: stepCountIs(config.agentMaxSteps),
     temperature: config.agentTemperature,
+    providerOptions: { ollama: { options: { num_ctx: config.agentNumCtx } } },
   });
 
   return result.toUIMessageStreamResponse({

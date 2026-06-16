@@ -1,6 +1,7 @@
 "use client";
 
 import type { UIMessage } from "ai";
+import Image from "next/image";
 import { cn } from "@/lib/cn";
 import { Spinner } from "@/components/ui/primitives";
 import { IconTool } from "@/components/ui/icons";
@@ -53,6 +54,32 @@ export function MessageParts({ message }: { message: UIMessage }) {
         }
         if (part.type === "reasoning") {
           return null;
+        }
+        if (part.type === "file") {
+          if (part.mediaType.startsWith("image/")) {
+            return (
+              <figure key={index} className="my-1.5 overflow-hidden rounded-md border border-border bg-surface-2">
+                <Image
+                  src={part.url}
+                  alt={part.filename ?? "Attached image"}
+                  width={512}
+                  height={512}
+                  unoptimized
+                  className="h-auto max-h-64 w-auto max-w-full object-contain"
+                />
+                {part.filename && (
+                  <figcaption className="border-t border-border px-2 py-1 text-[11px] text-muted-foreground">
+                    {part.filename}
+                  </figcaption>
+                )}
+              </figure>
+            );
+          }
+          return (
+            <div key={index} className="my-1.5 rounded-md border border-border bg-surface-2/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+              {part.filename ?? "Attached file"}
+            </div>
+          );
         }
         if (part.type.startsWith("tool-") || part.type === "dynamic-tool") {
           return <ToolChip key={index} part={part as never} />;

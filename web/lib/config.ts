@@ -6,8 +6,18 @@ export const config = {
   ollamaModel: process.env.OLLAMA_MODEL ?? "qwen3-vl:8b",
   agentMaxSteps: 6,
   agentTemperature: 0,
+  agentNumCtx: 16384,
   themeStorageKey: "reva-theme",
   onboardingStorageKey: "reva-onboarding-done",
+  chatOpenStorageKey: "reva-chat-open",
+  chatMinimizedStorageKey: "reva-chat-minimized",
+  chatMaxImageAttachments: 4,
+  chatMaxDocumentAttachments: 4,
+  chatMaxImageBytes: 10 * 1024 * 1024,
+  chatMaxDocumentBytes: 25 * 1024 * 1024,
+  chatImageAccept: "image/*",
+  chatDocumentAccept: ".pdf,.csv,.xlsx,.eml,.msg",
+  chatDocumentExtensions: [".pdf", ".csv", ".xlsx", ".eml", ".msg"],
   productName: "Reve Intelligence",
 } as const;
 
