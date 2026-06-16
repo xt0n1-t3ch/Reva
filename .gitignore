@@ -55,3 +55,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .proof/
+
+# Packaged static UI staged into wwwroot at build/package time (not committed)
+/src/Reva.Web/wwwroot/*
+!/src/Reva.Web/wwwroot/.gitkeep

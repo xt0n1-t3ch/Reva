@@ -1,12 +1,12 @@
 namespace Reva.Infrastructure;
 
-public static class RevaConfigurationSections
+public static partial class RevaConfigurationSections
 {
     public const string Storage = "Reva:Storage";
     public const string Parser = "Reva:Parser";
 }
 
-public static class RevaConfigurationKeys
+public static partial class RevaConfigurationKeys
 {
     public const string DatabaseProvider = "Reva:Database:Provider";
     public const string DatabaseConnectionString = "Reva:Database:ConnectionString";

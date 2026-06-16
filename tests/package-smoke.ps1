@@ -55,6 +55,24 @@ try {
         throw "Packaged Reva.exe did not pass HTTP smoke checks."
     }
 
+    # The single .exe must serve the bundled UI from the same origin as the API.
+    $homePage = Invoke-WebRequest -Uri "http://localhost:$port/" -TimeoutSec 5 -UseBasicParsing
+    if ($homePage.StatusCode -ne 200 -or $homePage.Content -notmatch "Reve Intelligence") {
+        throw "Packaged Reva.exe did not serve the static UI at /."
+    }
+
+    # The native chat agent must be wired and degrade gracefully when no local model is present.
+    $agentStatus = Invoke-WebRequest -Uri "http://localhost:$port/api/agent/status" -TimeoutSec 5 -UseBasicParsing
+    if ($agentStatus.StatusCode -ne 200) {
+        throw "Packaged Reva.exe did not expose /api/agent/status."
+    }
+
+    $agentBody = '{"id":"smoke","messages":[{"id":"m1","role":"user","parts":[{"type":"text","text":"hello"}]}]}'
+    $agentResponse = Invoke-WebRequest -Uri "http://localhost:$port/api/agent" -Method Post -ContentType "application/json" -Body $agentBody -TimeoutSec 30 -UseBasicParsing
+    if ($agentResponse.Headers["Content-Type"] -notmatch "text/event-stream" -or $agentResponse.Content -notmatch "data:") {
+        throw "Packaged /api/agent did not return a UI-message-stream response."
+    }
+
     Write-Host "PACKAGE_SMOKE_OK=http://localhost:$port"
 } finally {
     if (-not $process.HasExited) {
