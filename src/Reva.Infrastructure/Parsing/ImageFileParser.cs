@@ -21,6 +21,8 @@ public sealed class ImageFileParser(IOcrEngine? ocr) : IFileParser
         }
 
         var result = ocr.Recognize(filePath, cancellationToken);
+        var width = result.Width > 0 ? result.Width : 1;
+        var height = result.Height > 0 ? result.Height : 1;
         var format = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
         var warnings = new List<string>();
         if (result.Text.Length == 0)
@@ -32,7 +34,10 @@ public sealed class ImageFileParser(IOcrEngine? ocr) : IFileParser
             warnings.Add(string.Format(CultureInfo.InvariantCulture, "Low OCR confidence ({0:P0}); please verify the extracted text.", result.AverageConfidence));
         }
 
-        var spans = result.Lines.Select((line, index) => new SourceSpan($"ocr-1-{index + 1}", Guid.Empty, 1, 1, 1, 0, line.Bbox ?? new SourceBox(0, 0, 1, 1), line.Polygon, line.Text, line.Confidence, null, null, null, null)).ToList();
-        return Task.FromResult(ParseSupport.Build(Profile, format, result.Text, result.Text, warnings: warnings) with { SourceSpans = spans });
+        IReadOnlyList<ParsedPage> pages = result.Width > 0 && result.Height > 0
+            ? [new ParsedPage(1, filePath, width, height, 0)]
+            : [];
+        var spans = result.Lines.Select((line, index) => new SourceSpan($"ocr-1-{index + 1}", Guid.Empty, 1, width, height, 0, line.Bbox ?? new SourceBox(0, 0, 1, 1), line.Polygon, line.Text, line.Confidence, null, null, null, null)).ToList();
+        return Task.FromResult(ParseSupport.Build(Profile, format, result.Text, result.Text, warnings: warnings) with { SourceSpans = spans, Pages = pages });
     }
 }

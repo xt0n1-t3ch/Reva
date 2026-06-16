@@ -11,6 +11,7 @@ import {
 import { Badge, ConfidenceMeter, Dot } from "@/components/ui/primitives";
 import { EmptyState, Skeleton } from "@/components/ui/states";
 import { IconChevronRight, IconDocument } from "@/components/ui/icons";
+import { QueueThumbnail } from "@/components/workspace/queue-thumbnail";
 
 function QueueRow({ document }: { document: DocumentSummary }) {
   const tier = confidenceTier(document.confidence);
@@ -21,9 +22,7 @@ function QueueRow({ document }: { document: DocumentSummary }) {
       className="group grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 border-b border-border px-3 py-2.5 transition-colors last:border-0 hover:bg-surface-2/50 md:grid-cols-[minmax(0,1fr)_130px_150px_88px_128px_28px] md:py-2"
     >
       <div className="flex min-w-0 items-center gap-2.5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2 text-muted-foreground">
-          <IconDocument width={16} height={16} />
-        </span>
+        <QueueThumbnail documentId={document.id} />
         <span className="flex min-w-0 flex-col">
           <span className="truncate text-sm font-medium">{document.fileName}</span>
           <span className="truncate text-[11px] text-muted-foreground">

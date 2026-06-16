@@ -10,6 +10,8 @@ namespace Reva.Infrastructure.Persistence.DemoData;
 // through the real workflow — no fabricated records.
 public static class DemoDocumentSeeder
 {
+    private const string MeridianBordereauResourceName = "reva.seed.meridian-bordereau.png";
+
     public static async Task SeedIfEmptyAsync(IDocumentWorkflow workflow, RevaDbContext dbContext, CancellationToken cancellationToken)
     {
         if (await dbContext.Documents.AnyAsync(cancellationToken))
@@ -33,12 +35,38 @@ public static class DemoDocumentSeeder
 
     // Seeded oldest-first so the hero bordereau is the most recent — and therefore the
     // document the cockpit opens on by default.
-    private static IReadOnlyList<DemoSample> Samples =>
-    [
-        new("operations-note.txt", "text/plain", Encoding.UTF8.GetBytes(OperationsNote)),
-        new("technical-account-statement.txt", "text/plain", Encoding.UTF8.GetBytes(TechnicalAccount)),
-        new("orion-property-cat-xl-jan-2025.eml", "message/rfc822", BuildHeroBordereauEmail()),
-    ];
+    private static IReadOnlyList<DemoSample> Samples
+    {
+        get
+        {
+            var samples = new List<DemoSample>
+            {
+                new("operations-note.txt", "text/plain", Encoding.UTF8.GetBytes(OperationsNote)),
+                new("technical-account-statement.txt", "text/plain", Encoding.UTF8.GetBytes(TechnicalAccount)),
+            };
+            var meridianBordereau = ReadEmbeddedSample(MeridianBordereauResourceName);
+            if (meridianBordereau is not null)
+            {
+                samples.Add(new DemoSample("meridian-property-cat-xl-bordereau-2025-q1.png", "image/png", meridianBordereau));
+            }
+
+            samples.Add(new DemoSample("orion-property-cat-xl-jan-2025.eml", "message/rfc822", BuildHeroBordereauEmail()));
+            return samples;
+        }
+    }
+
+    private static byte[]? ReadEmbeddedSample(string resourceName)
+    {
+        using var stream = typeof(DemoDocumentSeeder).Assembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+        {
+            return null;
+        }
+
+        using var buffer = new MemoryStream();
+        stream.CopyTo(buffer);
+        return buffer.ToArray();
+    }
 
     // The hero document is a realistic broker submission: a cover-note email stating the
     // headline figures, with the line-item bordereau attached as a CSV. The stated totals

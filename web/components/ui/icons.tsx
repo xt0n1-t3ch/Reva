@@ -138,6 +138,32 @@ export const IconChevronRight = (p: IconProps) => (
   </svg>
 );
 
+export const IconChevronLeft = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="m15 6-6 6 6 6" />
+  </svg>
+);
+
+export const IconZoomIn = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-3.5-3.5M11 8v6M8 11h6" />
+  </svg>
+);
+
+export const IconZoomOut = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-3.5-3.5M8 11h6" />
+  </svg>
+);
+
+export const IconFit = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" />
+  </svg>
+);
+
 export const IconSearch = (p: IconProps) => (
   <svg {...base(p)}>
     <circle cx="11" cy="11" r="7" />

@@ -9,7 +9,7 @@ public sealed record OcrLine(
     SourceBox? Bbox = null,
     IReadOnlyList<SourcePoint>? Polygon = null);
 
-public sealed record OcrResult(string Text, IReadOnlyList<OcrLine> Lines, double AverageConfidence)
+public sealed record OcrResult(string Text, IReadOnlyList<OcrLine> Lines, double AverageConfidence, int Width = 0, int Height = 0)
 {
     public static OcrResult Empty { get; } = new(string.Empty, [], 0);
 }
