@@ -6,6 +6,7 @@ import type {
   DocumentSummary,
   DocumentUploadResult,
   ExportTemplate,
+  ExportTemplateDraft,
   InboundSourceStatus,
   ReconciliationCheck,
   ReviewDecision,
@@ -84,6 +85,26 @@ export const api = {
 
   listTemplates: (signal?: AbortSignal) =>
     request<ExportTemplate[]>("/api/templates", { signal }),
+
+  createTemplate: (draft: ExportTemplateDraft) =>
+    request<ExportTemplate>("/api/templates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(draft),
+    }),
+
+  updateTemplate: (id: string, draft: ExportTemplateDraft) =>
+    request<ExportTemplate>(`/api/templates/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(draft),
+    }),
+
+  duplicateTemplate: (id: string) =>
+    request<ExportTemplate>(`/api/templates/${id}/duplicate`, { method: "POST" }),
+
+  deleteTemplate: (id: string) =>
+    request<void>(`/api/templates/${id}`, { method: "DELETE" }),
 
   pageImageUrl: (documentId: string, page: number) =>
     apiUrl(`/api/documents/${documentId}/pages/${page}.png`),
