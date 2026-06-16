@@ -53,7 +53,7 @@ const createFileList = (attachments: ImageAttachment[]): FileList => {
 
 export function ChatPanel({ onClose, onMinimize }: { onClose?: () => void; onMinimize?: () => void }) {
   const { messages, sendMessage, setMessages, status, error, stop } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/agent" }),
+    transport: new DefaultChatTransport({ api: `${config.apiBaseUrl}/api/agent` }),
   });
   const [input, setInput] = useState("");
   const [imageAttachments, setImageAttachments] = useState<ImageAttachment[]>([]);

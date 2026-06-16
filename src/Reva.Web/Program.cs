@@ -55,6 +55,7 @@ app.MapOpenApi();
 app.MapDocumentEndpoints();
 app.MapTemplateEndpoints();
 app.MapApiSurfaceEndpoints();
+app.MapAgentEndpoints();
 
 await app.StartAsync();
 

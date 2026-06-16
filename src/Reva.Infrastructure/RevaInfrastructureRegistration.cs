@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenAI;
+using Reva.Infrastructure.Agent;
 using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Hashing;
 using Reva.Infrastructure.Ingestion;
@@ -31,6 +32,15 @@ public static class RevaInfrastructureRegistration
             llm.BaseUrl = configuration[RevaConfigurationKeys.LlmBaseUrl] ?? llm.BaseUrl;
             llm.Model = configuration[RevaConfigurationKeys.LlmModel] ?? llm.Model;
             llm.DeterministicOnly = !bool.TryParse(configuration[RevaConfigurationKeys.LlmDeterministicOnly], out var deterministicOnly) || deterministicOnly;
+        });
+        services.Configure<AgentChatOptions>(agent =>
+        {
+            var configured = BuildAgentOptions(configuration);
+            agent.Model = configured.Model;
+            agent.BaseUrl = configured.BaseUrl;
+            agent.NumCtx = configured.NumCtx;
+            agent.MaxSteps = configured.MaxSteps;
+            agent.Temperature = configured.Temperature;
         });
         services.Configure<DoclingParserOptions>(parser =>
         {
@@ -69,6 +79,7 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IReinsuranceClassifier, ReinsuranceClassifier>();
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();
         services.AddSingleton<IExtractionMerger, ExtractionMerger>();
+        services.AddSingleton<IAgentChatService>(provider => new AgentChatService(CreateAgentOllamaChatClient(configuration), Microsoft.Extensions.Options.Options.Create(BuildAgentOptions(configuration))));
         services.AddSingleton<ILlmFieldExtractor>(provider =>
         {
             var configuredProvider = configuration[RevaConfigurationKeys.LlmProvider] ?? LlmExtractionOptions.ProviderNone;
@@ -95,10 +106,29 @@ public static class RevaInfrastructureRegistration
         DeterministicOnly = !bool.TryParse(configuration[RevaConfigurationKeys.LlmDeterministicOnly], out var deterministicOnly) || deterministicOnly
     };
 
+    private static AgentChatOptions BuildAgentOptions(IConfiguration configuration) => new()
+    {
+        Model = configuration[RevaConfigurationKeys.AgentModel] ?? AgentChatOptions.DefaultModel,
+        BaseUrl = configuration[RevaConfigurationKeys.AgentBaseUrl] ?? AgentChatOptions.DefaultBaseUrl,
+        NumCtx = int.TryParse(configuration[RevaConfigurationKeys.AgentNumCtx], out var numCtx) ? numCtx : AgentChatOptions.DefaultNumCtx,
+        MaxSteps = int.TryParse(configuration[RevaConfigurationKeys.AgentMaxSteps], out var maxSteps) ? maxSteps : AgentChatOptions.DefaultMaxSteps,
+        Temperature = double.TryParse(configuration[RevaConfigurationKeys.AgentTemperature], out var temperature) ? temperature : AgentChatOptions.DefaultTemperature
+    };
+
     private static IChatClient CreateOllamaChatClient(IConfiguration configuration)
     {
         var options = BuildLlmOptions(configuration);
         return new OpenAI.Chat.ChatClient(options.Model, new ApiKeyCredential("ollama"), new OpenAIClientOptions { Endpoint = new Uri(options.BaseUrl) }).AsIChatClient();
+    }
+
+    private static IChatClient CreateAgentOllamaChatClient(IConfiguration configuration)
+    {
+        var options = BuildAgentOptions(configuration);
+        return new OpenAI.Chat.ChatClient(options.Model, new ApiKeyCredential("ollama"), new OpenAIClientOptions { Endpoint = new Uri(options.BaseUrl) })
+            .AsIChatClient()
+            .AsBuilder()
+            .UseFunctionInvocation(configure: client => client.MaximumIterationsPerRequest = options.MaxSteps)
+            .Build();
     }
 
     private static void EnsureSqliteDirectory(string connectionString)

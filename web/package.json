@@ -12,10 +12,8 @@
     "@ai-sdk/react": "^3.0.208",
     "ai": "^6.0.206",
     "next": "16.2.9",
-    "ollama-ai-provider-v2": "^3.6.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "zod": "^4.4.3"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.3",
