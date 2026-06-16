@@ -12,4 +12,6 @@ public sealed class AppSettingsRecord
     public double ConfidenceLowMax { get; set; } = 0.6;
     public double ConfidenceMediumMax { get; set; } = 0.85;
     public Guid? DefaultTemplateId { get; set; }
+    public double ReconciliationTolerance { get; set; } = 0.01;
+    public bool UseLlmAssist { get; set; }
 }

@@ -213,6 +213,8 @@ export interface AppSettings {
   confidenceLowMax: number;
   confidenceMediumMax: number;
   defaultTemplateId: string | null;
+  reconciliationTolerance: number;
+  useLlmAssist: boolean;
 }
 
 export interface ExportColumn {

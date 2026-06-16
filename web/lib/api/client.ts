@@ -83,6 +83,10 @@ export const api = {
   listInboundSources: (signal?: AbortSignal) =>
     request<InboundSourceStatus[]>("/api/inbound-sources", { signal }),
 
+  reseedDemo: () => request<{ seeded: boolean }>("/api/data/reseed", { method: "POST" }),
+
+  clearDocuments: () => request<{ deleted: number }>("/api/data/clear", { method: "POST" }),
+
   listTemplates: (signal?: AbortSignal) =>
     request<ExportTemplate[]>("/api/templates", { signal }),
 

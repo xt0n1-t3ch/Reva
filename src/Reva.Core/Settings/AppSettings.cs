@@ -8,7 +8,9 @@ public sealed record AppSettings(
     string ProductName,
     double ConfidenceLowMax,     // score below this renders as "Low"
     double ConfidenceMediumMax,  // score below this renders as "Medium"; at or above is "High"
-    Guid? DefaultTemplateId)
+    Guid? DefaultTemplateId,
+    double ReconciliationTolerance,
+    bool UseLlmAssist)
 {
-    public static AppSettings Default => new(AppTheme.Light, string.Empty, "Reve Intelligence", 0.6, 0.85, null);
+    public static AppSettings Default => new(AppTheme.Light, string.Empty, "Reve Intelligence", 0.6, 0.85, null, 0.01, false);
 }

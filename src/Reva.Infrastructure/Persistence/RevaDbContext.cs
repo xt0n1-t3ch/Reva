@@ -89,6 +89,8 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
             entity.Property(settings => settings.Theme).HasMaxLength(16);
             entity.Property(settings => settings.AccentColor).HasMaxLength(16);
             entity.Property(settings => settings.ProductName).HasMaxLength(80);
+            entity.Property(settings => settings.ReconciliationTolerance).HasDefaultValue(0.01);
+            entity.Property(settings => settings.UseLlmAssist).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<LearnedSchemaMappingRecord>(entity =>

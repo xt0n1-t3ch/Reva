@@ -26,9 +26,11 @@ public sealed class SettingsTests(RevaWebApplicationFactory factory) : IClassFix
 
         // Invalid accent is sanitized away; thresholds are clamped/ordered.
         var saved = await store.SaveAsync(
-            new AppSettings(AppTheme.Dark, "not-a-hex", "Acme Reinsurance", 0.9, 0.4, null), CancellationToken.None);
+            new AppSettings(AppTheme.Dark, "not-a-hex", "Acme Reinsurance", 0.9, 0.4, null, 2, true), CancellationToken.None);
         Assert.Equal(string.Empty, saved.AccentColor);
         Assert.True(saved.ConfidenceLowMax <= saved.ConfidenceMediumMax);
+        Assert.Equal(0.5, saved.ReconciliationTolerance);
+        Assert.True(saved.UseLlmAssist);
 
         var validAccent = await store.SaveAsync(
             saved with { AccentColor = "#4F46E5" }, CancellationToken.None);
@@ -54,7 +56,7 @@ public sealed class SettingsTests(RevaWebApplicationFactory factory) : IClassFix
 
         var response = await client.PutAsJsonAsync(
             "/api/settings",
-            new AppSettings(AppTheme.Dark, "not-a-hex", "Acme Reinsurance API", 0.95, 0.2, null),
+            new AppSettings(AppTheme.Dark, "not-a-hex", "Acme Reinsurance API", 0.95, 0.2, null, -1, true),
             SerializerOptions);
         response.EnsureSuccessStatusCode();
 
@@ -63,6 +65,8 @@ public sealed class SettingsTests(RevaWebApplicationFactory factory) : IClassFix
         Assert.Equal(string.Empty, saved.AccentColor);
         Assert.Equal("Acme Reinsurance API", saved.ProductName);
         Assert.True(saved.ConfidenceLowMax <= saved.ConfidenceMediumMax);
+        Assert.Equal(0, saved.ReconciliationTolerance);
+        Assert.True(saved.UseLlmAssist);
 
         await client.PutAsJsonAsync("/api/settings", AppSettings.Default, SerializerOptions);
     }

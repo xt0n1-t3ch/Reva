@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Reva.Core.Contracts;
 using Reva.Core.Documents;
 using Reva.Core.Reinsurance;
+using Reva.Core.Settings;
 using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Hashing;
 using Reva.Infrastructure.Parsing;
@@ -164,7 +165,9 @@ public sealed class DocumentWorkflow(
             // Always run best-effort extraction. Unknown/low-confidence documents are still
             // ingested as reviewable records (the extractor flags them) — never quarantined.
             var deterministic = extractor.Extract(parsed, classification);
-            var proposal = await llmExtractor.ProposeAsync(parsed, deterministic, cancellationToken);
+            var proposal = RuntimeSettings.Current.UseLlmAssist
+                ? await llmExtractor.ProposeAsync(parsed, deterministic, cancellationToken)
+                : null;
             var extraction = extractionMerger.Merge(deterministic, proposal);
             var mapped = await schemaMapping.MapAsync(parsed, extraction.Fields, cancellationToken);
             record.Status = DocumentStatus.Extracted.ToString();

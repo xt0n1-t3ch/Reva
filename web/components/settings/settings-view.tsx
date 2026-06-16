@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "@/lib/cn";
 import { api } from "@/lib/api/client";
 import type { AppSettings } from "@/lib/api/types";
 import { useApi } from "@/lib/use-api";
@@ -40,11 +41,14 @@ function Field({
 export function SettingsView() {
   const { data, error, loading, refresh } = useApi((signal) => api.getSettings(signal));
   const sources = useApi((signal) => api.listInboundSources(signal));
+  const templates = useApi((signal) => api.listTemplates(signal));
   const [form, setForm] = useState<AppSettings | null>(null);
   const [seed, setSeed] = useState<AppSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [maintenanceBusy, setMaintenanceBusy] = useState<"reseed" | "clear" | null>(null);
+  const [maintenanceResult, setMaintenanceResult] = useState<string | null>(null);
 
   if (data && data !== seed) {
     setSeed(data);
@@ -73,6 +77,35 @@ export function SettingsView() {
       setSaveError(cause instanceof Error ? cause.message : "Save failed");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const reseed = async () => {
+    setMaintenanceBusy("reseed");
+    setMaintenanceResult(null);
+    try {
+      const { seeded } = await api.reseedDemo();
+      setMaintenanceResult(seeded ? "Demo corpus reseeded." : "Workspace already has documents — clear it first to reseed.");
+    } catch (cause) {
+      setMaintenanceResult(cause instanceof Error ? cause.message : "Reseed failed.");
+    } finally {
+      setMaintenanceBusy(null);
+    }
+  };
+
+  const clear = async () => {
+    if (!window.confirm("Delete every document, extraction, and review record? This cannot be undone.")) {
+      return;
+    }
+    setMaintenanceBusy("clear");
+    setMaintenanceResult(null);
+    try {
+      const { deleted } = await api.clearDocuments();
+      setMaintenanceResult(`Cleared ${deleted} document${deleted === 1 ? "" : "s"}.`);
+    } catch (cause) {
+      setMaintenanceResult(cause instanceof Error ? cause.message : "Clear failed.");
+    } finally {
+      setMaintenanceBusy(null);
     }
   };
 
@@ -187,6 +220,88 @@ export function SettingsView() {
                 className="rounded-md border border-input bg-surface px-3 py-2 font-mono text-sm tabular"
               />
             </Field>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Extraction & reconciliation">
+          <div className="grid gap-4 p-4 sm:grid-cols-2">
+            <Field
+              label="Reconciliation tolerance"
+              hint="Money totals within this percentage of the line-item total count as reconciled. Applies to new ingests."
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  max={50}
+                  step={0.25}
+                  value={Number((form.reconciliationTolerance * 100).toFixed(2))}
+                  onChange={(event) => update("reconciliationTolerance", Math.max(0, Number(event.target.value)) / 100)}
+                  className="w-28 rounded-md border border-input bg-surface px-3 py-2 font-mono text-sm tabular"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+            </Field>
+            <Field
+              label="Local LLM assist"
+              hint="When on and a local model is configured, new ingests use it to assist extraction. Off keeps extraction fully deterministic."
+            >
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.useLlmAssist}
+                onClick={() => update("useLlmAssist", !form.useLlmAssist)}
+                className={cn(
+                  "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-border transition-colors",
+                  form.useLlmAssist ? "bg-primary" : "bg-surface-3",
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-block size-5 rounded-full bg-surface shadow-soft transition-transform",
+                    form.useLlmAssist ? "translate-x-5" : "translate-x-0.5",
+                  )}
+                />
+              </button>
+            </Field>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Export defaults">
+          <div className="grid gap-4 p-4 sm:grid-cols-2">
+            <Field label="Default export template" hint="Pre-selected when exporting a reviewed document.">
+              <select
+                value={form.defaultTemplateId ?? ""}
+                onChange={(event) => update("defaultTemplateId", event.target.value || null)}
+                className="rounded-md border border-input bg-surface px-3 py-2 text-sm"
+              >
+                <option value="">Automatic (built-in CSV)</option>
+                {(templates.data ?? []).map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name} · {template.format}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Data management">
+          <div className="flex flex-col gap-3 p-4">
+            <p className="text-sm text-muted-foreground">
+              Reload the bundled demo corpus into an empty workspace, or remove every document to start clean.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={reseed} disabled={maintenanceBusy !== null}>
+                {maintenanceBusy === "reseed" ? "Reseeding…" : "Reseed demo data"}
+              </Button>
+              <Button variant="danger" size="sm" onClick={clear} disabled={maintenanceBusy !== null}>
+                {maintenanceBusy === "clear" ? "Clearing…" : "Clear all documents"}
+              </Button>
+              {maintenanceResult && (
+                <span className="text-xs text-muted-foreground">{maintenanceResult}</span>
+              )}
+            </div>
           </div>
         </SectionCard>
 

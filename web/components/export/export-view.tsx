@@ -302,12 +302,24 @@ function TemplateEditor({
 export function ExportView() {
   const templates = useApi((signal) => api.listTemplates(signal));
   const documents = useApi((signal) => api.listDocuments(signal));
+  const settings = useApi((signal) => api.getSettings(signal));
   const [templateId, setTemplateId] = useState<string>("");
+  const [defaultApplied, setDefaultApplied] = useState(false);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
 
   const templateList = useMemo(() => templates.data ?? [], [templates.data]);
+
+  // Pre-select the configured default export template once both lists have loaded.
+  if (!defaultApplied && settings.data && templateList.length > 0) {
+    setDefaultApplied(true);
+    const preferred = settings.data.defaultTemplateId;
+    if (preferred && templateList.some((template) => template.id === preferred)) {
+      setTemplateId(preferred);
+    }
+  }
+
   const documentList = documents.data ?? [];
   const selectedTemplate = useMemo(
     () => templateList.find((template) => template.id === templateId) ?? null,

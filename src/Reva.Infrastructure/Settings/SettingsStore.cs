@@ -32,6 +32,8 @@ public sealed partial class SettingsStore(RevaDbContext dbContext) : ISettingsSt
         record.ConfidenceLowMax = sanitized.ConfidenceLowMax;
         record.ConfidenceMediumMax = sanitized.ConfidenceMediumMax;
         record.DefaultTemplateId = sanitized.DefaultTemplateId;
+        record.ReconciliationTolerance = sanitized.ReconciliationTolerance;
+        record.UseLlmAssist = sanitized.UseLlmAssist;
 
         await dbContext.SaveChangesAsync(cancellationToken);
         RuntimeSettings.Set(sanitized);
@@ -46,12 +48,20 @@ public sealed partial class SettingsStore(RevaDbContext dbContext) : ISettingsSt
         var name = string.IsNullOrWhiteSpace(settings.ProductName) ? AppSettings.Default.ProductName : settings.ProductName.Trim();
         var low = Math.Clamp(settings.ConfidenceLowMax, 0d, 1d);
         var medium = Math.Clamp(settings.ConfidenceMediumMax, 0d, 1d);
+        var reconciliationTolerance = Math.Clamp(settings.ReconciliationTolerance, 0d, 0.5d);
         if (medium < low)
         {
             (low, medium) = (medium, low);
         }
 
-        return settings with { AccentColor = accent, ProductName = name, ConfidenceLowMax = low, ConfidenceMediumMax = medium };
+        return settings with
+        {
+            AccentColor = accent,
+            ProductName = name,
+            ConfidenceLowMax = low,
+            ConfidenceMediumMax = medium,
+            ReconciliationTolerance = reconciliationTolerance
+        };
     }
 
     private static AppSettings ToSettings(AppSettingsRecord record) => new(
@@ -60,7 +70,9 @@ public sealed partial class SettingsStore(RevaDbContext dbContext) : ISettingsSt
         record.ProductName,
         record.ConfidenceLowMax,
         record.ConfidenceMediumMax,
-        record.DefaultTemplateId);
+        record.DefaultTemplateId,
+        record.ReconciliationTolerance,
+        record.UseLlmAssist);
 
     [GeneratedRegex("^#[0-9a-fA-F]{6}$", RegexOptions.CultureInvariant)]
     private static partial Regex HexColor();

@@ -25,6 +25,19 @@ public static class ApiSurfaceEndpoints
 
         routes.MapPut("/api/settings", async (Reva.Core.Settings.AppSettings draft, ISettingsStore settings, CancellationToken cancellationToken) => Results.Ok(await settings.SaveAsync(draft, cancellationToken))).WithTags("Settings");
 
+        var data = routes.MapGroup("/api/data").WithTags("Data management");
+        data.MapPost("/reseed", async (IDataMaintenance maintenance, CancellationToken cancellationToken) =>
+        {
+            var seeded = await maintenance.ReseedDemoAsync(cancellationToken);
+            return Results.Ok(new { seeded });
+        }).DisableAntiforgery();
+
+        data.MapPost("/clear", async (IDataMaintenance maintenance, CancellationToken cancellationToken) =>
+        {
+            var deleted = await maintenance.ClearAllDocumentsAsync(cancellationToken);
+            return Results.Ok(new { deleted });
+        }).DisableAntiforgery();
+
         routes.MapGet("/api/inbound-sources", (IInboundSourceRegistry registry) => Results.Ok(registry.Statuses())).WithTags("Inbound sources");
 
         routes.MapGet("/api/reconciliation/{id:guid}", async (Guid id, RevaDbContext dbContext, IBdxReviewPayloadAssembler assembler, CancellationToken cancellationToken) =>
