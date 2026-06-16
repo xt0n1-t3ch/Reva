@@ -4,23 +4,23 @@ using Microsoft.EntityFrameworkCore;
 using Reva.Infrastructure;
 using Reva.Infrastructure.Persistence;
 using Reva.Infrastructure.Persistence.DemoData;
-using Reva.Web.Components;
 using Reva.Web.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
-// Whether the end-user escape hatches permit auto-opening a browser. The actual open is
-// further restricted to Production below, so running locally or under tests never spawns a tab.
 var allowBrowserOpen = !args.Contains("--no-open", StringComparer.OrdinalIgnoreCase)
     && !string.Equals(Environment.GetEnvironmentVariable("REVA_NO_OPEN"), "1", StringComparison.OrdinalIgnoreCase);
 var seedDemo = args.Contains("--seed-demo", StringComparer.OrdinalIgnoreCase)
     || string.Equals(Environment.GetEnvironmentVariable("REVA_SEED_DEMO"), "1", StringComparison.OrdinalIgnoreCase);
 
+const string FrontendCorsPolicy = "FrontendCorsPolicy";
+var frontendOrigin = builder.Configuration["Reva:Frontend:Origin"] ?? "http://localhost:3000";
+builder.Services.AddCors(options => options.AddPolicy(FrontendCorsPolicy, policy => policy.WithOrigins(frontendOrigin).AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddOpenApi();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
 builder.Services.AddRevaInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -30,7 +30,6 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<RevaDbContext>();
     await dbContext.Database.MigrateAsync();
 
-    // Load persisted settings into the runtime holder so the UI reflects them from the first render.
     await scope.ServiceProvider.GetRequiredService<Reva.Infrastructure.Settings.ISettingsStore>().GetAsync(CancellationToken.None);
 
     if (seedDemo)
@@ -42,27 +41,23 @@ using (var scope = app.Services.CreateScope())
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        await context.Response.WriteAsJsonAsync(new { error = "An unexpected error occurred." });
+    }));
 }
 
-// Re-execute to the friendly not-found page for UI navigation only. API routes must keep their
-// raw status codes (otherwise a JSON 404 gets re-run against the Razor page and surfaces as 405).
-app.UseWhen(
-    context => !context.Request.Path.StartsWithSegments("/api"),
-    branch => branch.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true));
-app.UseAntiforgery();
+app.UseCors(FrontendCorsPolicy);
 
-app.MapStaticAssets();
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "Reva" }));
+app.MapOpenApi();
 app.MapDocumentEndpoints();
 app.MapTemplateEndpoints();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapApiSurfaceEndpoints();
 
 await app.StartAsync();
 
-// Only the packaged, end-user (Production) launch opens a browser. Local `dotnet run`,
-// integration tests, and the e2e harness all run in Development/Testing and stay quiet.
 if (allowBrowserOpen && app.Environment.IsProduction())
 {
     OpenBrowser(app);

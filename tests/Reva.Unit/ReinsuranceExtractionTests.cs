@@ -1,5 +1,6 @@
 using Reva.Core.Contracts;
 using Reva.Core.Reinsurance;
+using Reva.Core.Settings;
 using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Parsing;
 
@@ -125,6 +126,37 @@ public sealed class ReinsuranceExtractionTests
 
         Assert.DoesNotContain(result.Exceptions, issue =>
             issue.IsReconciliation && issue.FieldName == ReinsuranceFieldNames.Premium);
+    }
+
+    [Fact]
+    public void MoneyReconciliationRespectsRuntimeTolerance()
+    {
+        var text = "Currency: USD\nPremium: USD 4,400,000\n";
+        IReadOnlyList<IReadOnlyDictionary<string, string>> rows =
+        [
+            new Dictionary<string, string> { ["Premium"] = "2450000" },
+            new Dictionary<string, string> { ["Premium"] = "3100000" }
+        ];
+        var table = new ExtractedTable("bordereau", ["Premium"], rows);
+        var parsed = new ParsedDocument("test", "csv", text, text, "{}", [table], []);
+        var extractor = new ReinsuranceFieldExtractor();
+
+        try
+        {
+            RuntimeSettings.Set(AppSettings.Default with { ReconciliationTolerance = 0.5 });
+            var lenient = extractor.Extract(parsed, new ReinsuranceClassifier().Classify(parsed));
+            Assert.DoesNotContain(lenient.Exceptions, issue =>
+                issue.IsReconciliation && issue.FieldName == ReinsuranceFieldNames.Premium);
+
+            RuntimeSettings.Set(AppSettings.Default with { ReconciliationTolerance = 0.0001 });
+            var strict = extractor.Extract(parsed, new ReinsuranceClassifier().Classify(parsed));
+            Assert.Contains(strict.Exceptions, issue =>
+                issue.IsReconciliation && issue.FieldName == ReinsuranceFieldNames.Premium);
+        }
+        finally
+        {
+            RuntimeSettings.Set(AppSettings.Default);
+        }
     }
 
     private static string SampleStatementText()

@@ -42,10 +42,20 @@ namespace Reva.Infrastructure.Persistence.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("TEXT");
 
+                    b.Property<double>("ReconciliationTolerance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("REAL")
+                        .HasDefaultValue(0.01);
+
                     b.Property<string>("Theme")
                         .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("UseLlmAssist")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.HasKey("Id");
 
@@ -127,6 +137,39 @@ namespace Reva.Infrastructure.Persistence.Migrations
                     b.HasIndex("DocumentRecordId");
 
                     b.ToTable("DocumentIssueRecord");
+                });
+
+            modelBuilder.Entity("Reva.Infrastructure.Persistence.DocumentPageRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("DocumentRecordId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Height")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Page")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Rotation")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("Width")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentRecordId");
+
+                    b.ToTable("DocumentPages");
                 });
 
             modelBuilder.Entity("Reva.Infrastructure.Persistence.DocumentRecord", b =>
@@ -255,6 +298,77 @@ namespace Reva.Infrastructure.Persistence.Migrations
                     b.HasIndex("DocumentRecordId");
 
                     b.ToTable("DocumentSchemaMappingRecord");
+                });
+
+            modelBuilder.Entity("Reva.Infrastructure.Persistence.DocumentSourceSpanRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BlockId")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ColumnIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("DocumentRecordId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Height")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("OcrConfidence")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("Page")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("PageHeight")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("PageWidth")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("PolygonJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Rotation")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RowIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SpanId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TableId")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Width")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("X")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Y")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentRecordId");
+
+                    b.ToTable("DocumentSourceSpans");
                 });
 
             modelBuilder.Entity("Reva.Infrastructure.Persistence.DocumentTableRecord", b =>
@@ -415,10 +529,28 @@ namespace Reva.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Reva.Infrastructure.Persistence.DocumentPageRecord", b =>
+                {
+                    b.HasOne("Reva.Infrastructure.Persistence.DocumentRecord", null)
+                        .WithMany("Pages")
+                        .HasForeignKey("DocumentRecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Reva.Infrastructure.Persistence.DocumentSchemaMappingRecord", b =>
                 {
                     b.HasOne("Reva.Infrastructure.Persistence.DocumentRecord", null)
                         .WithMany("SchemaMappings")
+                        .HasForeignKey("DocumentRecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Reva.Infrastructure.Persistence.DocumentSourceSpanRecord", b =>
+                {
+                    b.HasOne("Reva.Infrastructure.Persistence.DocumentRecord", null)
+                        .WithMany("SourceSpans")
                         .HasForeignKey("DocumentRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -448,9 +580,13 @@ namespace Reva.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Fields");
 
+                    b.Navigation("Pages");
+
                     b.Navigation("ReviewEvents");
 
                     b.Navigation("SchemaMappings");
+
+                    b.Navigation("SourceSpans");
 
                     b.Navigation("Tables");
                 });

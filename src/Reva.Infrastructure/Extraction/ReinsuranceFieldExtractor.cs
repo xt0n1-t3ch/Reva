@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Reva.Core.Contracts;
 using Reva.Core.Reinsurance;
+using Reva.Core.Settings;
 using Reva.Infrastructure.Parsing;
 
 namespace Reva.Infrastructure.Extraction;
@@ -224,7 +225,7 @@ public sealed partial class ReinsuranceFieldExtractor : IReinsuranceExtractor
         }
 
         var relativeGap = Math.Abs(detected - expected) / Math.Max(Math.Abs(expected), 1m);
-        if (relativeGap < 0.0005m)
+        if (relativeGap < (decimal)RuntimeSettings.Current.ReconciliationTolerance)
         {
             return null;
         }
@@ -357,5 +358,4 @@ public sealed partial class ReinsuranceFieldExtractor : IReinsuranceExtractor
     [GeneratedRegex(@"\d{4}", RegexOptions.CultureInvariant)]
     private static partial Regex YearRegex();
 }
-
 

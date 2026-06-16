@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Reva.Core.Contracts;
 using Reva.Core.Documents;
 using Reva.Core.Reinsurance;
+using Reva.Core.Settings;
 using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Hashing;
 using Reva.Infrastructure.Parsing;
@@ -19,7 +20,9 @@ public sealed class DocumentWorkflow(
     IDocumentParser parser,
     IReinsuranceClassifier classifier,
     IReinsuranceExtractor extractor,
-    ISchemaMappingService schemaMapping) : IDocumentWorkflow
+    ISchemaMappingService schemaMapping,
+    ILlmFieldExtractor llmExtractor,
+    IExtractionMerger extractionMerger) : IDocumentWorkflow
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
@@ -161,7 +164,11 @@ public sealed class DocumentWorkflow(
 
             // Always run best-effort extraction. Unknown/low-confidence documents are still
             // ingested as reviewable records (the extractor flags them) — never quarantined.
-            var extraction = extractor.Extract(parsed, classification);
+            var deterministic = extractor.Extract(parsed, classification);
+            var proposal = RuntimeSettings.Current.UseLlmAssist
+                ? await llmExtractor.ProposeAsync(parsed, deterministic, cancellationToken)
+                : null;
+            var extraction = extractionMerger.Merge(deterministic, proposal);
             var mapped = await schemaMapping.MapAsync(parsed, extraction.Fields, cancellationToken);
             record.Status = DocumentStatus.Extracted.ToString();
             record.DocumentType = extraction.DocumentType.ToString();
@@ -175,6 +182,33 @@ public sealed class DocumentWorkflow(
                 IsCorrected = field.IsCorrected
             }).ToList();
             record.SchemaMappings = mapped.Mappings.ToList();
+            record.SourceSpans = parsed.SourceSpans.Select(span => new DocumentSourceSpanRecord
+            {
+                SpanId = span.Id,
+                Page = span.Page,
+                PageWidth = span.PageWidth,
+                PageHeight = span.PageHeight,
+                Rotation = span.Rotation,
+                X = span.Bbox.X,
+                Y = span.Bbox.Y,
+                Width = span.Bbox.Width,
+                Height = span.Bbox.Height,
+                PolygonJson = JsonSerializer.Serialize(span.Polygon ?? [], SerializerOptions),
+                Text = span.Text,
+                OcrConfidence = span.OcrConfidence,
+                BlockId = span.BlockId,
+                TableId = span.TableId,
+                RowIndex = span.RowIndex,
+                ColumnIndex = span.ColumnIndex
+            }).ToList();
+            record.Pages = parsed.Pages.Select(page => new DocumentPageRecord
+            {
+                Page = page.Page,
+                ImagePath = page.ImagePath,
+                Width = page.Width,
+                Height = page.Height,
+                Rotation = page.Rotation
+            }).ToList();
             record.Tables = extraction.Tables.Select(table => new DocumentTableRecord
             {
                 Name = table.Name,
@@ -228,6 +262,8 @@ public sealed class DocumentWorkflow(
             .Include(document => document.Fields)
             .Include(document => document.Tables)
             .Include(document => document.SchemaMappings)
+            .Include(document => document.SourceSpans)
+            .Include(document => document.Pages)
             .Include(document => document.Exceptions)
             .Include(document => document.ReviewEvents)
             .FirstOrDefaultAsync(document => document.Id == id, cancellationToken);

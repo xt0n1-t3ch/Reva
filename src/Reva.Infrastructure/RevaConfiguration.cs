@@ -14,6 +14,12 @@ public static class RevaConfigurationKeys
     public const string ParserPythonExecutable = "Reva:Parser:PythonExecutable";
     public const string ParserWorkerScriptPath = "Reva:Parser:WorkerScriptPath";
     public const string ParserTimeoutSeconds = "Reva:Parser:TimeoutSeconds";
+    public const string LlmProvider = "Reva:Llm:Provider";
+    public const string LlmBaseUrl = "Reva:Llm:BaseUrl";
+    public const string LlmModel = "Reva:Llm:Model";
+    public const string LlmDeterministicOnly = "Reva:Llm:DeterministicOnly";
+    public const string FeaturesDocling = "Features:Docling";
+    public const string InboundFileEmailDirectory = "Reva:Inbound:FileEmail:Directory";
 }
 
 public static class RevaDatabaseProviders

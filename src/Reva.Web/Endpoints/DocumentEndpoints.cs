@@ -1,7 +1,11 @@
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Reva.Core.Contracts;
 using Reva.Infrastructure;
 using Reva.Infrastructure.Export;
+using Reva.Infrastructure.Persistence;
+using Reva.Infrastructure.Rendering;
+using Reva.Infrastructure.Review;
 
 namespace Reva.Web.Endpoints;
 
@@ -45,6 +49,43 @@ public static class DocumentEndpoints
         {
             var document = await workflow.ReviewAsync(id, decision, cancellationToken);
             return document is null ? Results.NotFound() : Results.Ok(document);
+        });
+
+
+        group.MapGet("/{id:guid}/review-payload", async (Guid id, RevaDbContext dbContext, IBdxReviewPayloadAssembler assembler, CancellationToken cancellationToken) =>
+        {
+            var document = await dbContext.Documents
+                .AsSplitQuery()
+                .Include(item => item.Fields)
+                .Include(item => item.Tables)
+                .Include(item => item.Exceptions)
+                .Include(item => item.SourceSpans)
+                .Include(item => item.Pages)
+                .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+            return document is null ? Results.NotFound() : Results.Ok(assembler.Assemble(document));
+        });
+
+        group.MapGet("/{id:guid}/pages/{page:int}.png", async (Guid id, int page, RevaDbContext dbContext, IPdfPageImageRenderer renderer, CancellationToken cancellationToken) =>
+        {
+            var document = await dbContext.Documents
+                .Include(item => item.Pages)
+                .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+            if (document is null || page < 1)
+            {
+                return Results.NotFound();
+            }
+
+            var existing = document.Pages.FirstOrDefault(item => item.Page == page);
+            var path = existing?.ImagePath;
+            if (string.IsNullOrWhiteSpace(path) && string.Equals(document.Extension, ".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                var image = await renderer.RenderPageAsync(document.StoragePath, page, Path.Combine(Path.GetTempPath(), "reva-page-cache", document.Id.ToString("N")), cancellationToken);
+                path = image.ImagePath;
+            }
+
+            return !string.IsNullOrWhiteSpace(path) && File.Exists(path)
+                ? Results.File(path, "image/png")
+                : Results.NotFound();
         });
 
         group.MapGet("/{id:guid}/export", async (Guid id, string? format, Guid? templateId, IDocumentWorkflow workflow, IExportTemplateStore templates, IDocumentExporter exporter, CancellationToken cancellationToken) =>
