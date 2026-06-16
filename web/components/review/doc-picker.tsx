@@ -30,7 +30,7 @@ export function DocPicker() {
         </SectionCard>
       )}
       <p className="mt-3 text-xs text-subtle-foreground">
-        <Link href="/" className="text-primary hover:underline">
+        <Link href="/" className="text-primary underline">
           Go to the workspace
         </Link>{" "}
         to ingest more documents.

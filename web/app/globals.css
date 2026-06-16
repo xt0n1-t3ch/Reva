@@ -20,7 +20,7 @@
   --foreground: oklch(0.235 0.02 264);
   --muted: oklch(0.955 0.004 255);
   --muted-foreground: oklch(0.475 0.02 262);
-  --subtle-foreground: oklch(0.6 0.018 262);
+  --subtle-foreground: oklch(0.5 0.02 262);
   --border: oklch(0.908 0.006 258);
   --border-strong: oklch(0.855 0.008 258);
   --input: oklch(0.9 0.006 258);
@@ -31,9 +31,9 @@
   --primary-soft: color-mix(in oklab, var(--accent) 12%, var(--surface));
   --primary-border: color-mix(in oklab, var(--accent) 32%, var(--border));
 
-  --success: oklch(0.6 0.14 157);
+  --success: oklch(0.52 0.15 157);
   --success-foreground: oklch(0.99 0 0);
-  --success-soft: color-mix(in oklab, oklch(0.6 0.14 157) 14%, var(--surface));
+  --success-soft: color-mix(in oklab, oklch(0.52 0.15 157) 14%, var(--surface));
   --warning: oklch(0.72 0.15 71);
   --warning-foreground: oklch(0.27 0.05 71);
   --warning-soft: color-mix(in oklab, oklch(0.72 0.15 71) 18%, var(--surface));

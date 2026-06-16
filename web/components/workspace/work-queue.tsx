@@ -116,7 +116,9 @@ export function WorkQueue({
       </div>
       <div role="list">
         {documents.map((document) => (
-          <QueueRow key={document.id} document={document} />
+          <div role="listitem" key={document.id}>
+            <QueueRow document={document} />
+          </div>
         ))}
       </div>
     </div>

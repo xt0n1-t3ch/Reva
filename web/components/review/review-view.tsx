@@ -81,7 +81,7 @@ function SplitView({ documentId }: { documentId: string }) {
     return (
       <div className="p-4">
         <ErrorBanner message={error ?? "Document not found."} onRetry={refresh} />
-        <Link href="/review" className="mt-3 inline-block text-xs text-primary hover:underline">
+        <Link href="/review" className="mt-3 inline-block text-xs text-primary underline">
           Back to documents
         </Link>
       </div>

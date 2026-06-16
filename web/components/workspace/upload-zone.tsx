@@ -79,6 +79,7 @@ export function UploadZone({ onUploaded }: { onUploaded: () => void }) {
         type="file"
         multiple
         accept={ACCEPT}
+        aria-label="Upload bordereau documents"
         className="sr-only"
         onChange={(event) => void upload(event.target.files)}
       />

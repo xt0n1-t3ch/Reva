@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test("queue renders and upload control is present", async ({ page }) => {
   await page.goto("/");

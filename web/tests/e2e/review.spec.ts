@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { openFirstReviewDocument } from "./helpers";
 
 test("field hover activates a source citation", async ({ page }) => {

@@ -34,6 +34,7 @@ function FieldRow({ field, onActivate, activeSpanIds }: { field: FieldValue } & 
   return (
     <button
       type="button"
+      data-citation-row="field"
       onMouseEnter={() => onActivate(spanIds, [field.value])}
       onMouseLeave={() => onActivate([], [])}
       onFocus={() => onActivate(spanIds, [field.value])}

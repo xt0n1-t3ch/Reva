@@ -136,6 +136,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
             : "lg:w-0 lg:overflow-hidden lg:border-l-0",
         )}
         aria-hidden={!chatOpen}
+        inert={!chatOpen}
       >
         {chatMinimized && (
           <button

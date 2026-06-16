@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test("settings load and a field is editable", async ({ page }) => {
   await page.goto("/settings");
