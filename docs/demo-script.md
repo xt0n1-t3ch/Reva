@@ -1,62 +1,56 @@
 # Demo script
 
-The interview walkthrough. The automated end-to-end tests (`tests/Reva.E2E`) drive this exact
-flow in a real browser, so "it works" is provable on screen.
+This script shows Reva as a product: one localhost app that ingests messy reinsurance documents, extracts and maps canonical fields, reconciles headline figures against line items, supports source-cited human review, and exports approved data.
 
-## Run it
+## Run locally
 
 ```powershell
 dotnet run --project src/Reva.Web/Reva.Web.csproj -- --seed-demo
 ```
 
-Open the workspace. (Local runs don't auto-open a tab; the packaged build does.)
+Open `http://localhost:5187`. The packaged executable follows the same product flow after launching `Reva.exe` or `Start-Reva.cmd`.
 
-## The demo corpus
+## Demo corpus
 
-Seeded on first run — one document per kind, chosen to show range:
+| Document | Type | What it demonstrates |
+|:---|:---|:---|
+| `orion-property-cat-xl-jan-2025.eml` | Premium bordereau email with attachment | Email intake, attachment parsing, extraction, learned schema mapping, source citations, and reconciliation breaks where stated cover-note totals differ from summed line items. |
+| `meridian-property-cat-xl-bordereau-2025-q1.png` | Scanned bordereau image | Offline PaddleOCR on a scanned page, field extraction with real page coordinates, and geometry-backed citation overlays in the split view. |
+| `technical-account-statement.txt` | Statement of account | Clean technical-account extraction, confidence, approval, and export. |
+| `operations-note.txt` | Unknown operational note | Never-hard-reject behavior: the file still becomes a low-confidence reviewable record. |
 
-| Document | Type | Shows |
-|---|---|---|
-| `orion-property-cat-xl-jan-2025.eml` | Premium bordereau (broker cover-note email + CSV attachment) | The hero: extraction + **reconciliation** (the stated cover-note totals deliberately disagree with the attached line items) + source citations |
-| `technical-account-statement.txt` | Statement of account | Clean extraction, zero exceptions, ready to approve |
-| `operations-note.txt` | Unknown | **Never hard-rejected** — a non-reinsurance note still becomes a low-confidence reviewable record |
+Reva can also process Excel/CSV, digital PDFs, scanned PDFs and images, Word, PowerPoint, plain text, email bodies, email attachments, and best-effort visible text from unknown files.
 
-What the engine processes today: Excel/CSV, PDF (digital + scanned via OCR), Word, PowerPoint,
-emails with attachments, plain text, and anything else best-effort. Document types it
-understands: premium & claims bordereaux, statements of account, slips, loss runs, claim
-notices. See `docs/research/reinsurance-landscape.md` for the domain grounding.
+## Five-minute walkthrough
 
-## Walkthrough (about 5 minutes)
+1. **Workspace** — Start at the work queue. Point out status, confidence, exceptions, and real page thumbnails for image/PDF entries. Filter to items that need review.
+2. **Import** — Drop a document or use the seeded `.eml`. Reva stores it, hashes it, parses the email body and attachment, classifies it, extracts fields, maps headers, reconciles values, and opens review.
+3. **Review split view** — On the left, document pages render with source highlights. On the right, canonical fields show values, confidence, status, citations, and exceptions. Hover or focus a field to highlight the exact source region.
+4. **Schema mapping** — Show the source header → canonical target mapping evidence. Correct a mapping once; the sender-specific EF rule is learned and takes precedence for the next document from that sender/domain.
+5. **Reconciliation** — Open the exception cards. Explain **Detected** as the stated value, **Expected** as the computed line-item total, and the agreement score as a value in `[0,1]`. Money checks honor the configured tolerance.
+6. **Assistant** — Open the assistant. Ask for the document summary or why a field failed reconciliation. If Ollama/model is not installed, show the graceful local-model-unavailable message and continue the core flow.
+7. **Export** — Pick a saved template, preview the output, and download CSV, Excel, or JSON. The Lloyd's CRS template demonstrates downstream reporting shape.
+8. **Settings** — Show theme/accent/branding, reconciliation tolerance, optional LLM-assisted extraction, default export template, reseed, and clear-data controls.
 
-1. **Workspace** — the dense operations view: KPI strip, a work queue, and the segmented
-   filter (All / Needs review / Clean). Filter to *Needs review* to show triage.
-2. **Import anything** — drop a file (even a random one). It is never rejected; it becomes a
-   reviewable record and opens straight into review.
-3. **Review & adjust** — the split view: the document on the left, extracted fields on the
-   right. **Hover a field and its value lights up in the document** (the source citation).
-   The Schema mapping panel shows each sender header mapped to the canonical layout with
-   confidence. Correct a mapping once and the sender-specific rule is remembered. Edit a field;
-   it shows as *Reviewed* once approved.
-4. **Checks** — the Detected-vs-Expected reconciliation cards, computed from the data, ranked
-   by how badly they disagree.
-5. **Export** — pick a template from the Export menu (Bordereau line items, Lloyd's CRS 5.2,
-   Canonical CSV, Full JSON) and download as Excel/CSV/JSON. Build your own on the **Export
-   templates** page: choose columns, rename headers, pick the format, watch the live preview.
+## Talking points
 
-## Why it is built well (talking points)
+- **Local-first:** native parsers, bundled OCR, SQLite, deterministic extraction, and exports all run without external services.
+- **Trustworthy:** every extracted field carries provenance; geometry-backed citations highlight source regions; analyst edits become **Reviewed** instead of artificial confidence.
+- **Adaptive:** schema mapping starts with aliases and fuzzy matching, then learns sender/domain rules from corrections.
+- **Operational:** reconciliation turns mismatches into actionable field-level exceptions instead of burying them in tables.
+- **Simple to deploy:** the release is one `Reva.exe` serving the UI, API, OCR, and assistant endpoint from one localhost origin.
 
-- **Customizable**: Settings let you switch theme (light / dark / system), recolour the accent,
-  rename the product, set confidence thresholds, pick a default export template, and manage data
-  — all persisted and applied across the app.
-- **Modular**: parsing, OCR, classification, extraction, and reconciliation are separate,
-  swappable pieces behind interfaces — add a parser or an LLM extractor without touching the UI.
-- **Extensible**: never hard-rejects; new document types and export templates slot in.
-- **Trustworthy**: confidence is computed (not faked), every value and mapped header is
-  traceable to its source, and corrections are audited.
-- **Proven**: real Playwright end-to-end tests run this whole demo on every change.
+## Proof commands
 
-## Architecture
+```powershell
+dotnet test Reva.slnx
+cd web
+npx playwright test
+```
 
-- Backend-first, contract-driven; the UI injects the workflow directly.
-- Native .NET parsers + offline PaddleOCR; EF Core (SQLite default, SQL Server by config).
-- Human-in-the-loop review for auditability. Synthetic data only.
+Package proof:
+
+```powershell
+./scripts/package-windows.ps1 -Version 1.3.0
+./tests/package-smoke.ps1
+```
