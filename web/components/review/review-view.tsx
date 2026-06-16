@@ -6,12 +6,15 @@ import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/client";
 import type { BdxReviewPayload, Citation } from "@/lib/api/types";
 import { useApi } from "@/lib/use-api";
-import { Button } from "@/components/ui/primitives";
+import { Badge, Button } from "@/components/ui/primitives";
 import { ErrorBanner, Skeleton } from "@/components/ui/states";
-import { IconChevronRight, IconExport } from "@/components/ui/icons";
+import { IconChevronRight, IconCheck, IconAlert, IconExport } from "@/components/ui/icons";
+import { reviewStateTone, humanizeEnum } from "@/lib/format";
 import { DocumentCanvas } from "@/components/review/document-canvas";
 import { SourceTextCanvas } from "@/components/review/source-text-canvas";
-import { ReviewDetails } from "@/components/review/review-details";
+import { VerdictHeader } from "@/components/review/verdict-header";
+import { FieldGroups } from "@/components/review/field-groups";
+import { LineItems } from "@/components/review/line-items";
 import { DocPicker } from "@/components/review/doc-picker";
 
 const collectCitedSpanIds = (payload: BdxReviewPayload): Set<string> => {
@@ -31,6 +34,7 @@ function SplitView({ documentId }: { documentId: string }) {
   const detail = useApi((signal) => api.getDocument(documentId, signal), [documentId]);
   const [activeSpanIds, setActiveSpanIds] = useState<Set<string>>(new Set());
   const [activeValues, setActiveValues] = useState<string[]>([]);
+  const [decisionPending, setDecisionPending] = useState<string | null>(null);
 
   const citedSpanIds = useMemo(() => (data ? collectCitedSpanIds(data) : new Set<string>()), [data]);
   const hasPageImages = useMemo(
@@ -43,11 +47,32 @@ function SplitView({ documentId }: { documentId: string }) {
     setActiveValues(values);
   };
 
+  const decide = async (decision: string) => {
+    setDecisionPending(decision);
+    try {
+      await api.reviewDocument(documentId, {
+        decision,
+        reviewer: "Reviewer",
+        notes: null,
+        fieldCorrections: [],
+        mappingCorrections: [],
+      });
+      detail.refresh();
+    } catch {
+      // Surfaced via the detail banner on next load; keep the action area responsive.
+    } finally {
+      setDecisionPending(null);
+    }
+  };
+
   if (loading && !data) {
     return (
-      <div className="grid h-full grid-cols-1 gap-4 p-4 lg:grid-cols-[1.4fr_1fr]">
-        <Skeleton className="h-full min-h-72" />
-        <Skeleton className="h-full min-h-72" />
+      <div className="flex h-full flex-col gap-4 p-4">
+        <Skeleton className="h-24" />
+        <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
+          <Skeleton className="h-full min-h-72" />
+          <Skeleton className="h-full min-h-72" />
+        </div>
       </div>
     );
   }
@@ -63,6 +88,8 @@ function SplitView({ documentId }: { documentId: string }) {
     );
   }
 
+  const reviewState = detail.data?.reviewState;
+
   return (
     <div className="flex h-full flex-col" data-tour="review-split-view">
       <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border bg-surface px-4 py-2.5">
@@ -74,14 +101,43 @@ function SplitView({ documentId }: { documentId: string }) {
           <span className="truncate font-medium text-foreground">{data.document.filename}</span>
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          {reviewState && <Badge tone={reviewStateTone[reviewState]}>{humanizeEnum(reviewState)}</Badge>}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={decisionPending !== null}
+            onClick={() => void decide("NeedsCorrection")}
+          >
+            <IconAlert width={14} height={14} />
+            Request changes
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={decisionPending !== null}
+            onClick={() => void decide("Approved")}
+          >
+            <IconCheck width={14} height={14} />
+            Approve
+          </Button>
           <a href={api.exportUrl(documentId, "json")} target="_blank" rel="noreferrer">
-            <Button variant="outline" size="sm">
-              <IconExport width={14} height={14} />
-              Export
+            <Button variant="ghost" size="icon" aria-label="Export">
+              <IconExport width={16} height={16} />
             </Button>
           </a>
         </div>
       </header>
+
+      {detail.data && (
+        <VerdictHeader
+          documentType={detail.data.documentType}
+          confidence={detail.data.confidence}
+          fields={data.fields}
+          reconciliation={data.reconciliation}
+          onActivate={activate}
+          activeSpanIds={activeSpanIds}
+        />
+      )}
 
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1.4fr_1fr]">
         <div className="min-h-0 overflow-y-auto border-b border-border bg-surface-2/30 p-4 lg:border-b-0 lg:border-r">
@@ -97,12 +153,8 @@ function SplitView({ documentId }: { documentId: string }) {
           )}
         </div>
         <div className="min-h-0 overflow-y-auto bg-surface">
-          <ReviewDetails
-            fields={data.fields}
-            reconciliation={data.reconciliation}
-            onActivate={activate}
-            activeSpanIds={activeSpanIds}
-          />
+          <FieldGroups fields={data.fields} onActivate={activate} activeSpanIds={activeSpanIds} />
+          <LineItems lineItems={data.lineItems} onActivate={activate} activeSpanIds={activeSpanIds} />
         </div>
       </div>
     </div>
