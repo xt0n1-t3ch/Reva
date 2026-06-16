@@ -7,6 +7,7 @@ export const config = {
   agentMaxSteps: 6,
   agentTemperature: 0,
   themeStorageKey: "reva-theme",
+  onboardingStorageKey: "reva-onboarding-done",
   productName: "Reve Intelligence",
 } as const;
 

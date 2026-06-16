@@ -75,6 +75,7 @@ export function DocumentCanvas({
                   <mark
                     key={span.id}
                     title={span.text}
+                    data-active={active ? "true" : undefined}
                     style={rectStyle(spanRect(span))}
                     className={cn(
                       "absolute rounded-[2px] transition-colors duration-150",

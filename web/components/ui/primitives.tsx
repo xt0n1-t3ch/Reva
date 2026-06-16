@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
+import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import type { ConfidenceTier, Tone } from "@/lib/format";
 import { formatPercent } from "@/lib/format";
@@ -86,16 +86,20 @@ export function Button({
   );
 }
 
-export function Card({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
+export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(function Card(
+  { className, children, ...rest },
+  ref,
+) {
   return (
     <div
+      ref={ref}
       className={cn("rounded-lg border border-border bg-surface shadow-soft", className)}
       {...rest}
     >
       {children}
     </div>
   );
-}
+});
 
 export function Spinner({ className }: { className?: string }) {
   return (

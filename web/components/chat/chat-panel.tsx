@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { config } from "@/lib/config";
 import { MessageParts } from "@/components/chat/message-parts";
 import { Button } from "@/components/ui/primitives";
+import { ErrorBanner } from "@/components/ui/states";
 import { IconSend, IconSparkles } from "@/components/ui/icons";
 
 const suggestions = [
@@ -100,9 +101,7 @@ export function ChatPanel() {
         )}
 
         {error && (
-          <div className="rounded-md border border-danger/30 bg-danger-soft px-3 py-2 text-xs text-danger">
-            {error.message || "The assistant is unavailable. Confirm Ollama is running."}
-          </div>
+          <ErrorBanner message={error.message || "The assistant is unavailable. Confirm Ollama is running."} />
         )}
       </div>
 

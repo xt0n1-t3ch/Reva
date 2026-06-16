@@ -17,6 +17,7 @@ function QueueRow({ document }: { document: DocumentSummary }) {
   return (
     <Link
       href={`/review?doc=${document.id}`}
+      data-tour="queue-row"
       className="group grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 border-b border-border px-3 py-2.5 transition-colors last:border-0 hover:bg-surface-2/50 md:grid-cols-[minmax(0,1fr)_130px_150px_88px_128px_28px] md:py-2"
     >
       <div className="flex min-w-0 items-center gap-2.5">

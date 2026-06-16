@@ -5,13 +5,15 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { BrandMark, NavLinks, NavRail } from "@/components/shell/nav-rail";
 import { TopBar } from "@/components/shell/top-bar";
+import { TourProvider, useTour } from "@/components/onboarding/tour-provider";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { IconClose } from "@/components/ui/icons";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+function AppShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [navOpen, setNavOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const { startTour } = useTour();
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-background">
@@ -47,6 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           onOpenNav={() => setNavOpen(true)}
           onToggleChat={() => setChatOpen((value) => !value)}
           chatOpen={chatOpen}
+          onStartTour={startTour}
         />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
@@ -85,5 +88,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <TourProvider>
+      <AppShellContent>{children}</AppShellContent>
+    </TourProvider>
   );
 }

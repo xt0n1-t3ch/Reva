@@ -33,6 +33,7 @@ export function SourceTextCanvas({
           segment.active ? (
             <mark
               key={index}
+              data-active="true"
               className="rounded-[2px] bg-citation-active px-0.5 text-foreground ring-1 ring-citation-ring"
             >
               {segment.text}

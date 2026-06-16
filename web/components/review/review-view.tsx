@@ -64,7 +64,7 @@ function SplitView({ documentId }: { documentId: string }) {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col" data-tour="review-split-view">
       <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border bg-surface px-4 py-2.5">
         <nav className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <Link href="/review" className="hover:text-foreground">

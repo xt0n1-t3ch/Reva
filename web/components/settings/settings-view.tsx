@@ -191,6 +191,7 @@ export function SettingsView() {
         </SectionCard>
 
         <SectionCard title="Inbound sources" meta={<span>Read-only</span>}>
+          {sources.error && <div className="p-3"><ErrorBanner message={`Could not load inbound sources: ${sources.error}`} onRetry={sources.refresh} /></div>}
           <ul role="list" className="p-2">
             {(sources.data ?? []).map((source) => (
               <li key={source.name} className="flex items-center gap-2.5 rounded-md px-2 py-2">

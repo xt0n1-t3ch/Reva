@@ -39,6 +39,7 @@ export function UploadZone({ onUploaded }: { onUploaded: () => void }) {
     <div className="flex flex-col gap-2">
       <button
         type="button"
+        data-tour="upload-zone"
         onClick={() => inputRef.current?.click()}
         onDragOver={(event) => {
           event.preventDefault();

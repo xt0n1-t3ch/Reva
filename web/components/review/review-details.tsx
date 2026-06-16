@@ -33,6 +33,7 @@ function FieldRow({ field, onActivate, activeSpanIds }: { field: FieldValue } & 
   return (
     <button
       type="button"
+      data-citation-row="field"
       onMouseEnter={() => onActivate(spanIds, [field.value])}
       onMouseLeave={() => onActivate([], [])}
       onFocus={() => onActivate(spanIds, [field.value])}
@@ -84,6 +85,7 @@ function CheckRow({
   return (
     <button
       type="button"
+      data-citation-row="reconciliation"
       onMouseEnter={() => onActivate(spanIds, values)}
       onMouseLeave={() => onActivate([], [])}
       onFocus={() => onActivate(spanIds, values)}
@@ -146,7 +148,7 @@ export function ReviewDetails({
         )}
       </section>
 
-      <section>
+      <section data-tour="reconciliation-panel">
         <header className="flex items-center justify-between border-y border-border bg-surface px-3.5 py-2">
           <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-subtle-foreground">
             <IconScale width={13} height={13} />

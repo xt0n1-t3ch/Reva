@@ -151,3 +151,10 @@ export const IconScale = (p: IconProps) => (
     <path d="m5 7 3 6M19 7l-3 6" />
   </svg>
 );
+export const IconHelp = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.8 9a2.3 2.3 0 1 1 3.8 1.8c-.9.6-1.6 1.2-1.6 2.4" />
+    <path d="M12 17h.01" />
+  </svg>
+);

@@ -61,6 +61,12 @@ export function ExportView() {
                 <Skeleton key={index} className="h-28" />
               ))}
             </div>
+          ) : templateList.length === 0 ? (
+            <EmptyState
+              icon={<IconExport width={20} height={20} />}
+              title="No templates configured"
+              description="Default all-field exports are still available for ingested documents."
+            />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {templateList.map((template) => (
@@ -70,6 +76,7 @@ export function ExportView() {
           )}
         </section>
 
+        <div data-tour="export-panel">
         <SectionCard
           title="Download documents"
           meta={
@@ -90,7 +97,13 @@ export function ExportView() {
             </label>
           }
         >
-          {documentList.length === 0 ? (
+          {documents.loading && !documents.data ? (
+            <div className="flex flex-col gap-2 p-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-12" />
+              ))}
+            </div>
+          ) : documentList.length === 0 ? (
             <div className="p-4">
               <EmptyState
                 icon={<IconDocument width={20} height={20} />}
@@ -139,6 +152,7 @@ export function ExportView() {
             </ul>
           )}
         </SectionCard>
+        </div>
       </div>
     </PageContainer>
   );
