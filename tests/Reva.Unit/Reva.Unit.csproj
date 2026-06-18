@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Reva.Ai\Reva.Ai.csproj" />
     <ProjectReference Include="..\..\src\Reva.Core\Reva.Core.csproj" />
     <ProjectReference Include="..\..\src\Reva.Infrastructure\Reva.Infrastructure.csproj" />
   </ItemGroup>

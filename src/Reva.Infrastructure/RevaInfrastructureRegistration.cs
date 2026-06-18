@@ -79,7 +79,11 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IReinsuranceClassifier, ReinsuranceClassifier>();
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();
         services.AddSingleton<IExtractionMerger, ExtractionMerger>();
-        services.AddSingleton<IAgentChatService>(provider => new AgentChatService(CreateAgentOllamaChatClient(configuration), Microsoft.Extensions.Options.Options.Create(BuildAgentOptions(configuration))));
+        services.AddSingleton<IAppActionBus, AppActionBus>();
+        services.AddSingleton<IAgentChatService>(provider => new AgentChatService(
+            CreateAgentOllamaChatClient(configuration),
+            Microsoft.Extensions.Options.Options.Create(BuildAgentOptions(configuration)),
+            provider.GetRequiredService<IAppActionBus>()));
         services.AddSingleton<ILlmFieldExtractor>(provider =>
         {
             var configuredProvider = configuration[RevaConfigurationKeys.LlmProvider] ?? LlmExtractionOptions.ProviderNone;

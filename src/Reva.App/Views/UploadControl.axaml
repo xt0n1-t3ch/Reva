@@ -1,0 +1,137 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Reva.App.ViewModels"
+             xmlns:views="using:Reva.App.Views"
+             x:Class="Reva.App.Views.UploadControl"
+             x:DataType="vm:UploadViewModel"
+             x:CompileBindings="True"
+             DragDrop.AllowDrop="True">
+
+    <UserControl.Resources>
+        <views:UploadStatusBrushConverter x:Key="StatusBrush" />
+        <views:UploadProgressVisibleConverter x:Key="ProgressVisible" />
+    </UserControl.Resources>
+
+    <DockPanel LastChildFill="True">
+
+        <Panel DockPanel.Dock="Top" Margin="0 0 0 12">
+
+            <Border CornerRadius="{DynamicResource CornerRadiusMd}"
+                    BorderThickness="2"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    Background="{DynamicResource Surface2Brush}">
+
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="10"
+                            Margin="32 28">
+
+                    <TextBlock Text="↑"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource PrimaryBrush}" />
+
+                    <TextBlock Text="Drop documents here"
+                               Classes="subheading"
+                               HorizontalAlignment="Center" />
+
+                    <TextBlock Text="PDF · DOCX · XLSX · CSV · EML · PNG and more"
+                               Classes="caption"
+                               HorizontalAlignment="Center" />
+
+                    <Button Classes="ghost"
+                            HorizontalAlignment="Center"
+                            Margin="0 6 0 0"
+                            IsEnabled="{Binding !IsUploading}"
+                            Click="OnBrowseClicked"
+                            Content="Browse files…" />
+
+                </StackPanel>
+            </Border>
+
+            <Border CornerRadius="{DynamicResource CornerRadiusMd}"
+                    BorderThickness="2"
+                    BorderBrush="{DynamicResource PrimaryBrush}"
+                    Background="{DynamicResource PrimarySoftBrush}"
+                    IsVisible="{Binding IsDragOver}"
+                    IsHitTestVisible="False" />
+
+        </Panel>
+
+        <Grid DockPanel.Dock="Bottom"
+              RowDefinitions="*,Auto"
+              IsVisible="{Binding HasEntries}">
+
+            <ScrollViewer Grid.Row="0" MaxHeight="240" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Entries}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:UploadFileEntry">
+                            <Border Classes="chip" Margin="0 3">
+                                <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+
+                                    <Border Grid.Column="0"
+                                            Grid.RowSpan="2"
+                                            Width="8"
+                                            Height="8"
+                                            CornerRadius="4"
+                                            Margin="0 0 12 0"
+                                            VerticalAlignment="Center"
+                                            Background="{Binding Status, Converter={StaticResource StatusBrush}}" />
+
+                                    <TextBlock Grid.Column="1"
+                                               Grid.Row="0"
+                                               Text="{Binding FileName}"
+                                               FontSize="{DynamicResource FontSizeBody}"
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="NoWrap" />
+
+                                    <TextBlock Grid.Column="1"
+                                               Grid.Row="1"
+                                               Text="{Binding StatusText}"
+                                               Classes="caption"
+                                               Foreground="{Binding Status, Converter={StaticResource StatusBrush}}" />
+
+                                    <ProgressBar Grid.Column="2"
+                                                 Grid.RowSpan="2"
+                                                 Width="72"
+                                                 Height="4"
+                                                 Margin="12 0 0 0"
+                                                 VerticalAlignment="Center"
+                                                 Minimum="0"
+                                                 Maximum="100"
+                                                 Value="{Binding Progress}"
+                                                 IsVisible="{Binding Status, Converter={StaticResource ProgressVisible}}"
+                                                 Foreground="{DynamicResource PrimaryBrush}"
+                                                 Background="{DynamicResource Surface2Brush}" />
+
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="1"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        HorizontalAlignment="Right"
+                        Margin="0 8 0 0">
+
+                <Button Classes="ghost"
+                        Content="Cancel"
+                        IsVisible="{Binding IsUploading}"
+                        Command="{Binding CancelCommand}" />
+
+                <Button Classes="ghost"
+                        Content="Clear done"
+                        IsVisible="{Binding !IsUploading}"
+                        Command="{Binding ClearCompletedCommand}" />
+
+            </StackPanel>
+
+        </Grid>
+
+    </DockPanel>
+
+</UserControl>

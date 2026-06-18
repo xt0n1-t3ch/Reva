@@ -1,0 +1,302 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Reva.App.ViewModels"
+             x:Class="Reva.App.Views.ReviewView"
+             x:DataType="vm:ReviewViewModel"
+             x:CompileBindings="True">
+
+    <Grid RowDefinitions="Auto,*" Margin="28 24 28 24" RowSpacing="18">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Classes="display" Text="{Binding Title}" />
+                <TextBlock Classes="muted" Text="{Binding Description}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Border Classes="chip" IsVisible="{Binding HasStatusMessage}">
+                    <TextBlock Text="{Binding StatusMessage}" Classes="caption" VerticalAlignment="Center" />
+                </Border>
+                <Button Classes="ghost" Command="{Binding RefreshCommand}" Content="Refresh" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="288,*,420" ColumnSpacing="18">
+
+            <Border Grid.Column="0" Classes="panel" Padding="0">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0" Text="DOCUMENTS" Classes="caption" Margin="18 16 18 10" />
+                    <ListBox Grid.Row="1"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Padding="10 0 10 12"
+                             SelectionMode="Single"
+                             ItemsSource="{Binding Documents}"
+                             SelectedItem="{Binding SelectedDocument, Mode=TwoWay}">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0 3" />
+                                <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusSm}" />
+                                <Setter Property="Cursor" Value="Hand" />
+                            </Style>
+                        </ListBox.Styles>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DocumentPickerItem">
+                                <Border BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{DynamicResource CornerRadiusSm}"
+                                        Padding="12 10">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="{Binding FileName}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Border Classes="statusDot" Background="{Binding StateBrush}" />
+                                            <TextBlock Text="{Binding StateLabel}" Classes="caption" VerticalAlignment="Center" />
+                                            <TextBlock Text="·" Classes="caption" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding TypeLabel}" Classes="caption" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding ExceptionLabel}"
+                                                   Classes="caption"
+                                                   IsVisible="{Binding HasExceptions}"
+                                                   Foreground="{DynamicResource WarningBrush}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Classes="panel" Padding="0" ClipToBounds="True">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="18 16 18 12">
+                        <TextBlock Grid.Column="0" Text="SOURCE PAGE" Classes="caption" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Classes="caption"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding HasDocument}"
+                                   Text="{Binding CurrentPage, StringFormat='Page {0}'}" />
+                    </Grid>
+
+                    <Panel Grid.Row="1">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto"
+                                      IsVisible="{Binding HasPageImage}">
+                            <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="18">
+                                <Image Name="PageImageSurface"
+                                       Source="{Binding PageImage}"
+                                       Stretch="Uniform"
+                                       Width="{Binding PageImageWidth}"
+                                       Height="{Binding PageImageHeight}" />
+                                <ItemsControl ItemsSource="{Binding Citations}"
+                                              Width="{Binding #PageImageSurface.Bounds.Width}"
+                                              Height="{Binding #PageImageSurface.Bounds.Height}"
+                                              SizeChanged="OnOverlaySizeChanged">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:CitationRegion">
+                                            <Border Canvas.Left="{Binding Left}"
+                                                    Canvas.Top="{Binding Top}"
+                                                    Width="{Binding Width}"
+                                                    Height="{Binding Height}"
+                                                    Background="{Binding FillBrush}"
+                                                    BorderBrush="{Binding StrokeBrush}"
+                                                    BorderThickness="{Binding StrokeThickness}"
+                                                    ToolTip.Tip="{Binding Quote}"
+                                                    CornerRadius="3" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <Border IsVisible="{Binding !HasPageImage}"
+                                Padding="32"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                            <StackPanel Spacing="8" MaxWidth="320" HorizontalAlignment="Center">
+                                <TextBlock Text="No page preview" Classes="subheading" HorizontalAlignment="Center" />
+                                <TextBlock Classes="muted"
+                                           TextAlignment="Center"
+                                           Text="This document has no rendered page image. Field citations and reconciliation remain available on the right." />
+                            </StackPanel>
+                        </Border>
+
+                        <Border IsVisible="{Binding !HasDocument}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                Padding="32"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                            <StackPanel Spacing="8" MaxWidth="320" HorizontalAlignment="Center">
+                                <TextBlock Text="Select a document" Classes="subheading" HorizontalAlignment="Center" />
+                                <TextBlock Classes="muted"
+                                           TextAlignment="Center"
+                                           Text="Choose a document from the list to review its citations, fields, and reconciliation." />
+                            </StackPanel>
+                        </Border>
+                    </Panel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Classes="panel" Padding="0">
+                <Grid RowDefinitions="*,Auto">
+                    <ScrollViewer Grid.Row="0" Padding="18 16 18 8">
+                        <StackPanel Spacing="18">
+
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="CANONICAL FIELDS" Classes="caption" />
+
+                                <ItemsControl ItemsSource="{Binding Fields}" IsVisible="{Binding HasFields}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ReviewFieldItem">
+                                            <Border Background="{Binding HighlightBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="{DynamicResource CornerRadiusSm}"
+                                                    Padding="12 10"
+                                                    Margin="0 3"
+                                                    PointerEntered="OnFieldPointerEntered"
+                                                    PointerExited="OnFieldPointerExited">
+                                                <StackPanel Spacing="8">
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <TextBlock Grid.Column="0"
+                                                                   Text="{Binding Label}"
+                                                                   FontWeight="Medium"
+                                                                   VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <Border Grid.Column="1"
+                                                                CornerRadius="{DynamicResource CornerRadiusSm}"
+                                                                Padding="8 3"
+                                                                Background="{DynamicResource Surface2Brush}"
+                                                                ToolTip.Tip="{Binding ConfidenceTier}">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <Border Classes="statusDot" Background="{Binding ConfidenceBrush}" />
+                                                                <TextBlock Text="{Binding ConfidenceLabel}" Classes="caption" VerticalAlignment="Center" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBox Text="{Binding EditedValue, Mode=TwoWay}"
+                                                             PlaceholderText="—"
+                                                             FontSize="{DynamicResource FontSizeBody}" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="{Binding StatusLabel}" Classes="caption" VerticalAlignment="Center" />
+                                                        <TextBlock Text="· cited"
+                                                                   Classes="caption"
+                                                                   VerticalAlignment="Center"
+                                                                   IsVisible="{Binding HasCitations}"
+                                                                   Foreground="{DynamicResource PrimaryBrush}" />
+                                                        <Border Classes="chip"
+                                                                Padding="7 2"
+                                                                IsVisible="{Binding IsEdited}">
+                                                            <TextBlock Text="Edited" Classes="caption" Foreground="{DynamicResource AccentBrush}" />
+                                                        </Border>
+                                                        <Border Classes="chip"
+                                                                Padding="7 2"
+                                                                IsVisible="{Binding IsReviewed}">
+                                                            <TextBlock Text="Confirmed" Classes="caption" Foreground="{DynamicResource SuccessBrush}" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Classes="muted"
+                                           Text="No fields were extracted from this document."
+                                           IsVisible="{Binding !HasFields}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="10" IsVisible="{Binding HasReconciliation}">
+                                <TextBlock Text="RECONCILIATION" Classes="caption" />
+                                <ItemsControl ItemsSource="{Binding Reconciliation}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ReconciliationItem">
+                                            <Border BorderBrush="{DynamicResource BorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="{DynamicResource CornerRadiusSm}"
+                                                    Background="{DynamicResource Surface2Brush}"
+                                                    Padding="12 10"
+                                                    Margin="0 3">
+                                                <StackPanel Spacing="8">
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="Medium" VerticalAlignment="Center" />
+                                                        <Border Grid.Column="1"
+                                                                CornerRadius="{DynamicResource CornerRadiusSm}"
+                                                                Padding="8 3"
+                                                                Background="{DynamicResource SurfaceBrush}">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <Border Classes="statusDot" Background="{Binding StatusBrush}" />
+                                                                <TextBlock Text="{Binding StatusLabel}" Classes="caption" VerticalAlignment="Center" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </Grid>
+                                                    <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
+                                                        <StackPanel Grid.Column="0" Spacing="2">
+                                                            <TextBlock Text="Detected" Classes="caption" />
+                                                            <TextBlock Text="{Binding DetectedValue}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                                        </StackPanel>
+                                                        <StackPanel Grid.Column="1" Spacing="2">
+                                                            <TextBlock Text="Expected" Classes="caption" />
+                                                            <TextBlock Text="{Binding ExpectedValue}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                                        </StackPanel>
+                                                        <StackPanel Grid.Column="2" Spacing="2">
+                                                            <TextBlock Text="Delta" Classes="caption" />
+                                                            <TextBlock Text="{Binding DeltaLabel}" FontWeight="Medium" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <TextBlock Text="{Binding Explanation}"
+                                                               Classes="caption"
+                                                               IsVisible="{Binding HasExplanation}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="1"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="0 1 0 0"
+                            Padding="18 14"
+                            IsVisible="{Binding HasDocument}">
+                        <StackPanel Spacing="12">
+                            <TextBox Text="{Binding ReviewerNotes, Mode=TwoWay}"
+                                     PlaceholderText="Reviewer notes (optional)"
+                                     AcceptsReturn="True"
+                                     MaxHeight="72"
+                                     TextWrapping="Wrap" />
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                <Button Grid.Column="0"
+                                        Classes="primary"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Command="{Binding ApproveCommand}"
+                                        Content="Approve" />
+                                <Button Grid.Column="1"
+                                        Classes="ghost"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Command="{Binding NeedsCorrectionCommand}"
+                                        Content="Needs fix" />
+                                <Button Grid.Column="2"
+                                        Classes="ghost"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Command="{Binding RejectCommand}"
+                                        Content="Reject" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,45 +1,49 @@
 # Reva documentation
 
-<div align="center">
-  <img src="assets/reva-banner.png" alt="Reva cockpit banner" />
-  <p><strong>Production docs for Reva 1.3.0 — local-first document intelligence for reinsurance bordereaux.</strong></p>
-</div>
+Local-first document intelligence for reinsurance bordereaux, shipped as a native Avalonia desktop application.
 
 ## Start here
 
-| Guide | Scope |
+| Guide | One line |
 |:---|:---|
-| [Architecture](architecture.md) | The single `Reva.exe`, .NET 10 host, static Next.js cockpit, API surface, persistence, and runtime boundaries. |
-| [AI pipeline](ai-pipeline.md) | Parser routing, offline OCR, extraction, confidence, learned mapping, reconciliation, assistant chat, and export. |
-| [Packaging](packaging.md) | Windows package contents, build command, release ZIP shape, and smoke-test checks. |
-| [Demo script](demo-script.md) | A short product walkthrough using the seeded corpus and real review/export flows. |
-| [Reinsurance landscape](research/reinsurance-landscape.md) | Domain grounding: document types, canonical fields, standards, reconciliation breaks, and competitive UX patterns. |
-| [Test suite](../tests/index.md) | Unit, integration, host smoke, package smoke, web Playwright, accessibility, and optional Docling-worker tests. |
+| [Architecture](architecture.md) | The four in-process projects, the native window, the layer boundaries, and the copilot action bus. |
+| [AI pipeline](ai-pipeline.md) | Parsing, offline OCR, deterministic extraction, the VLM merge, reconciliation, schema mapping, and the agent. |
+| [Packaging](packaging.md) | How the native single-file `Reva.exe` is built and run. |
 
-## Current product contract
+## Learn the codebase (interview-ready)
 
-Reva is a local-first, offline-by-default AI document-intelligence application for reinsurance bordereaux ingestion and reconciliation. The product name is **Reva**; the in-app cockpit title is **Reve Intelligence**.
+| Guide | One line |
+|:---|:---|
+| [Code tour](learn/code-tour.md) | A file-by-file walk through every project and key file, written to teach. |
+| [Tech stack](learn/tech-stack.md) | Why .NET 10, Avalonia, MVVM, EF Core, PaddleOCR, Ollama, and Skia — with how-to-explain talking points. |
+| [Interview cheatsheet](learn/interview-cheatsheet.md) | Likely questions with crisp answers, the elevator pitch, and a live demo script. |
+| [Model landscape](learn/model-landscape.md) | The June-2026 local LLM/VLM/OCR map and why the model is user-selectable, not hardcoded. |
 
-At runtime, Reva is one localhost-only Windows process:
+## Domain and reference
+
+| Guide | One line |
+|:---|:---|
+| [Glossary (CONTEXT.md)](../CONTEXT.md) | The reinsurance and architecture terms used throughout Reva, defined once. |
+| [Reinsurance landscape](research/reinsurance-landscape.md) | Document types, canonical fields, standards, and reconciliation breaks behind the product. |
+
+## The product in one diagram
+
+Everything runs in one process; layers depend inward and there is no HTTP between them.
 
 ```mermaid
 flowchart LR
-  Browser["Analyst browser"] --> Host["Reva.exe on http://localhost:5187"]
-  Host --> UI["Static Next.js UI from wwwroot"]
-  Host --> API["REST API + /api/agent SSE"]
-  API --> Workflow["DocumentWorkflow"]
-  Workflow --> OCR["PaddleOCR + native parsers"]
-  Workflow --> Map["learned schema mapping"]
-  Workflow --> Reconcile["reconciliation engine"]
-  Workflow --> Export["CSV / Excel / JSON templates"]
-  Workflow --> Store[("SQLite default")]
+  User["Analyst"] --> App["Reva.App (Avalonia window)"]
+  App --> Ai["Reva.Ai (configurable model)"]
+  App --> Infra["Reva.Infrastructure (pipeline + agent)"]
+  Ai --> Infra
+  Infra --> Core["Reva.Core (contracts)"]
+  Infra --> Store[("SQLite default")]
+  Ai -. optional .-> Ollama["local Ollama VLM"]
 ```
 
-## Non-goals and boundaries
+## Boundaries
 
-- Node.js is build-time only; no Node process is required in the release package.
-- Python and Docling are optional richer parsing paths, not core runtime requirements.
-- The inbound email seam is file-based `.eml`/`.msg`; live mailbox sync is not a shipped feature.
-- Extraction stays deterministic and keyless unless optional LLM-assisted extraction is explicitly enabled.
-- Bounding boxes are normalized to `0..1` against the final rendered page size.
-- Provenance is always present; citations may be empty only when geometry is unavailable.
+- The native desktop app is the 2.0 product. The legacy browser host in `src/Reva.Web` is retained but is not part of the shipped app.
+- The deterministic tier — native parsers, offline OCR, extraction, reconciliation — runs with no model and no network.
+- The local VLM is optional and chosen in Settings. Docling is an optional richer parsing path, off by default.
+- Citation geometry is normalized to `0..1` against the rendered page size; provenance is always present even when geometry is unavailable.

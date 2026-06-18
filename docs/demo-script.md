@@ -1,14 +1,24 @@
 # Demo script
 
-This script shows Reva as a product: one localhost app that ingests messy reinsurance documents, extracts and maps canonical fields, reconciles headline figures against line items, supports source-cited human review, and exports approved data.
+> This page describes the legacy browser host (`src/Reva.Web`). For the 2.0 native desktop app, use the demo script in the [interview cheatsheet](learn/interview-cheatsheet.md#demo-script), which walks the same flow inside the Avalonia window. The product walkthrough below still maps one-to-one onto the native screens (Dashboard, Review, Mappings, Export, Settings, Copilot).
 
-## Run locally
+This script shows Reva as a product: one app that ingests messy reinsurance documents, extracts and maps canonical fields, reconciles headline figures against line items, supports source-cited human review, and exports approved data.
+
+## Run the native app
+
+```powershell
+dotnet run --project src/Reva.App/Reva.App.csproj
+```
+
+A native window opens. The packaged executable follows the same flow after launching `Reva.exe`.
+
+## Run the legacy browser host
 
 ```powershell
 dotnet run --project src/Reva.Web/Reva.Web.csproj -- --seed-demo
 ```
 
-Open `http://localhost:5187`. The packaged executable follows the same product flow after launching `Reva.exe` or `Start-Reva.cmd`.
+Open `http://localhost:5187`. This path is retained for reference and is not the 2.0 product.
 
 ## Demo corpus
 

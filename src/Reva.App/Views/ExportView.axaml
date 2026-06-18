@@ -1,0 +1,322 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Reva.App.ViewModels"
+             xmlns:conv="using:Reva.App.Converters"
+             x:Class="Reva.App.Views.ExportView"
+             x:DataType="vm:ExportViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.Styles>
+        <Style Selector="ComboBox.cell">
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Padding" Value="10 5" />
+            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusSm}" />
+        </Style>
+        <Style Selector="TextBox.cell">
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Padding" Value="10 6" />
+            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusSm}" />
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        </Style>
+        <Style Selector="ListBox.templates">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="ListBox.templates ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0 0 0 8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
+        </Style>
+        <Style Selector="ListBox.templates ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Border.templateRow">
+            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
+            <Setter Property="Padding" Value="14 12" />
+        </Style>
+        <Style Selector="ListBox.templates ListBoxItem:selected Border.templateRow">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PrimarySoftBrush}" />
+        </Style>
+        <Style Selector="Border.previewHead">
+            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 1 0" />
+            <Setter Property="Padding" Value="12 8" />
+            <Setter Property="MinWidth" Value="120" />
+        </Style>
+        <Style Selector="Border.previewCell">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 1 1" />
+            <Setter Property="Padding" Value="12 8" />
+            <Setter Property="MinWidth" Value="120" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*" Margin="28">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0 0 0 18">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Classes="display" Text="{Binding Title}" />
+                <TextBlock Classes="muted" Text="{Binding Description}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Button Classes="ghost" Content="Import template" Command="{Binding ImportTemplateFileCommand}" />
+                <Button Classes="ghost" Content="New template" Command="{Binding NewTemplateCommand}" />
+                <Button Classes="ghost" Content="Refresh" Command="{Binding LoadCommand}" IsEnabled="{Binding !IsBusy}" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="320,*" ColumnSpacing="18">
+
+            <Border Grid.Column="0" Classes="panel" Padding="16">
+                <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+                    <StackPanel Grid.Row="0" Spacing="2" Margin="2 0 2 12">
+                        <TextBlock Classes="caption" Text="TEMPLATES" />
+                        <TextBlock Classes="muted" FontSize="{DynamicResource FontSizeCaption}"
+                                   Text="{Binding TemplateCount, StringFormat='{}{0} available'}" />
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1">
+                        <Panel>
+                            <ListBox Classes="templates"
+                                     ItemsSource="{Binding Templates}"
+                                     SelectedItem="{Binding Selected, Mode=TwoWay}"
+                                     IsVisible="{Binding HasTemplates}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:TemplateEditorViewModel">
+                                        <Border Classes="templateRow">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Grid.Column="0" Spacing="3">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Border Classes="chip" Padding="7 2">
+                                                            <TextBlock Classes="caption" Text="{Binding FormatLabel}" />
+                                                        </Border>
+                                                        <TextBlock Classes="caption" VerticalAlignment="Center"
+                                                                   Text="{Binding StatusLabel}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <Border Grid.Column="1" Classes="statusDot" VerticalAlignment="Center"
+                                                        Background="{DynamicResource PrimaryBrush}"
+                                                        IsVisible="{Binding IsBuiltIn}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel IsVisible="{Binding IsTemplateListEmpty}"
+                                        VerticalAlignment="Center" Spacing="8" Margin="6">
+                                <TextBlock Classes="subheading" Text="No templates" HorizontalAlignment="Center" />
+                                <TextBlock Classes="muted" TextAlignment="Center"
+                                           Text="Create a new template or import one from a file to get started." />
+                            </StackPanel>
+                        </Panel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0 1 0 0"
+                            Margin="0 12 0 0" Padding="0 12 0 0">
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="caption" Text="EXPORT SOURCE" />
+                            <ComboBox Classes="cell" HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding Documents}"
+                                      SelectedItem="{Binding SelectedDocument, Mode=TwoWay}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:DocumentOptionViewModel">
+                                        <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button Classes="primary" HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Content="Export selected document"
+                                    Command="{Binding ExportDocumentCommand}" />
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Row="3" Spacing="8" Margin="0 12 0 0"
+                                IsVisible="{Binding StatusMessage, Converter={x:Static conv:NonEmptyConverter.Instance}}">
+                        <Border Classes="chip" IsVisible="{Binding !HasError}" Background="{DynamicResource Surface2Brush}">
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       TextWrapping="Wrap"
+                                       FontSize="{DynamicResource FontSizeCaption}"
+                                       Foreground="{DynamicResource MutedForegroundBrush}" />
+                        </Border>
+                        <Border Classes="chip" IsVisible="{Binding HasError}" Background="{DynamicResource PrimarySoftBrush}">
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       TextWrapping="Wrap"
+                                       FontSize="{DynamicResource FontSizeCaption}"
+                                       Foreground="{DynamicResource DangerBrush}" />
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Classes="panel" Padding="0">
+                <Grid RowDefinitions="*" IsVisible="{Binding HasSelection}">
+                    <ScrollViewer>
+                        <StackPanel Spacing="18" Margin="22">
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0" Spacing="3">
+                                    <TextBlock Classes="caption" Text="TEMPLATE" />
+                                    <TextBlock Classes="heading" Text="{Binding Selected.Name}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <Button Classes="ghost" Content="Duplicate" Command="{Binding DuplicateTemplateCommand}" />
+                                    <Button Classes="ghost" Content="Export to file" Command="{Binding ExportTemplateFileCommand}" />
+                                    <Button Classes="ghost" Content="Delete" Command="{Binding DeleteTemplateCommand}"
+                                            IsEnabled="{Binding CanEdit}" />
+                                    <Button Classes="primary" Content="Save" Command="{Binding SaveTemplateCommand}"
+                                            IsEnabled="{Binding CanEdit}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Classes="chip" HorizontalAlignment="Left"
+                                    IsVisible="{Binding !CanEdit}"
+                                    Background="{DynamicResource PrimarySoftBrush}">
+                                <TextBlock Classes="caption" Foreground="{DynamicResource PrimaryBrush}"
+                                           Text="Built-in template — duplicate it to customize." />
+                            </Border>
+
+                            <Grid ColumnDefinitions="*,200" ColumnSpacing="14">
+                                <StackPanel Grid.Column="0" Spacing="6">
+                                    <TextBlock Classes="caption" Text="NAME" />
+                                    <TextBox Classes="cell" Text="{Binding Selected.Name, Mode=TwoWay}"
+                                             IsEnabled="{Binding CanEdit}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock Classes="caption" Text="FORMAT" />
+                                    <ComboBox Classes="cell" HorizontalAlignment="Stretch"
+                                              ItemsSource="{Binding Formats}"
+                                              SelectedItem="{Binding Selected.Format, Mode=TwoWay}"
+                                              IsEnabled="{Binding CanEdit}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" Classes="subheading" Text="Columns" VerticalAlignment="Center" />
+                                    <Button Grid.Column="1" Classes="ghost" Content="Add column"
+                                            Command="{Binding AddColumnCommand}" IsEnabled="{Binding CanEdit}" />
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*,*,Auto" Margin="2 0">
+                                    <TextBlock Grid.Column="0" Classes="caption" Text="OUTPUT HEADER" />
+                                    <TextBlock Grid.Column="1" Classes="caption" Text="SOURCE FIELD" Margin="10 0 0 0" />
+                                    <TextBlock Grid.Column="2" Classes="caption" Text="" />
+                                </Grid>
+
+                                <ItemsControl ItemsSource="{Binding Selected.Columns}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ColumnEditorViewModel">
+                                            <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10" Margin="0 0 0 8">
+                                                <TextBox Grid.Column="0" Classes="cell"
+                                                         Text="{Binding Header, Mode=TwoWay}"
+                                                         PlaceholderText="Output column name"
+                                                         IsEnabled="{Binding IsEditable}" />
+                                                <ComboBox Grid.Column="1" Classes="cell" HorizontalAlignment="Stretch"
+                                                          ItemsSource="{Binding Sources}"
+                                                          SelectedItem="{Binding Source, Mode=TwoWay}"
+                                                          IsEnabled="{Binding IsEditable}" />
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2"
+                                                            IsVisible="{Binding IsEditable}">
+                                                    <Button Classes="icon" Content="↑"
+                                                            Command="{Binding MoveUpCommand}" />
+                                                    <Button Classes="icon" Content="↓"
+                                                            Command="{Binding MoveDownCommand}" />
+                                                    <Button Classes="icon" Content="✕"
+                                                            Foreground="{DynamicResource DangerBrush}"
+                                                            Command="{Binding RemoveCommand}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0 1 0 0" Padding="0 16 0 0">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <TextBlock Classes="subheading" Text="Live preview" VerticalAlignment="Center" />
+                                            <TextBlock Classes="caption"
+                                                       Text="Rendered from the selected document and this template." />
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Classes="ghost" Content="Refresh preview"
+                                                Command="{Binding PreviewCommand}" />
+                                    </Grid>
+
+                                    <Border Classes="templateRow" Padding="0" ClipToBounds="True"
+                                            IsVisible="{Binding HasPreview}">
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                                            <StackPanel>
+                                                <ItemsControl ItemsSource="{Binding PreviewHeaders}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="x:String">
+                                                            <Border Classes="previewHead">
+                                                                <TextBlock Classes="caption" Text="{Binding}"
+                                                                           FontWeight="SemiBold" />
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+
+                                                <ItemsControl ItemsSource="{Binding PreviewRows}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:PreviewRowViewModel">
+                                                            <ItemsControl ItemsSource="{Binding Cells}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <StackPanel Orientation="Horizontal" />
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate x:DataType="x:String">
+                                                                        <Border Classes="previewCell">
+                                                                            <TextBlock Text="{Binding}"
+                                                                                       TextTrimming="CharacterEllipsis" />
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </Border>
+
+                                    <Border Classes="templateRow" IsVisible="{Binding !HasPreview}">
+                                        <StackPanel Spacing="6" Margin="6" HorizontalAlignment="Center">
+                                            <TextBlock Classes="muted" HorizontalAlignment="Center" TextAlignment="Center"
+                                                       Text="Pick a source document and refresh the preview to see the rendered output." />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

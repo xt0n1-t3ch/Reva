@@ -1,131 +1,121 @@
 # Architecture
 
-Reva is a local-first document-intelligence application for reinsurance bordereaux ingestion and reconciliation. The production runtime is deliberately simple: one self-contained `Reva.exe` hosts the static cockpit, REST API, OCR, reconciliation engine, and assistant chat on `http://localhost:5187`.
+Reva 2.0 is a native desktop application for reinsurance bordereaux ingestion and reconciliation. The whole product runs in one process: the Avalonia UI, the document pipeline, the database, the OCR engine, and the AI copilot all call each other through in-process dependency injection. There is no web server and no HTTP between the layers.
+
+> The earlier release served a Next.js cockpit over `http://localhost:5187`. That browser host (`src/Reva.Web`) is retained in the repository but is not part of the 2.0 product. Everything below describes the native app, `src/Reva.App`.
 
 ## System overview
 
 ```mermaid
 flowchart TB
-  subgraph Release["Windows release package"]
-    Exe["Reva.exe<br/>.NET 10 self-contained<br/>PublishSingleFile"]
-    Cmd["Start-Reva.cmd"]
-    RunReadme["README-RUN.txt"]
+  subgraph Proc["Single process · Reva.exe · native window"]
+    App["Reva.App (Avalonia 12)<br/>views, view models, shell,<br/>navigation, copilot panel"]
+    Ai["Reva.Ai<br/>model registry (configurable),<br/>VLM field extractor"]
+    Infra["Reva.Infrastructure<br/>EF Core, parser router, PaddleOCR,<br/>extraction + merge, reconciliation,<br/>schema mapping, export, agent + action bus"]
+    Core["Reva.Core<br/>contracts, document states,<br/>canonical fields, MoneyFormatter"]
+    Store[("SQLite default<br/>SQL Server by config")]
   end
 
-  subgraph Host["src/Reva.Web · Microsoft.NET.Sdk.Web"]
-    Static["Static UI serving<br/>wwwroot + SPA fallback"]
-    Rest["Minimal REST API<br/>OpenAPI + health"]
-    AgentEndpoint["/api/agent<br/>AI-SDK UI-message-stream SSE"]
-  end
-
-  subgraph Web["web/ · build-time only"]
-    Next["Next.js 16.2.9 App Router<br/>React 19.2 · TypeScript · Tailwind 4<br/>output: export"]
-  end
-
-  subgraph Core["src/Reva.Core"]
-    Contracts["Contracts.cs"]
-    Fields["canonical reinsurance fields"]
-    Money["MoneyFormatter"]
-  end
-
-  subgraph Infra["src/Reva.Infrastructure"]
-    Workflow["DocumentWorkflow"]
-    Router["ParserRouter + typed parsers"]
-    OCR["Sdcb.PaddleOCR<br/>PP-OCR V5 bundled models"]
-    Extract["classifier + field extractor"]
-    Mapping["schema mapping<br/>alias → fuzzy → learned"]
-    Reconcile["reconciliation engine<br/>configurable tolerance"]
-    Agent["Agent/ native chat services<br/>FunctionInvokingChatClient"]
-    Persistence["EF Core persistence<br/>SQLite default / SQL Server switch"]
-  end
-
-  Browser["Analyst browser"] -->|localhost only| Exe
-  Cmd --> Exe
-  Exe --> Host
-  Next -->|package-time export| Static
-  Static --> Browser
-  Rest --> Workflow
-  AgentEndpoint --> Agent
-  Agent -->|tools over real workflow| Workflow
-  Workflow --> Router --> OCR
-  Workflow --> Extract --> Mapping --> Reconcile
-  Workflow --> Persistence
-  Workflow --> Core
-  Persistence --> Db[("SQLite database")]
-  Persistence -. config .-> SqlServer[("SQL Server")]
+  User["Analyst"] -->|clicks, drag-drop, chat| App
+  App -->|IRevaClient façade| Infra
+  App -->|IModelRegistry| Ai
+  Ai --> Infra
+  Infra --> Core
+  Ai --> Core
+  Infra --> Store
+  Infra --> Files["Local uploads<br/>SHA-256 hashed"]
+  Ai -. optional, OpenAI-compatible .-> Ollama["Local Ollama<br/>swappable model"]
 ```
 
 ## Runtime shape
 
-Reva ships as one self-contained Windows executable:
-
-- `win-x64`, .NET 10, self-contained publish.
-- `PublishSingleFile=true` with native libraries self-extracted by the .NET host.
-- One process serves the web UI, API, OCR engine, persistence workflow, and native chat endpoint.
-- One origin (`http://localhost:5187`) avoids cross-origin setup and keeps the release package easy to smoke-test.
-- The static UI is staged into `src/Reva.Web/wwwroot` during packaging; Node.js is not present at run time.
+- A native Avalonia window, not a browser. Launching `Reva.exe` opens the app directly — no URL, no port, no SPA.
+- One process hosts the UI, the workflow, EF Core, PaddleOCR, and the agent. They communicate by method calls, not network requests.
+- The workspace is per-user: the SQLite database and the uploads folder live under `%LOCALAPPDATA%\Reva`.
+- The AI is local and optional. When Ollama is absent, every non-AI feature works unchanged.
 
 ## Project boundaries
 
-| Project | Responsibility | Dependencies |
+Dependencies point inward. The app depends on infrastructure and AI; infrastructure and AI depend on core; core depends on nothing.
+
+| Project | Responsibility | Depends on |
 |:---|:---|:---|
-| `src/Reva.Core` | Domain contracts, document states, canonical reinsurance field names, review payload types, and the single `MoneyFormatter`. | No web or infrastructure dependencies. |
-| `src/Reva.Infrastructure` | EF Core persistence, SQLite/SQL Server provider selection, file storage, SHA-256 hashing, parser routing, typed parsers, OCR, classification, extraction, schema mapping, reconciliation, export, settings, demo data, and `DocumentWorkflow`. | Depends on Core and runtime libraries. |
-| `src/Reva.Infrastructure/Agent` | Native assistant chat: AI-SDK request parsing, UI-message-stream SSE mapping, Ollama process management, tool-loop registration, and document/reconciliation/field-explanation tools. | Uses the real workflow and review payload assembler. |
-| `src/Reva.Web` | Minimal API host, `/api/agent`, `/api/agent/status`, OpenAPI, static file serving, SPA fallback, and package health. | Depends on Core and Infrastructure. |
-| `web/` | Next.js 16.2.9 static cockpit. Built with `pnpm` at package time and exported to `wwwroot`. | Build-time Node.js only. |
+| `src/Reva.Core` | Domain contracts, document and review states, canonical reinsurance field names, and `MoneyFormatter`. | Nothing. |
+| `src/Reva.Infrastructure` | EF Core persistence and provider selection, file storage, SHA-256 hashing, parser routing and typed parsers, PaddleOCR, classification, deterministic extraction, the VLM merge seam, schema mapping, reconciliation, export, settings, data maintenance, the agent chat service, and the in-process action bus. | Core. |
+| `src/Reva.Ai` | The configurable model registry and the VLM field extractor. Implements the infrastructure's `ILlmFieldExtractor`. | Core, Infrastructure. |
+| `src/Reva.App` | The Avalonia desktop application — the shipped `Reva.exe`. Views, view models, navigation, the copilot panel, theming, and DI composition. | Core, Infrastructure, Ai. |
+| `src/Reva.Web` | Legacy browser host. Retained, not shipped in 2.0. | Core, Infrastructure. |
 
-## API surface
+## Composition
 
-| Route | Purpose |
-|:---|:---|
-| `POST /api/documents` | Upload a document and run ingestion. |
-| `GET /api/documents` | Return the work queue. |
-| `GET /api/documents/{id}` | Return document detail. |
-| `GET /api/documents/{id}/review-payload` | Return the schema-backed split-view review payload. |
-| `GET /api/documents/{id}/pages/{page}.png` | Return a page image for review and citation overlays. |
-| `POST /api/documents/{id}/review` | Save field edits and mapping corrections. |
-| `GET /api/documents/{id}/export` | Export the document with a selected format/template. |
-| `/api/templates` | Create, read, update, duplicate, and delete export templates. |
-| `POST /api/data/reseed` / `POST /api/data/clear` | Manage local demo/workspace data. |
-| `POST /api/agent` | Stream native assistant responses as AI-SDK UI-message-stream SSE. |
-| `GET /api/agent/status` | Report Ollama process/model availability. |
-| `GET /health` | Package and host health check. |
+The app has one composition root: `AppServices.Build()` in `src/Reva.App/Composition/`. It ensures the per-user data directory exists, builds configuration (forcing the SQLite provider at the per-user path and the per-user upload root), then registers everything:
 
-## Data flow
+```csharp
+services.AddRevaInfrastructure(configuration);   // pipeline, agent, action bus, EF Core
+services.AddRevaAi(configuration);               // model registry, VLM extractor
+services.AddSingleton<IRevaClient, RevaClient>();
+services.AddSingleton<INavigationService, NavigationService>();
+// + ShellViewModel and every screen's view model
+```
+
+`AddRevaInfrastructure` and `AddRevaAi` are the same extension methods the backend exposes, so the desktop app re-hosts the proven domain core rather than reimplementing it.
+
+## How the layers talk
+
+The UI never calls infrastructure services directly. Every view model takes one façade, `IRevaClient`, which opens a DI scope per call and forwards to the workflow, template store, exporter, settings store, and model registry. This keeps view models free of infrastructure detail and gives one seam to mock in tests.
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor Analyst
-  participant UI as Next.js cockpit
-  participant API as Reva.Web API
+  participant VM as View model
+  participant Client as IRevaClient
   participant Flow as DocumentWorkflow
-  participant Parse as ParserRouter/OCR
-  participant Map as SchemaMappingService
-  participant Rec as Reconciliation engine
+  participant Parse as ParserRouter / PaddleOCR
+  participant Vlm as VlmFieldExtractor (optional)
   participant DB as EF Core store
 
-  Analyst->>UI: Upload document
-  UI->>API: POST /api/documents
-  API->>Flow: IngestAsync(file)
+  Analyst->>VM: drop a document
+  VM->>Client: UploadAsync(file)
+  Client->>Flow: IngestAsync(file)
   Flow->>Parse: parse text, tables, pages, source spans
   Parse-->>Flow: parsed content + normalized geometry
-  Flow->>Flow: classify and extract fields
-  Flow->>Map: alias/fuzzy/learned sender mapping
-  Map-->>Flow: mapped canonical fields + evidence
-  Flow->>Rec: compare stated figures with line-item totals
-  Rec-->>Flow: field exceptions + agreement scores
+  Flow->>Flow: classify + deterministic extract
+  opt LLM assist enabled
+    Flow->>Vlm: ProposeAsync(pages, deterministic)
+    Vlm-->>Flow: cited field proposals
+  end
+  Flow->>Flow: conservative merge + schema map + reconcile
   Flow->>DB: persist document, pages, spans, fields, mappings, issues
-  API-->>UI: document summary
-  UI->>API: GET /api/documents/{id}/review-payload
-  API-->>UI: pages + fields + citations + reconciliation
-  Analyst->>UI: Review, correct mapping/fields, export
+  Flow-->>Client: summary
+  Client-->>VM: result
 ```
+
+## The copilot action bus
+
+The copilot can move the real UI without reaching into views. Its action tools publish typed `AppAction` messages onto an in-process `IAppActionBus` (`src/Reva.Infrastructure/Agent/AppAction.cs`). The app's `NavigationService` subscribes to that bus and performs the navigation on the UI thread. Chat and UI share one channel, so they stay in lockstep.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Agent as AgentChatService (tool loop)
+  participant Tool as Action tool
+  participant Bus as IAppActionBus
+  participant Nav as NavigationService
+  participant UI as Views
+
+  Agent->>Tool: open_document(id)
+  Tool->>Bus: Publish(OpenDocument, id)
+  Tool->>Bus: Publish(Navigate, "review")
+  Bus-->>Nav: AppAction stream (marshalled to UI thread)
+  Nav->>UI: navigate to Review, open the document
+```
+
+The action kinds are fixed and small: `Navigate`, `OpenDocument`, `GotoPage`, `Highlight`, `Refresh`, `SetFilter`, `Toast`, `Progress`.
 
 ## Persistence and configuration
 
-SQLite is the offline default. SQL Server is selected by configuration when a shared database is needed:
+SQLite is the default and needs no setup — the database is one file under the user's local app data. SQL Server is selected by configuration when a team needs shared storage; the registration picks the provider at startup with no code change:
 
 ```json
 {
@@ -138,18 +128,16 @@ SQLite is the offline default. SQL Server is selected by configuration when a sh
 }
 ```
 
-Settings stored in the app include theme/accent/branding, confidence thresholds, reconciliation tolerance, optional LLM-assisted extraction, default export template, and data-management actions.
+The AI layer is configured under `Reva:Ai:*` (base URL, active model, vision toggle, timeout) and the model registry persists the chosen model to a state file in the workspace. In-app settings cover theme, accent, branding, confidence thresholds, reconciliation tolerance, the LLM-assist toggle, the default export template, the model menu, and data management.
 
 ## Review payload and citations
 
-Review payloads follow [`contracts/bdx-review-payload.schema.json`](../contracts/bdx-review-payload.schema.json). Source geometry is normalized to `0..1` against the final rendered page size. OCR and rendered PDF pages can carry exact boxes and polygons; purely textual or fallback parses still include provenance even when geometry is unavailable.
-
-The split-view cockpit uses this contract to keep field panels, exception cards, and document highlights synchronized. A corrected field is marked **Reviewed** rather than having its confidence inflated.
+Review payloads follow [`contracts/bdx-review-payload.schema.json`](../contracts/bdx-review-payload.schema.json). Source geometry is normalized to `0..1` against the final rendered page size. OCR and rendered PDF pages carry exact boxes and polygons; purely textual or fallback parses still include provenance even when geometry is unavailable. A corrected field is marked **Reviewed** rather than having its confidence inflated.
 
 ## Security posture
 
-- Localhost-only runtime; no external service is required for core extraction.
+- Fully local: OCR, the database, and the model all run on-device. No external service is required for core extraction.
 - Uploads are stored under safe names and hashed with SHA-256.
-- Unknown files degrade to visible-text fallback instead of crashing the workflow.
-- Optional Docling and optional LLM-assisted extraction stay disabled unless configured.
-- Secrets come from environment or local configuration and are never part of the repository.
+- Unknown files degrade to a low-confidence visible-text record instead of crashing the workflow.
+- The VLM and Docling paths stay disabled unless explicitly configured, and a model proposal can never overwrite a validated figure.
+- Secrets come from environment or local configuration and are never committed.

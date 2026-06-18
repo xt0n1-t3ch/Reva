@@ -1,0 +1,155 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Reva.App.ViewModels"
+             xmlns:nav="using:Reva.App.Navigation"
+             xmlns:conv="using:Reva.App.Converters"
+             xmlns:views="using:Reva.App.Views"
+             xmlns:onb="using:Reva.App.Onboarding"
+             x:Class="Reva.App.Views.ShellView"
+             x:DataType="vm:ShellViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.Resources>
+        <conv:StringEqualsConverter x:Key="RouteActive" />
+    </UserControl.Resources>
+
+    <Grid ColumnDefinitions="248,*,Auto" Background="{DynamicResource BgBrush}">
+
+        <Border Grid.Column="0"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0 0 1 0">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="14">
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="6 12 6 22">
+                    <Border Width="32" Height="32" CornerRadius="9" Background="{DynamicResource PrimaryBrush}">
+                        <TextBlock Text="R" FontWeight="Bold" FontSize="18" Foreground="#FFFFFFFF"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="{Binding AppTitle}" Classes="heading" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Spacing="0">
+                    <TextBlock Text="WORKSPACE" Classes="caption" Margin="10 0 0 8" />
+
+                    <Button Name="TourTargetNavDashboard"
+                            Classes="nav"
+                            Classes.active="{Binding ActiveRoute, Converter={StaticResource RouteActive}, ConverterParameter={x:Static nav:AppRoutes.Dashboard}}"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="{x:Static nav:AppRoutes.Dashboard}">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="▤" FontSize="16" />
+                            <TextBlock Text="Dashboard" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Name="TourTargetNavReview"
+                            Classes="nav"
+                            Classes.active="{Binding ActiveRoute, Converter={StaticResource RouteActive}, ConverterParameter={x:Static nav:AppRoutes.Review}}"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="{x:Static nav:AppRoutes.Review}">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="✓" FontSize="16" />
+                            <TextBlock Text="Review" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Name="TourTargetNavMappings"
+                            Classes="nav"
+                            Classes.active="{Binding ActiveRoute, Converter={StaticResource RouteActive}, ConverterParameter={x:Static nav:AppRoutes.Mappings}}"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="{x:Static nav:AppRoutes.Mappings}">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="⇄" FontSize="16" />
+                            <TextBlock Text="Mappings" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Name="TourTargetNavExport"
+                            Classes="nav"
+                            Classes.active="{Binding ActiveRoute, Converter={StaticResource RouteActive}, ConverterParameter={x:Static nav:AppRoutes.Export}}"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="{x:Static nav:AppRoutes.Export}">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="↧" FontSize="16" />
+                            <TextBlock Text="Export" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Name="TourTargetNavSettings"
+                            Classes="nav"
+                            Classes.active="{Binding ActiveRoute, Converter={StaticResource RouteActive}, ConverterParameter={x:Static nav:AppRoutes.Settings}}"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="{x:Static nav:AppRoutes.Settings}">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="⚙" FontSize="16" />
+                            <TextBlock Text="Settings" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <Border Grid.Row="2" Classes="chip" Margin="4 0 4 4">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Border Classes="statusDot"
+                                Background="{Binding IsOnline, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
+                        <TextBlock Text="{Binding StatusText}" Classes="caption" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1" RowDefinitions="Auto,*">
+
+            <Border Grid.Row="0"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0 0 0 1"
+                    Padding="22 14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding AppTitle}" Classes="subheading" VerticalAlignment="Center" />
+                        <Border Classes="chip" IsVisible="{Binding ActiveModel, Converter={x:Static conv:NonEmptyConverter.Instance}}">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <Border Classes="statusDot"
+                                        Background="{Binding IsOnline, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
+                                <TextBlock Text="{Binding ActiveModel}" Classes="caption" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Button Name="TourTargetTourButton"
+                                Classes="ghost"
+                                Click="OnStartTourClicked"
+                                Content="Tour" />
+                        <Button Classes="icon" Command="{Binding ToggleThemeCommand}" Content="◐" />
+                        <Button Classes="primary" Command="{Binding ToggleCopilotCommand}" Content="Copilot" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <ContentControl Name="TourTargetContentHost" Grid.Row="1" Content="{Binding Current}" />
+        </Grid>
+
+        <Border Name="TourTargetCopilotDock"
+                Grid.Column="2"
+                Width="380"
+                IsVisible="{Binding IsCopilotOpen}"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1 0 0 0">
+            <Grid RowDefinitions="Auto,*">
+                <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0 0 0 1" Padding="18 14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="Copilot" Classes="subheading" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Classes="icon" Command="{Binding ToggleCopilotCommand}" Content="✕" />
+                    </Grid>
+                </Border>
+                <ContentControl Grid.Row="1" Content="{Binding Copilot}" />
+            </Grid>
+        </Border>
+
+        <onb:TourOverlay Grid.Column="0"
+                         Grid.ColumnSpan="3" />
+    </Grid>
+</UserControl>

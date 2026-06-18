@@ -1,85 +1,69 @@
 # Packaging
 
-Reva 1.3.0 packages the product as one self-contained Windows executable. The package contains no Node.js runtime and does not require a separate web server.
+Reva 2.0 ships as one self-contained native executable, `Reva.exe`, published from `src/Reva.App`. The package contains no Node.js, no web server, and no separate processes. Double-clicking it opens a native desktop window — there is no URL to visit.
 
 ## Build the Windows package
 
 ```powershell
-./scripts/package-windows.ps1 -Version 1.3.0
+./scripts/package-windows.ps1 -Version 2.0.0
 ```
 
-The script performs the release build in this order:
+The script publishes the Avalonia app as a single self-contained file and zips the result:
 
-1. `pnpm install --frozen-lockfile` in `web/`.
-2. `pnpm run build` for the Next.js static export (`output: 'export'`).
-3. Clear and stage `web/out/*` into `src/Reva.Web/wwwroot`.
-4. `dotnet publish src/Reva.Web/Reva.Web.csproj` for `win-x64`, self-contained, single file.
-5. Add the launcher and package readme.
-6. Zip the release artifacts.
+1. `dotnet publish src/Reva.App/Reva.App.csproj` for `win-x64`, self-contained.
+2. `PublishSingleFile=true` with `IncludeNativeLibrariesForSelfExtract=true`, so native dependencies (PaddleOCR, Skia, the PDF renderer) are bundled and self-extracted by the .NET host.
+3. `EnableCompressionInSingleFile=true` to keep the download small.
+4. Add the double-click launcher and package readme.
+5. Zip the artifacts.
 
 Expected output:
 
 ```text
-artifacts/releases/Reva-v1.3.0-win-x64.zip
+artifacts/releases/Reva-v2.0.0-win-x64.zip
 ```
 
 ## Package contents
 
 | File | Purpose |
 |:---|:---|
-| `Reva.exe` | Single self-contained .NET 10 application hosting the static UI, REST API, OCR, workflow, export, and assistant chat. |
-| `Start-Reva.cmd` | Double-click launcher that sets `ASPNETCORE_URLS=http://localhost:5187` and starts `Reva.exe`. |
-| `README-RUN.txt` | Package-local run notes and optional Ollama/Docling guidance. |
+| `Reva.exe` | The single self-contained .NET 10 / Avalonia desktop application. Opens a native window hosting the full pipeline, database, OCR, and copilot. |
+| `Start-Reva.cmd` | Optional double-click launcher that starts `Reva.exe` from its own folder. |
+| `README-RUN.txt` | Package-local run notes and optional Ollama guidance. |
 
-Native libraries are included in the single-file publish and self-extract as needed by the .NET host.
+Native libraries are included in the single-file publish and self-extract as needed by the .NET host on first launch.
 
 ## Run the package
 
 ```powershell
-Expand-Archive artifacts/releases/Reva-v1.3.0-win-x64.zip -DestinationPath artifacts/run/Reva
+Expand-Archive artifacts/releases/Reva-v2.0.0-win-x64.zip -DestinationPath artifacts/run/Reva
 ./artifacts/run/Reva/Reva.exe
 ```
 
-Then open:
+A native window opens. On first run, Reva creates its workspace under `%LOCALAPPDATA%\Reva` (the SQLite database and the uploads folder).
 
-```text
-http://localhost:5187
+## Run from source during development
+
+```powershell
+dotnet run --project src/Reva.App/Reva.App.csproj
 ```
 
-`Start-Reva.cmd` performs the same start path for double-click usage.
+This launches the same native window directly, against the same per-user workspace.
 
-## Optional assistant setup
+## Optional assistant and VLM setup
 
-The package is fully useful without a local model. For assistant chat, install Ollama and pull the default model:
+The package is fully useful without any model — the deterministic tier ingests, extracts, reconciles, reviews, and exports offline. For the copilot and VLM-assisted extraction, install Ollama and pull a model:
 
 ```powershell
 winget install Ollama.Ollama
 ollama pull qwen3-vl:8b
 ```
 
-Reva best-effort starts `ollama serve` when Ollama is installed. If the model is absent, `/api/agent/status` reports that state and `POST /api/agent` returns a clear local-model-unavailable stream while the rest of the app continues to work.
-
-## Smoke-test the package
-
-```powershell
-./tests/package-smoke.ps1
-```
-
-The smoke test builds a package, extracts it to a temp directory, starts `Reva.exe` on an alternate localhost port, and asserts:
-
-- `GET /health` returns `status = ok` and `service = Reva`;
-- `GET /api/documents/` returns an empty document list for a clean package run;
-- `GET /` serves the bundled static UI and includes `Reve Intelligence`;
-- `GET /api/agent/status` responds;
-- `POST /api/agent` returns `text/event-stream` content.
-
-The script stops the package process and restores environment variables after the run.
+Then open **Settings**, choose a model from the menu, and enable **LLM assist** for VLM extraction. The model is configurable per machine; see [model landscape](learn/model-landscape.md). When Ollama is not running or no model is installed, the copilot shows a clear local-model-unavailable message and the rest of the app continues to work.
 
 ## Runtime notes
 
-- Node.js is build-time only.
-- Python is optional and only enables the richer Docling parser path.
-- SQLite is the default persistence store; SQL Server can be selected by local configuration.
-- The release listens on localhost and defaults to `http://localhost:5187`.
-- `REVA_NO_OPEN=1` is available for headless runs.
-- `--seed-demo` or `REVA_SEED_DEMO=1` loads the bundled demo corpus when needed.
+- The app is a native window — there is no port and no localhost server.
+- SQLite is the default store; SQL Server can be selected by local configuration.
+- Python and Docling are optional and only enable the richer tier-three parsing path.
+- The workspace lives under `%LOCALAPPDATA%\Reva`; deleting it resets the app to a clean state.
+- The chosen model is persisted in the workspace and reused across launches.

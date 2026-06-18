@@ -1,0 +1,95 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:onb="using:Reva.App.Onboarding"
+             x:Class="Reva.App.Onboarding.TourOverlay"
+             x:DataType="onb:TourOverlayViewModel"
+             x:CompileBindings="True"
+             IsVisible="{Binding IsVisible}"
+             IsHitTestVisible="True">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="TourScrimBrush" Color="#B3060912" />
+    </UserControl.Resources>
+
+    <Grid>
+
+        <Canvas IsVisible="{Binding HasHighlight}" IsHitTestVisible="True">
+            <Border Canvas.Left="0" Canvas.Top="0"
+                    Width="{Binding SurfaceWidth}"
+                    Height="{Binding DimTopHeight}"
+                    Background="{StaticResource TourScrimBrush}" />
+            <Border Canvas.Left="0"
+                    Canvas.Top="{Binding DimBottomY}"
+                    Width="{Binding SurfaceWidth}"
+                    Height="{Binding DimBottomHeight}"
+                    Background="{StaticResource TourScrimBrush}" />
+            <Border Canvas.Left="0"
+                    Canvas.Top="{Binding DimMiddleY}"
+                    Width="{Binding DimLeftWidth}"
+                    Height="{Binding DimMiddleHeight}"
+                    Background="{StaticResource TourScrimBrush}" />
+            <Border Canvas.Left="{Binding DimRightX}"
+                    Canvas.Top="{Binding DimMiddleY}"
+                    Width="{Binding DimRightWidth}"
+                    Height="{Binding DimMiddleHeight}"
+                    Background="{StaticResource TourScrimBrush}" />
+            <Border Canvas.Left="{Binding HighlightX}"
+                    Canvas.Top="{Binding HighlightY}"
+                    Width="{Binding HighlightWidth}"
+                    Height="{Binding HighlightHeight}"
+                    CornerRadius="{Binding HighlightCornerRadiusValue}"
+                    BorderThickness="2"
+                    BorderBrush="{DynamicResource PrimaryBrush}"
+                    IsHitTestVisible="False" />
+        </Canvas>
+
+        <Border IsVisible="{Binding !HasHighlight}"
+                Background="{StaticResource TourScrimBrush}" />
+
+        <Border Width="{Binding CardWidthValue}"
+                VerticalAlignment="{Binding CardCentered, Converter={x:Static onb:TourCenteredVerticalAlignmentConverter.Instance}}"
+                HorizontalAlignment="{Binding CardCentered, Converter={x:Static onb:TourCenteredHorizontalAlignmentConverter.Instance}}"
+                Margin="{Binding CardMargin}"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource CornerRadiusLg}"
+                BoxShadow="0 18 48 0 #5C000000"
+                Padding="22">
+            <StackPanel Spacing="14">
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding Counter}"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               FontWeight="SemiBold"
+                               FontSize="{DynamicResource FontSizeCaption}" />
+                    <TextBlock Text="{Binding Title}"
+                               Classes="heading"
+                               TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Body}"
+                               Classes="muted"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0 4 0 0">
+                    <Button Grid.Column="0"
+                            Classes="ghost"
+                            Content="Skip"
+                            Command="{Binding SkipCommand}" />
+                    <Button Grid.Column="2"
+                            Classes="ghost"
+                            Content="Back"
+                            Margin="0 0 8 0"
+                            IsEnabled="{Binding CanGoBack}"
+                            Command="{Binding BackCommand}" />
+                    <Button Grid.Column="3"
+                            Classes="primary"
+                            Content="{Binding PrimaryActionText}"
+                            Command="{Binding NextCommand}" />
+                </Grid>
+
+            </StackPanel>
+        </Border>
+
+    </Grid>
+</UserControl>

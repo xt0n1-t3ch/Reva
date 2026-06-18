@@ -1,160 +1,166 @@
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0B1220,45:00B3A4,100:3B5BD6&height=210&section=header&text=Reva&fontSize=72&fontColor=ffffff&desc=Local-first%20AI%20document%20intelligence%20for%20reinsurance&descSize=18&descAlignY=72" alt="Reva animated header" />
-
-  <img src="docs/assets/reva-banner.png" alt="Reva AI document intelligence cockpit banner" />
+  <img src="docs/assets/reva-banner.png" alt="Reva document intelligence" />
 
   <h1>Reva</h1>
-  <p><strong>Offline-by-default bordereaux ingestion, reconciliation, review, and export in one Windows executable.</strong></p>
-
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&duration=3500&pause=800&color=00B3A4&center=true&vCenter=true&width=760&lines=Ingest+messy+reinsurance+documents;Extract+source-cited+canonical+fields;Reconcile+headline+figures+against+line+items;Review+and+export+from+one+localhost+app" alt="Animated Reva capability subtitle" />
+  <p><strong>A native desktop app that turns messy reinsurance documents into reviewable, source-cited, export-ready data — fully offline by default.</strong></p>
 
   <p>
-    <a href="https://github.com/xt0n1-t3ch/Reva/actions/workflows/ci.yml"><img src="https://github.com/xt0n1-t3ch/Reva/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
     <img src="https://img.shields.io/badge/.NET-10-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 10">
-    <img src="https://img.shields.io/badge/Next.js-16.2.9-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 16.2.9">
-    <img src="https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=0B1220" alt="React 19.2">
-    <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-    <img src="https://img.shields.io/badge/Tailwind-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
-    <img src="https://img.shields.io/badge/Ollama-qwen3--vl%3A8b-000000?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama qwen3-vl:8b">
-    <img src="https://img.shields.io/badge/SQLite-default-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite default">
-    <img src="https://img.shields.io/badge/Playwright-tested-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" alt="Playwright tested">
-    <img src="https://img.shields.io/badge/SemVer-1.3.0-3B5BD6?style=for-the-badge&logo=semver&logoColor=white" alt="SemVer 1.3.0">
-    <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Keep%20a%20Changelog-1.1.0-E05735?style=for-the-badge" alt="Keep a Changelog"></a>
+    <img src="https://img.shields.io/badge/Avalonia-12.0.4-7B3FE4?style=for-the-badge&logo=avalonia&logoColor=white" alt="Avalonia 12">
+    <img src="https://img.shields.io/badge/MVVM-CommunityToolkit-0078D4?style=for-the-badge" alt="CommunityToolkit.Mvvm">
+    <img src="https://img.shields.io/badge/EF%20Core-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="EF Core SQLite">
+    <img src="https://img.shields.io/badge/OCR-PaddleOCR-0A8754?style=for-the-badge" alt="PaddleOCR">
+    <img src="https://img.shields.io/badge/VLM-Ollama%20(swappable)-000000?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama VLM">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-00B3A4?style=for-the-badge" alt="MIT License"></a>
   </p>
 </div>
 
-Reva is a local-first, offline-by-default AI document-intelligence application for reinsurance bordereaux ingestion and reconciliation. It turns messy files, emails, spreadsheets, PDFs, scans, and visible text into structured, reviewable, export-ready data with source citations, honest confidence, learned schema mapping, and analyst corrections that persist by sender.
+Reva ingests the documents a reinsurance back office actually receives — emails with attachments, spreadsheets, digital and scanned PDFs, Word and PowerPoint files, plain text, and the occasional unknown binary — and produces structured, reviewable records. Every extracted value carries a citation back to the page region it came from. Headline figures are reconciled against the line items that should add up to them. Analyst corrections are learned per sender so the next document from the same broker maps itself.
 
-The shipped product is a single self-contained `Reva.exe`. It serves the static Next.js cockpit, REST API, OCR, reconciliation engine, and native assistant chat from one localhost origin: `http://localhost:5187`. No Node.js, web server, cloud OCR, or API key is required at run time.
+Reva 2.0 is a **native Avalonia desktop application**. You download or build one file, `Reva.exe`, and double-click it. It opens a real desktop window — not a browser, not a localhost server, not a separate web process. The UI, the document pipeline, the database, the OCR engine, and the AI copilot all run in a single process and talk to each other through in-process method calls.
 
-## Highlights
+## What changed in 2.0
 
-| Capability | What Reva does |
+The previous release shipped a .NET host that served a Next.js cockpit over `http://localhost:5187`. Reva 2.0 retires that browser stack for the end user. The application is now a native window built on Avalonia, with the same proven domain core underneath. Three things drive the new version:
+
+- **Native, not browser.** `Reva.App` is an Avalonia desktop client. No HTTP server, no port, no SPA. It calls the domain services directly through dependency injection.
+- **VLM-first, configurable.** Extraction starts deterministic and keyless. On top of that, a vision-language model (VLM) running in your local Ollama can read page images and propose additional fields. The model is **chosen in Settings from a menu, not hardcoded.**
+- **Agentic copilot.** A chat panel can answer questions about your documents and also *act* on the app — navigate, open a document, correct a field, set a review state, export — by driving the same UI you do.
+
+## The three-tier processing model
+
+Reva separates "always works" from "works better with a model" from "works better with extra tooling." Each tier is independent; a missing tier never breaks the one below it.
+
+| Tier | What it does | Requires |
+|:---|:---|:---|
+| **1 — Deterministic (always on)** | Native parsers, bundled offline PaddleOCR, rule-based reinsurance field extraction, schema mapping, and reconciliation. This tier runs with no model and no network. | Nothing. Ships in the box. |
+| **2 — Local VLM (swappable)** | A vision-language model reads the rendered page images and proposes fields the deterministic tier missed, each with a citation. Proposals are merged conservatively — they never overwrite a validated money total. | A local Ollama and a pulled model, both optional. Enabled with the **LLM assist** toggle in Settings. |
+| **3 — Docling (optional)** | A richer document-layout parsing path for hard PDFs and scans, run through an external Docling worker when explicitly installed and enabled. | Python + Docling, off by default. |
+
+If Ollama is not running, or no model is pulled, Reva still ingests, extracts, reconciles, reviews, and exports. The model makes things better; it is never a hard dependency.
+
+## The configurable model menu
+
+The VLM is a setting, not a constant. The model menu in **Settings** lists a curated set of capable June-2026 local models plus anything you have already pulled into Ollama. Pick one; it is persisted and used for both the copilot and VLM-assisted extraction.
+
+| Model | Kind | Note |
+|:---|:---|:---|
+| Qwen 3.5 | vision | Newest Qwen, multimodal — recommended if pulled |
+| Qwen3-VL | vision | Strong document VLM |
+| Qwen3-VL 8B | vision | Balanced local VLM (the default if present) |
+| Granite Docling | vision / OCR | IBM's small document VLM |
+| Llama 4 | text | General text model |
+| Gemma 4 | text | General text model |
+
+Reva probes Ollama's `/api/tags`, marks which curated models are installed, and appends any other models it finds. The full June-2026 landscape — why these models, where PaddleOCR-VL, MinerU, and granite-docling fit, and why none of it is wired as a constant — is in [docs/learn/model-landscape.md](docs/learn/model-landscape.md).
+
+## File-type coverage
+
+Routing is by sniffed content and parser capability, not by extension alone. Anything unrecognized degrades to a low-confidence visible-text record instead of failing.
+
+| Input | Handled by |
 |:---|:---|
-| Any-format intake | Ingests TXT, Markdown, CSV, Office files, `.eml`/`.msg` email with attachments, digital PDFs, images, scanned PDFs, and unknown binaries through a low-confidence visible-text fallback. |
-| Offline OCR | Runs bundled `Sdcb.PaddleOCR` PP-OCR V5 models locally and records normalized boxes and polygons for citation overlays. |
-| Native assistant | Streams AI-SDK UI-message SSE from `/api/agent` while `Microsoft.Extensions.AI` talks to a local Ollama OpenAI-compatible endpoint. |
-| Learned schema mapping | Combines static reinsurance aliases, bounded fuzzy matching, and EF-backed sender/domain overrides learned from analyst corrections. |
-| Reconciliation | Compares stated headline figures to computed table totals for money fields, cession rate, and line of business with a configurable tolerance. |
-| Rossum-style review | Shows document pages beside fields; hovering a field highlights the exact cited source region and scales with zoom. |
-| Export templates | Exports CSV, Excel, and JSON through saved templates, including a Lloyd's CRS template and live preview. |
-| Local-first default | Keeps extraction deterministic and keyless; optional LLM-assisted extraction and optional Docling paths stay disabled unless configured. |
-
-## Architecture at a glance
-
-```mermaid
-flowchart TB
-  subgraph Runtime["Single self-contained Reva.exe · localhost-only"]
-    Host["src/Reva.Web<br/>Minimal API + static UI host<br/>/api + /api/agent + SPA fallback"]
-    UI["Next.js 16.2.9 static export<br/>React 19.2 · TypeScript · Tailwind 4<br/>served from wwwroot"]
-    Agent["Native assistant chat<br/>Microsoft.Extensions.AI + Ollama<br/>AI-SDK UI-message-stream SSE"]
-    Workflow["DocumentWorkflow<br/>parse → classify → extract → map → reconcile → review → export"]
-    Infra["src/Reva.Infrastructure<br/>EF Core, parser router, PaddleOCR, extractor, mapping, reconciliation"]
-    Core["src/Reva.Core<br/>contracts, states, canonical fields, MoneyFormatter"]
-    Store[("SQLite default<br/>SQL Server by config")]
-  end
-
-  Analyst["Analyst browser"] -->|http://localhost:5187| UI
-  UI -->|same-origin REST + SSE| Host
-  Host --> Workflow
-  Host --> Agent
-  Agent -->|4 tool-loop functions| Workflow
-  Workflow --> Infra
-  Infra --> Core
-  Infra --> Store
-  Infra --> Files["Local file storage<br/>SHA-256 hashed uploads"]
-  Agent -. optional local model .-> Ollama["Ollama qwen3-vl:8b<br/>http://localhost:11434/v1"]
-```
+| TXT, Markdown, CSV | Built-in text/CSV parsers with encoding detection |
+| DOCX, PPTX | `DocumentFormat.OpenXml` |
+| XLSX, XLS, ODS | `ClosedXML`, legacy Excel reader, OpenDocument reader |
+| EML, MSG | `MimeKit` and `MSGReader`, including recursive attachments |
+| Digital PDF | `PdfPig` |
+| Images, scanned PDF | `Sdcb.PaddleOCR` (PP-OCR V5, bundled) with page rendering |
+| Unknown / binary | Best-effort visible-text fallback, never a hard error |
 
 ## Quick start
 
-### Windows release
+### Run the release
 
-1. Download `Reva-v1.3.0-win-x64.zip` from [Releases](https://github.com/xt0n1-t3ch/Reva/releases).
-2. Extract the ZIP.
-3. Double-click `Reva.exe` or `Start-Reva.cmd`.
-4. Open `http://localhost:5187` and upload a reinsurance document.
+1. Download `Reva.exe` (the single self-contained Windows build) from Releases.
+2. Double-click `Reva.exe`. A native window opens — there is no URL to visit.
+3. Drag a reinsurance document onto the upload area, or click to browse.
 
-Optional assistant chat:
+Your workspace (database and uploaded files) lives under `%LOCALAPPDATA%\Reva`. Nothing leaves the machine.
+
+### Enable the AI copilot and VLM (optional)
 
 ```powershell
 winget install Ollama.Ollama
 ollama pull qwen3-vl:8b
 ```
 
-Reva best-effort starts `ollama serve` when Ollama is installed. If the model is unavailable, chat reports that clearly and the rest of the product continues to work offline.
+Open **Settings**, choose a model from the menu, and turn on **LLM assist** if you want VLM-assisted extraction. The status dot in the shell turns green when Ollama is reachable.
 
-### From source
+### Build and run from source
 
 ```powershell
-dotnet run --project src/Reva.Web/Reva.Web.csproj
+dotnet run --project src/Reva.App/Reva.App.csproj
 ```
 
-For frontend development:
+This launches the native window directly. For the full validator chain, see [AGENTS.md](AGENTS.md) and [tests](tests/).
 
-```powershell
-cd web
-pnpm install
-pnpm dev
+## Architecture at a glance
+
+Everything runs in one process. The layers depend inward only, and there is no HTTP between them.
+
+```mermaid
+flowchart TB
+  subgraph Proc["Single process · Reva.exe · native desktop window"]
+    App["Reva.App (Avalonia 12)<br/>MVVM views, view models, shell,<br/>navigation, copilot panel"]
+    Ai["Reva.Ai<br/>model registry (configurable menu),<br/>VLM field extractor"]
+    Infra["Reva.Infrastructure<br/>EF Core, parser router, PaddleOCR,<br/>extraction + merge, reconciliation,<br/>schema mapping, export, agent + action bus"]
+    Core["Reva.Core<br/>contracts, document states,<br/>canonical fields, MoneyFormatter"]
+    Store[("SQLite by default<br/>SQL Server by config")]
+    Ollama["Local Ollama<br/>optional, swappable model"]
+  end
+
+  User["Analyst"] -->|clicks, drag-drop, chat| App
+  App -->|in-process DI calls| Ai
+  App -->|in-process DI calls| Infra
+  Ai --> Infra
+  Infra --> Core
+  Ai --> Core
+  Infra --> Store
+  Ai -. optional, OpenAI-compatible .-> Ollama
 ```
 
-Core validation:
+### How the copilot acts on the app
 
-```powershell
-dotnet test Reva.slnx
-cd web
-npx playwright test
+The copilot does not script the UI through a back door. Its action tools publish typed `AppAction` messages onto an in-process `IAppActionBus`. The app's `NavigationService` subscribes to that bus and moves the real UI. The chat and the UI stay in lockstep because they share one channel.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor Analyst
+  participant Chat as Copilot panel
+  participant Agent as AgentChatService (tool loop)
+  participant Tool as Action tool
+  participant Bus as IAppActionBus
+  participant Nav as NavigationService
+  participant UI as Views
+
+  Analyst->>Chat: "Open the bordereau with exceptions and highlight Premium"
+  Chat->>Agent: stream turn with tool definitions
+  Agent->>Tool: open_document(id)
+  Tool->>Bus: Publish(OpenDocument, id)
+  Tool->>Bus: Publish(Highlight, id, "Premium")
+  Bus-->>Nav: AppAction stream (on UI thread)
+  Nav->>UI: navigate to Review, open document, highlight field
+  Agent-->>Chat: streamed explanation of what it did
 ```
 
 ## Repository map
 
 | Path | Owns |
 |:---|:---|
-| [`src/Reva.Core`](src/Reva.Core/) | Domain contracts, document states, canonical reinsurance field names, and shared money formatting. |
-| [`src/Reva.Infrastructure`](src/Reva.Infrastructure/) | Persistence, storage, hashing, parsers, OCR, classification, extraction, learned mapping, reconciliation, workflow orchestration, and native agent services. |
-| [`src/Reva.Web`](src/Reva.Web/) | .NET 10 web host, REST endpoints, `/api/agent`, OpenAPI, static UI serving, and SPA fallback. |
-| [`web`](web/) | Next.js App Router cockpit that static-exports into `src/Reva.Web/wwwroot` at package time. |
+| [`src/Reva.Core`](src/Reva.Core/) | Domain contracts, document states, canonical reinsurance field names, and money formatting. No UI, no infrastructure. |
+| [`src/Reva.Infrastructure`](src/Reva.Infrastructure/) | EF Core persistence, file storage, hashing, parser routing, PaddleOCR, extraction and merge, reconciliation, schema mapping, export, settings, the agent chat service, and the in-process action bus. |
+| [`src/Reva.Ai`](src/Reva.Ai/) | The configurable model registry and the VLM field extractor. The seam where models plug in. |
+| [`src/Reva.App`](src/Reva.App/) | The Avalonia desktop application — the shipped `Reva.exe`. Views, view models, navigation, the copilot panel, theming, and DI composition. |
+| [`src/Reva.Web`](src/Reva.Web/) | The legacy browser host. Retained, not part of the 2.0 product. |
 | [`contracts`](contracts/) | Review payload schema, including normalized citation geometry. |
-| [`tests`](tests/) | Unit, integration, host smoke, package smoke, and test index. |
-| [`docs`](docs/) | Architecture, pipeline, packaging, demo, and reinsurance-domain documentation. |
+| [`docs`](docs/) | Architecture, AI pipeline, packaging, and the learning guides in [`docs/learn`](docs/learn/). |
+| [`tests`](tests/) | Unit and integration suites. |
 
 ## Documentation
 
-| Guide | Start here when you want to... |
-|:---|:---|
-| [Documentation index](docs/index.md) | Navigate the project docs. |
-| [Architecture](docs/architecture.md) | Understand the all-in-one executable, backend boundaries, API host, static UI, data model, and security posture. |
-| [AI pipeline](docs/ai-pipeline.md) | Follow parsing, OCR, extraction, schema mapping, reconciliation, assistant chat, and export flow. |
-| [Packaging](docs/packaging.md) | Build and smoke-test `Reva-v1.3.0-win-x64.zip`. |
-| [Demo script](docs/demo-script.md) | Run a concise product walkthrough with the seeded corpus. |
-| [Reinsurance landscape](docs/research/reinsurance-landscape.md) | Review the document types, canonical fields, standards, and competitive UX patterns behind Reva. |
-| [Test suite](tests/index.md) | Pick the right unit, integration, E2E, Playwright, or package-smoke command. |
-| [Visual reference](docs/visual-references/reva-intelligence-cockpit-reference.png) | See the current cockpit direction. |
-
-<details>
-<summary><strong>Runtime contract</strong></summary>
-
-- `POST /api/documents` uploads a file and starts the workflow.
-- `GET /api/documents` and `GET /api/documents/{id}` return queue/detail data.
-- `GET /api/documents/{id}/review-payload` returns the schema-backed review payload.
-- `GET /api/documents/{id}/pages/{page}.png` serves renderable page images for the split view.
-- `POST /api/documents/{id}/review` saves field edits and mapping corrections.
-- `GET /api/documents/{id}/export` downloads CSV, Excel, or JSON.
-- `/api/templates` owns export template CRUD and duplication.
-- `POST /api/data/reseed` and `POST /api/data/clear` manage demo/workspace data.
-- `POST /api/agent` streams AI-SDK UI-message-stream SSE.
-- `GET /api/agent/status` reports local Ollama/model readiness.
-- `GET /health` reports package health.
-
-</details>
-
-<details>
-<summary><strong>Offline defaults</strong></summary>
-
-Reva's keyless path is the product default: native .NET parsers, local PaddleOCR, SQLite, deterministic extraction, learned mapping, reconciliation, review, and exports all run without a cloud account. Optional Docling and optional LLM-assisted extraction are additive configuration paths, not required runtime services.
-
-</details>
+Start at the [documentation index](docs/index.md). For interview-style depth on how and why Reva is built the way it is, the [learning guides](docs/learn/) walk through every project, every technology choice, and the questions an interviewer is likely to ask.
 
 ## License
 

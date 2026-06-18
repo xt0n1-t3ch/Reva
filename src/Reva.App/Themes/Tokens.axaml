@@ -1,0 +1,52 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="BgBrush" Color="#FF0B0F1A" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#FF111726" />
+            <SolidColorBrush x:Key="Surface2Brush" Color="#FF1A2233" />
+            <SolidColorBrush x:Key="BorderBrush" Color="#FF24304A" />
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#FF4F7DF9" />
+            <SolidColorBrush x:Key="PrimarySoftBrush" Color="#FF1C2A4D" />
+            <SolidColorBrush x:Key="AccentBrush" Color="#FF38BDF8" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#FF34D399" />
+            <SolidColorBrush x:Key="WarningBrush" Color="#FFF59E0B" />
+            <SolidColorBrush x:Key="DangerBrush" Color="#FFF87171" />
+            <SolidColorBrush x:Key="ForegroundBrush" Color="#FFE6EBF5" />
+            <SolidColorBrush x:Key="MutedForegroundBrush" Color="#FF8A95AD" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="BgBrush" Color="#FFF4F6FB" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="Surface2Brush" Color="#FFEEF2F9" />
+            <SolidColorBrush x:Key="BorderBrush" Color="#FFDDE3EE" />
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#FF3B6FE0" />
+            <SolidColorBrush x:Key="PrimarySoftBrush" Color="#FFE3ECFD" />
+            <SolidColorBrush x:Key="AccentBrush" Color="#FF0EA5E9" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#FF059669" />
+            <SolidColorBrush x:Key="WarningBrush" Color="#FFD97706" />
+            <SolidColorBrush x:Key="DangerBrush" Color="#FFDC2626" />
+            <SolidColorBrush x:Key="ForegroundBrush" Color="#FF1A2233" />
+            <SolidColorBrush x:Key="MutedForegroundBrush" Color="#FF64708A" />
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+
+    <CornerRadius x:Key="CornerRadiusSm">6</CornerRadius>
+    <CornerRadius x:Key="CornerRadiusMd">10</CornerRadius>
+    <CornerRadius x:Key="CornerRadiusLg">16</CornerRadius>
+
+    <Thickness x:Key="SpacingCard">20</Thickness>
+    <Thickness x:Key="SpacingTight">12</Thickness>
+
+    <FontFamily x:Key="AppFontFamily">fonts:Inter#Inter</FontFamily>
+
+    <x:Double x:Key="FontSizeCaption">12</x:Double>
+    <x:Double x:Key="FontSizeBody">14</x:Double>
+    <x:Double x:Key="FontSizeSubheading">16</x:Double>
+    <x:Double x:Key="FontSizeHeading">20</x:Double>
+    <x:Double x:Key="FontSizeDisplay">28</x:Double>
+    <x:Double x:Key="FontSizeKpi">30</x:Double>
+</ResourceDictionary>
