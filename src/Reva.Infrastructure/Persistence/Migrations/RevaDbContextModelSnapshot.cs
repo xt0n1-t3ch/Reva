@@ -28,6 +28,31 @@ namespace Reva.Infrastructure.Persistence.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AiApiKey")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AiBaseUrl")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("http://localhost:11434/v1");
+
+                    b.Property<string>("AiModel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("qwen2.5vl:7b");
+
+                    b.Property<string>("AiProvider")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Ollama");
+
                     b.Property<double>("ConfidenceLowMax")
                         .HasColumnType("REAL");
 
@@ -445,6 +470,9 @@ namespace Reva.Infrastructure.Persistence.Migrations
                         .HasMaxLength(96)
                         .HasColumnType("TEXT");
 
+                    b.Property<double?>("Confidence")
+                        .HasColumnType("REAL");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -462,6 +490,11 @@ namespace Reva.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(160)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsOverride")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("TEXT");

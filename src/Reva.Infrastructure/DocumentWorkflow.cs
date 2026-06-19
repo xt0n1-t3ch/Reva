@@ -116,12 +116,7 @@ public sealed class DocumentWorkflow(
             await ApplyMappingCorrectionsAsync(document, decision.MappingCorrections, cancellationToken);
         }
 
-        document.ReviewState = decision.Decision switch
-        {
-            "Approve" => ReviewState.Approved.ToString(),
-            "Reject" => ReviewState.Rejected.ToString(),
-            _ => ReviewState.NeedsCorrection.ToString()
-        };
+        document.ReviewState = ReviewDecisionMapper.ToReviewState(decision.Decision).ToString();
         document.ReviewEvents.Add(new ReviewEventRecord
         {
             Decision = decision.Decision,

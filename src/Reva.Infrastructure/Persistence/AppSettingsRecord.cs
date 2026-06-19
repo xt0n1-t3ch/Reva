@@ -1,3 +1,5 @@
+using Reva.Core.Settings;
+
 namespace Reva.Infrastructure.Persistence;
 
 // A single-row table (Id is always 1) holding the app-wide settings.
@@ -14,4 +16,8 @@ public sealed class AppSettingsRecord
     public Guid? DefaultTemplateId { get; set; }
     public double ReconciliationTolerance { get; set; } = 0.01;
     public bool UseLlmAssist { get; set; }
+    public string AiProvider { get; set; } = AiProviderNames.Ollama;
+    public string AiBaseUrl { get; set; } = AiSettingsDefaults.OllamaBaseUrl;
+    public string? AiApiKey { get; set; }
+    public string AiModel { get; set; } = AiSettingsDefaults.DefaultModel;
 }

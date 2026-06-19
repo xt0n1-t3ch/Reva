@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
@@ -39,6 +40,7 @@ public sealed class OllamaLlmFieldExtractor(IChatClient chatClient, IOptions<Llm
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            Debug.WriteLine($"LLM field extraction failed: {ex.Message}");
             return null;
         }
     }

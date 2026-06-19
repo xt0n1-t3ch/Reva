@@ -3,16 +3,47 @@
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { api } from "@/lib/api/client";
-import { IconDocument } from "@/components/ui/icons";
+import type { ReinsuranceDocumentType } from "@/lib/api/types";
+import { IconDocument, IconMail, IconScale, IconReview } from "@/components/ui/icons";
+
+// A compact, document-shaped glyph chosen by document type so digital documents
+// (e-mail, CSV, plain text) that never render a page still read as intentional, not broken.
+const glyphFor = (documentType?: ReinsuranceDocumentType) => {
+  switch (documentType) {
+    case "ClaimNotice":
+      return IconMail;
+    case "LossRun":
+    case "StatementOfAccount":
+    case "Bordereau":
+      return IconReview;
+    case "Treaty":
+    case "FacultativeSlip":
+    case "Endorsement":
+      return IconScale;
+    default:
+      return IconDocument;
+  }
+};
 
 // Lazily probes the document's first page image. Digital documents (e-mail, CSV,
-// plain text) have no rendered page, so the request 404s and the generic icon stays.
-export function QueueThumbnail({ documentId }: { documentId: string }) {
+// plain text) have no rendered page, so the request 404s and the type glyph stays.
+export function QueueThumbnail({
+  documentId,
+  documentType,
+}: {
+  documentId: string;
+  documentType?: ReinsuranceDocumentType;
+}) {
   const [hasImage, setHasImage] = useState(false);
+  const Glyph = glyphFor(documentType);
 
   return (
-    <span className="relative flex h-11 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-surface-2 text-muted-foreground">
-      {!hasImage && <IconDocument width={16} height={16} />}
+    <span className="relative flex h-12 w-[2.375rem] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-surface-2 text-subtle-foreground shadow-soft ring-1 ring-inset ring-border/40 transition-[border-color,box-shadow] group-hover:border-border-strong group-hover:shadow-pop">
+      {!hasImage && (
+        <span className="bg-dotgrid flex h-full w-full items-center justify-center bg-surface-2">
+          <Glyph width={15} height={15} />
+        </span>
+      )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={api.pageImageUrl(documentId, 1)}
@@ -22,10 +53,17 @@ export function QueueThumbnail({ documentId }: { documentId: string }) {
         onLoad={() => setHasImage(true)}
         onError={() => setHasImage(false)}
         className={cn(
-          "absolute inset-0 h-full w-full object-cover object-top transition-opacity",
+          "absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-300",
           hasImage ? "opacity-100" : "opacity-0",
         )}
       />
+      {/* A faint top sheen sells the thumbnail as a real page edge, not a flat box. */}
+      {hasImage && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/[0.06] to-transparent dark:from-white/[0.06]"
+        />
+      )}
     </span>
   );
 }

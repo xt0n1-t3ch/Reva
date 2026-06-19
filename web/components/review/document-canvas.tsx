@@ -113,16 +113,22 @@ export function DocumentCanvas({
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="flex shrink-0 items-center justify-between gap-2 rounded-md border border-border bg-surface px-2 py-1.5">
         {pages.length > 1 ? (
-          <div className="flex items-center gap-0.5">
-            <ToolbarButton label="Previous page" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= firstPage}>
-              <IconChevronLeft width={15} height={15} />
-            </ToolbarButton>
-            <span className="min-w-20 text-center font-mono text-xs tabular text-muted-foreground">
-              Page {currentPage} / {pages.length}
+          <div className="flex items-center gap-1.5">
+            <span className="hidden pl-1 text-[11px] font-semibold uppercase tracking-wider text-subtle-foreground sm:inline">
+              Source
             </span>
-            <ToolbarButton label="Next page" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= lastPage}>
-              <IconChevronRight width={15} height={15} />
-            </ToolbarButton>
+            <span aria-hidden="true" className="hidden h-3.5 w-px bg-border sm:inline-block" />
+            <div className="flex items-center gap-0.5">
+              <ToolbarButton label="Previous page" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= firstPage}>
+                <IconChevronLeft width={15} height={15} />
+              </ToolbarButton>
+              <span className="min-w-20 text-center font-mono text-xs tabular text-muted-foreground">
+                Page {currentPage} / {pages.length}
+              </span>
+              <ToolbarButton label="Next page" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= lastPage}>
+                <IconChevronRight width={15} height={15} />
+              </ToolbarButton>
+            </div>
           </div>
         ) : (
           <span className="px-1 text-[11px] font-semibold uppercase tracking-wider text-subtle-foreground">
@@ -150,8 +156,8 @@ export function DocumentCanvas({
         </div>
       </div>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto rounded-md bg-surface-2/20 p-3">
-        <div className="mx-auto flex flex-col items-center gap-4" style={{ width: `${zoom * 100}%` }}>
+      <div ref={scrollRef} className="bg-dotgrid min-h-0 flex-1 overflow-auto rounded-md bg-surface-2/20 p-4 sm:p-6">
+        <div className="mx-auto flex flex-col items-center gap-5" style={{ width: `${zoom * 100}%` }}>
           {pages.map((page) => {
             const ratio = page.width > 1 && page.height > 1 ? page.width / page.height : undefined;
             const pageSpans = spansByPage.get(page.page) ?? [];
@@ -161,7 +167,7 @@ export function DocumentCanvas({
                 <figure
                   key={page.page}
                   data-page={page.page}
-                  className="flex min-h-48 w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border bg-surface-2/30 px-6 py-10 text-center"
+                  className="bg-dotgrid flex min-h-48 w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border bg-surface-2/30 px-6 py-10 text-center"
                 >
                   <p className="text-sm font-medium text-muted-foreground">Page preview unavailable</p>
                   <p className="max-w-xs text-xs text-subtle-foreground">
@@ -175,7 +181,7 @@ export function DocumentCanvas({
               <figure
                 key={page.page}
                 data-page={page.page}
-                className="relative w-full overflow-hidden rounded-md border border-border bg-surface shadow-soft"
+                className="relative w-full overflow-hidden rounded-md border border-border bg-surface shadow-pop ring-1 ring-black/[0.03] transition-shadow dark:ring-white/[0.04]"
                 style={ratio ? { aspectRatio: ratio } : undefined}
               >
                 {!loadedPages.has(page.page) && (
@@ -214,7 +220,7 @@ export function DocumentCanvas({
                     );
                   })}
                 </div>
-                <figcaption className="absolute bottom-1.5 right-1.5 rounded bg-black/55 px-1.5 py-0.5 font-mono text-[10px] text-white tabular">
+                <figcaption className="pointer-events-none absolute bottom-2 right-2 rounded border border-white/10 bg-black/60 px-1.5 py-0.5 font-mono text-[10px] tabular text-white shadow-soft backdrop-blur-sm">
                   {page.page}/{pages.length}
                 </figcaption>
               </figure>

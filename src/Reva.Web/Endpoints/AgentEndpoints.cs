@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Reva.Infrastructure;
 using Reva.Infrastructure.Agent;
+using Reva.Infrastructure.Knowledge;
 using Reva.Infrastructure.Persistence;
 using Reva.Infrastructure.Review;
 
@@ -38,7 +39,8 @@ public static class AgentEndpoints
             }
 
             var tools = agent.BuildTools(workflow, dbContext, assembler, cancellationToken);
-            var updates = SafeUpdates(agent.StreamAsync(parsed.Messages, tools, cancellationToken), cancellationToken);
+            var reasoning = AgentReasoningOptions.FromHeader(httpContext.Request.Headers[AgentReasoningOptions.HeaderName].ToString());
+            var updates = SafeUpdates(agent.StreamAsync(parsed.Messages, tools, cancellationToken, reasoning), cancellationToken);
             await WriteFramesAsync(
                 httpContext.Response,
                 AiSdkUiMessageStreamMapper.MapAsync(updates, NewId(), NewId, cancellationToken),

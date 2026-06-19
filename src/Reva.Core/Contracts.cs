@@ -75,6 +75,13 @@ public sealed record FieldCorrection(string Name, string Value);
 
 public sealed record SchemaMappingCorrection(string SourceHeader, string CanonicalField);
 
+public sealed record SchemaMappingOverrideDraft(
+    string SenderKey,
+    string SourceHeader,
+    string CanonicalField,
+    double? Confidence = null,
+    bool? IsOverride = null);
+
 public sealed record ReviewDecision(string Decision, string Reviewer, string? Notes, IReadOnlyList<FieldCorrection> FieldCorrections)
 {
     public IReadOnlyList<SchemaMappingCorrection> MappingCorrections { get; init; } = [];

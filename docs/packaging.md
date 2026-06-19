@@ -1,69 +1,47 @@
-# Packaging
+# Packaging and run shape
 
-Reva 2.0 ships as one self-contained native executable, `Reva.exe`, published from `src/Reva.App`. The package contains no Node.js, no web server, and no separate processes. Double-clicking it opens a native desktop window — there is no URL to visit.
+Reva packages as a web frontend plus an ASP.NET Core API. In production, the frontend is exported statically and served from the API host.
 
-## Build the Windows package
+## Development
+
+Run the API:
 
 ```powershell
-./scripts/package-windows.ps1 -Version 2.0.0
+dotnet run --project src/Reva.Web/Reva.Web.csproj -- --no-open
 ```
 
-The script publishes the Avalonia app as a single self-contained file and zips the result:
+Run the web app:
 
-1. `dotnet publish src/Reva.App/Reva.App.csproj` for `win-x64`, self-contained.
-2. `PublishSingleFile=true` with `IncludeNativeLibrariesForSelfExtract=true`, so native dependencies (PaddleOCR, Skia, the PDF renderer) are bundled and self-extracted by the .NET host.
-3. `EnableCompressionInSingleFile=true` to keep the download small.
-4. Add the double-click launcher and package readme.
-5. Zip the artifacts.
-
-Expected output:
-
-```text
-artifacts/releases/Reva-v2.0.0-win-x64.zip
+```powershell
+cd web
+$env:NEXT_PUBLIC_API_BASE_URL = "http://localhost:5158"
+pnpm install
+pnpm dev
 ```
 
-## Package contents
+Open `http://localhost:3000`.
 
-| File | Purpose |
+## Production shape
+
+1. Build the frontend static export from `web/`.
+2. Copy the exported assets into the API host's `wwwroot`.
+3. Publish `src/Reva.Web` with the normal .NET publish flow.
+4. Run the API host; it serves both HTTP endpoints and the static app.
+
+## Runtime files
+
+| File or folder | Purpose |
 |:---|:---|
-| `Reva.exe` | The single self-contained .NET 10 / Avalonia desktop application. Opens a native window hosting the full pipeline, database, OCR, and copilot. |
-| `Start-Reva.cmd` | Optional double-click launcher that starts `Reva.exe` from its own folder. |
-| `README-RUN.txt` | Package-local run notes and optional Ollama guidance. |
+| SQLite database | Documents, fields, source spans, settings, learned mappings, Knowledge Hub records. |
+| Upload storage | Original files and generated derivatives. |
+| Export folder | CSV, Excel, and JSON outputs selected by the user. |
+| Provider settings | Optional model endpoint and active model metadata. |
 
-Native libraries are included in the single-file publish and self-extract as needed by the .NET host on first launch.
-
-## Run the package
-
-```powershell
-Expand-Archive artifacts/releases/Reva-v2.0.0-win-x64.zip -DestinationPath artifacts/run/Reva
-./artifacts/run/Reva/Reva.exe
-```
-
-A native window opens. On first run, Reva creates its workspace under `%LOCALAPPDATA%\Reva` (the SQLite database and the uploads folder).
-
-## Run from source during development
+## Validation before handing off
 
 ```powershell
-dotnet run --project src/Reva.App/Reva.App.csproj
+dotnet build Reva.slnx -warnaserror
+dotnet test
 ```
 
-This launches the same native window directly, against the same per-user workspace.
-
-## Optional assistant and VLM setup
-
-The package is fully useful without any model — the deterministic tier ingests, extracts, reconciles, reviews, and exports offline. For the copilot and VLM-assisted extraction, install Ollama and pull a model:
-
-```powershell
-winget install Ollama.Ollama
-ollama pull qwen3-vl:8b
-```
-
-Then open **Settings**, choose a model from the menu, and enable **LLM assist** for VLM extraction. The model is configurable per machine; see [model landscape](learn/model-landscape.md). When Ollama is not running or no model is installed, the copilot shows a clear local-model-unavailable message and the rest of the app continues to work.
-
-## Runtime notes
-
-- The app is a native window — there is no port and no localhost server.
-- SQLite is the default store; SQL Server can be selected by local configuration.
-- Python and Docling are optional and only enable the richer tier-three parsing path.
-- The workspace lives under `%LOCALAPPDATA%\Reva`; deleting it resets the app to a clean state.
-- The chosen model is persisted in the workspace and reused across launches.
+For UI changes, also run the API and web dev server, then verify the browser flow that changed.

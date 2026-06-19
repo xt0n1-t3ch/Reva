@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Reva.Core.Settings;
 
 namespace Reva.Infrastructure.Persistence;
 
@@ -91,6 +92,10 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
             entity.Property(settings => settings.ProductName).HasMaxLength(80);
             entity.Property(settings => settings.ReconciliationTolerance).HasDefaultValue(0.01);
             entity.Property(settings => settings.UseLlmAssist).HasDefaultValue(false);
+            entity.Property(settings => settings.AiProvider).HasMaxLength(32).HasDefaultValue(AiProviderNames.Ollama);
+            entity.Property(settings => settings.AiBaseUrl).HasMaxLength(512).HasDefaultValue(AiSettingsDefaults.OllamaBaseUrl);
+            entity.Property(settings => settings.AiApiKey).HasMaxLength(2048);
+            entity.Property(settings => settings.AiModel).HasMaxLength(256).HasDefaultValue(AiSettingsDefaults.DefaultModel);
         });
 
         modelBuilder.Entity<LearnedSchemaMappingRecord>(entity =>
@@ -101,6 +106,7 @@ public sealed class RevaDbContext(DbContextOptions<RevaDbContext> options) : DbC
             entity.Property(mapping => mapping.SourceHeader).HasMaxLength(160);
             entity.Property(mapping => mapping.NormalizedSourceHeader).HasMaxLength(160);
             entity.Property(mapping => mapping.CanonicalField).HasMaxLength(96);
+            entity.Property(mapping => mapping.IsOverride).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<ReviewEventRecord>(entity =>

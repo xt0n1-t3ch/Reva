@@ -55,8 +55,19 @@ const wordBoundary = /(?<=[a-z])(?=[A-Z])/g;
 
 export const humanizeEnum = (value: string): string => value.replace(wordBoundary, " ");
 
+const documentTypeLabels: Record<ReinsuranceDocumentType, string> = {
+  Unknown: "Unclassified",
+  Treaty: "Treaty",
+  FacultativeSlip: "Facultative Slip",
+  Bordereau: "Bordereau",
+  StatementOfAccount: "Statement of Account",
+  LossRun: "Loss Run",
+  Endorsement: "Endorsement",
+  ClaimNotice: "Claim Notice",
+};
+
 export const documentTypeLabel = (type: ReinsuranceDocumentType): string =>
-  type === "Unknown" ? "Unclassified" : humanizeEnum(type);
+  documentTypeLabels[type] ?? humanizeEnum(type);
 
 export const statusTone: Record<DocumentStatus, Tone> = {
   Uploaded: "neutral",

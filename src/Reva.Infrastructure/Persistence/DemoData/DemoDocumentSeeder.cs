@@ -12,6 +12,16 @@ public static class DemoDocumentSeeder
 {
     private const string MeridianBordereauResourceName = "reva.seed.meridian-bordereau.png";
 
+    // One realistic bordereau per supported file type, so the demo corpus exercises every
+    // ingestion path (PDF text, Excel, CSV, OCR image) out of the box.
+    private static readonly IReadOnlyList<EmbeddedSample> EmbeddedSamples =
+    [
+        new("reva.seed.northwind-casualty-xol.pdf", "northwind-casualty-xol-bordereau-2026-q1.pdf", "application/pdf"),
+        new("reva.seed.atlantic-marine-cargo.xlsx", "atlantic-marine-cargo-bordereau-2026-q1.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        new("reva.seed.pacific-aviation-hull.csv", "pacific-aviation-hull-bordereau-2026-q1.csv", "text/csv"),
+        new("reva.seed.coastal-property-cat.jpg", "coastal-property-cat-bordereau-2026-q2.jpg", "image/jpeg"),
+    ];
+
     public static async Task SeedIfEmptyAsync(IDocumentWorkflow workflow, RevaDbContext dbContext, CancellationToken cancellationToken)
     {
         if (await dbContext.Documents.AnyAsync(cancellationToken))
@@ -48,6 +58,15 @@ public static class DemoDocumentSeeder
             if (meridianBordereau is not null)
             {
                 samples.Add(new DemoSample("meridian-property-cat-xl-bordereau-2025-q1.png", "image/png", meridianBordereau));
+            }
+
+            foreach (var embedded in EmbeddedSamples)
+            {
+                var content = ReadEmbeddedSample(embedded.ResourceName);
+                if (content is not null)
+                {
+                    samples.Add(new DemoSample(embedded.FileName, embedded.ContentType, content));
+                }
             }
 
             samples.Add(new DemoSample("orion-property-cat-xl-jan-2025.eml", "message/rfc822", BuildHeroBordereauEmail()));
@@ -143,4 +162,6 @@ public static class DemoDocumentSeeder
         "Internal note: please process the January submissions when you have a moment. Thanks, Operations team.\n";
 
     private sealed record DemoSample(string FileName, string ContentType, byte[] Content);
+
+    private sealed record EmbeddedSample(string ResourceName, string FileName, string ContentType);
 }

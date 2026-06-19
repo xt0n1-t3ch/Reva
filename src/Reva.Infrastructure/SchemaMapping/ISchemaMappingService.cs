@@ -12,4 +12,5 @@ public interface ISchemaMappingService
 {
     Task<SchemaMappingResult> MapAsync(ParsedDocument parsedDocument, IReadOnlyList<ExtractedField> fields, CancellationToken cancellationToken);
     Task LearnAsync(string senderKey, IReadOnlyList<SchemaMappingCorrection> corrections, CancellationToken cancellationToken);
+    Task<LearnedSchemaMappingRecord> UpsertOverrideAsync(SchemaMappingOverrideDraft draft, CancellationToken cancellationToken);
 }

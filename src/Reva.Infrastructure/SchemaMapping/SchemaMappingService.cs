@@ -80,6 +80,8 @@ public sealed partial class SchemaMappingService(RevaDbContext dbContext) : ISch
                     SourceHeader = correction.SourceHeader.Trim(),
                     NormalizedSourceHeader = normalized,
                     CanonicalField = correction.CanonicalField,
+                    Confidence = 0.99,
+                    IsOverride = true,
                     UseCount = 1,
                     CreatedAt = now,
                     UpdatedAt = now
@@ -89,9 +91,58 @@ public sealed partial class SchemaMappingService(RevaDbContext dbContext) : ISch
 
             existing.SourceHeader = correction.SourceHeader.Trim();
             existing.CanonicalField = correction.CanonicalField;
+            existing.Confidence = 0.99;
+            existing.IsOverride = true;
             existing.UseCount++;
             existing.UpdatedAt = now;
         }
+    }
+
+    public async Task<LearnedSchemaMappingRecord> UpsertOverrideAsync(SchemaMappingOverrideDraft draft, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+
+        var senderKey = (draft.SenderKey ?? string.Empty).Trim().ToLowerInvariant();
+        var sourceHeader = (draft.SourceHeader ?? string.Empty).Trim();
+        var requestedCanonicalField = (draft.CanonicalField ?? string.Empty).Trim();
+        var canonicalField = ReinsuranceFieldNames.Canonical.FirstOrDefault(field => field.Equals(requestedCanonicalField, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(senderKey) || string.IsNullOrWhiteSpace(sourceHeader) || string.IsNullOrWhiteSpace(canonicalField))
+        {
+            throw new ArgumentException("A sender key, source header, and canonical field are required.", nameof(draft));
+        }
+
+        var normalized = NormalizeHeader(sourceHeader);
+        var now = DateTimeOffset.UtcNow;
+        var existing = await dbContext.LearnedSchemaMappings
+            .FirstOrDefaultAsync(mapping => mapping.SenderKey == senderKey && mapping.NormalizedSourceHeader == normalized, cancellationToken);
+        if (existing is null)
+        {
+            existing = new LearnedSchemaMappingRecord
+            {
+                SenderKey = senderKey,
+                SourceHeader = sourceHeader,
+                NormalizedSourceHeader = normalized,
+                CanonicalField = canonicalField,
+                Confidence = ClampConfidence(draft.Confidence),
+                IsOverride = draft.IsOverride ?? true,
+                UseCount = 1,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            dbContext.LearnedSchemaMappings.Add(existing);
+        }
+        else
+        {
+            existing.SourceHeader = sourceHeader;
+            existing.CanonicalField = canonicalField;
+            existing.Confidence = ClampConfidence(draft.Confidence);
+            existing.IsOverride = draft.IsOverride ?? true;
+            existing.UseCount++;
+            existing.UpdatedAt = now;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return existing;
     }
 
     public static string DetectSenderKey(string text)
@@ -185,7 +236,7 @@ public sealed partial class SchemaMappingService(RevaDbContext dbContext) : ISch
     {
         if (learned.TryGetValue(normalized, out var learnedMapping))
         {
-            return (learnedMapping.CanonicalField, 0.99, "learned", true);
+            return (learnedMapping.CanonicalField, learnedMapping.Confidence ?? 0.99, "learned", true);
         }
 
         foreach (var (canonical, aliases) in StaticAliases)
@@ -254,6 +305,9 @@ public sealed partial class SchemaMappingService(RevaDbContext dbContext) : ISch
 
         return StatusRegex().IsMatch(trimmed) ? NormalizeHeader(trimmed).ToUpperInvariant().Replace(' ', '_') : trimmed;
     }
+
+    private static double? ClampConfidence(double? confidence) =>
+        confidence is null || double.IsNaN(confidence.Value) ? null : Math.Round(Math.Clamp(confidence.Value, 0D, 1D), 3, MidpointRounding.AwayFromZero);
 
     private static double Similarity(string left, string right)
     {

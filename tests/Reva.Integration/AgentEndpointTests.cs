@@ -59,7 +59,7 @@ public sealed class AgentEndpointTests(RevaWebApplicationFactory factory) : ICla
     {
         public IReadOnlyList<AITool> BuildTools(IDocumentWorkflow workflow, RevaDbContext dbContext, IBdxReviewPayloadAssembler assembler, CancellationToken cancellationToken, IDataMaintenance? maintenance = null) => [];
 
-        public async IAsyncEnumerable<ChatResponseUpdate> StreamAsync(IReadOnlyList<ChatMessage> messages, IReadOnlyList<AITool> tools, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<ChatResponseUpdate> StreamAsync(IReadOnlyList<ChatMessage> messages, IReadOnlyList<AITool> tools, [EnumeratorCancellation] CancellationToken cancellationToken, AgentReasoningOptions? reasoning = null)
         {
             Assert.NotEmpty(messages);
             Assert.Empty(tools);

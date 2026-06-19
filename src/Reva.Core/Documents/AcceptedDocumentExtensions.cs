@@ -9,7 +9,7 @@ public static class AcceptedDocumentExtensions
 {
     public static readonly IReadOnlyList<string> Spreadsheet = [".csv", ".tsv", ".xlsx", ".xlsm", ".xls", ".ods", ".gsheet"];
 
-    public static readonly IReadOnlyList<string> Document = [".pdf", ".docx", ".pptx", ".txt", ".md", ".rtf"];
+    public static readonly IReadOnlyList<string> Document = [".pdf", ".docx", ".pptx", ".txt", ".md"];
 
     public static readonly IReadOnlyList<string> Email = [".eml", ".msg"];
 

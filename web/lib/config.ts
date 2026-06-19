@@ -2,8 +2,6 @@ const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, "");
 
 export const config = {
   apiBaseUrl: trimTrailingSlash(process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5187"),
-  ollamaBaseUrl: trimTrailingSlash(process.env.OLLAMA_BASE_URL ?? "http://localhost:11434/api"),
-  ollamaModel: process.env.OLLAMA_MODEL ?? "qwen3-vl:8b",
   agentMaxSteps: 6,
   agentTemperature: 0,
   agentNumCtx: 16384,
@@ -18,7 +16,7 @@ export const config = {
   chatImageAccept: "image/*",
   chatDocumentAccept: ".pdf,.csv,.xlsx,.eml,.msg",
   chatDocumentExtensions: [".pdf", ".csv", ".xlsx", ".eml", ".msg"],
-  productName: "Reve Intelligence",
+  productName: "Reva",
 } as const;
 
 export const confidenceThresholds = {

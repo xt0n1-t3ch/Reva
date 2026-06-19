@@ -6,6 +6,11 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Persistence\DemoData\Assets\meridian-property-cat-xl-bordereau-2025-q1.png" LogicalName="reva.seed.meridian-bordereau.png" />
+    <EmbeddedResource Include="Persistence\DemoData\Assets\northwind-casualty-xol-bordereau-2026-q1.pdf" LogicalName="reva.seed.northwind-casualty-xol.pdf" />
+    <EmbeddedResource Include="Persistence\DemoData\Assets\atlantic-marine-cargo-bordereau-2026-q1.xlsx" LogicalName="reva.seed.atlantic-marine-cargo.xlsx" />
+    <EmbeddedResource Include="Persistence\DemoData\Assets\pacific-aviation-hull-bordereau-2026-q1.csv" LogicalName="reva.seed.pacific-aviation-hull.csv" />
+    <EmbeddedResource Include="Persistence\DemoData\Assets\coastal-property-cat-bordereau-2026-q2.jpg" LogicalName="reva.seed.coastal-property-cat.jpg" />
+    <EmbeddedResource Include="Knowledge\knowledge-seed.json" LogicalName="reva.knowledge.seed.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,9 +21,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="10.3.0" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.3.0" />
     <PackageReference Include="PDFtoImage" Version="5.1.0" />
+    <!-- Pin patched SQLite bundle: older EF transitive pulls SQLitePCLRaw.lib.e_sqlite3 2.1.11 (NU1903). -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
     <!-- Pin patched version: EF Design pulls a vulnerable transitive 9.0.0 (NU1903). -->
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.9" />
     <!-- Document parsers (all managed, no Python): PDF, Word/PowerPoint, Excel, email. -->

@@ -32,7 +32,7 @@ public sealed class DisabledOAuthInboundDocumentSource(string name) : IInboundDo
     public Task<IReadOnlyList<InboundDocument>> PullAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<InboundDocument>>([]);
 }
 
-public sealed class InboundSourceRegistry(IEnumerable<IInboundDocumentSource> sources, Microsoft.Extensions.Options.IOptions<DoclingFeatureOptions> docling) : IInboundSourceRegistry
+public sealed class InboundSourceRegistry(IEnumerable<IInboundDocumentSource> sources) : IInboundSourceRegistry
 {
     public IReadOnlyList<InboundSourceStatus> Statuses() =>
     [
@@ -42,6 +42,6 @@ public sealed class InboundSourceRegistry(IEnumerable<IInboundDocumentSource> so
             "outlook" => new InboundSourceStatus(source.Name, false, "disabled: requires OAuth credentials + network"),
             _ => new InboundSourceStatus(source.Name, true, "enabled")
         }),
-        new InboundSourceStatus("docling", docling.Value.Enabled, docling.Value.Enabled ? "enabled" : "disabled: feature flag off")
+        new InboundSourceStatus("docling", false, "disabled: parser adapter not wired")
     ];
 }

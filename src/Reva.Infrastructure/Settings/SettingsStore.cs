@@ -34,6 +34,10 @@ public sealed partial class SettingsStore(RevaDbContext dbContext) : ISettingsSt
         record.DefaultTemplateId = sanitized.DefaultTemplateId;
         record.ReconciliationTolerance = sanitized.ReconciliationTolerance;
         record.UseLlmAssist = sanitized.UseLlmAssist;
+        record.AiProvider = sanitized.AiProvider;
+        record.AiBaseUrl = sanitized.AiBaseUrl;
+        record.AiApiKey = sanitized.AiApiKey;
+        record.AiModel = sanitized.AiModel;
 
         await dbContext.SaveChangesAsync(cancellationToken);
         RuntimeSettings.Set(sanitized);
@@ -49,6 +53,9 @@ public sealed partial class SettingsStore(RevaDbContext dbContext) : ISettingsSt
         var low = Math.Clamp(settings.ConfidenceLowMax, 0d, 1d);
         var medium = Math.Clamp(settings.ConfidenceMediumMax, 0d, 1d);
         var reconciliationTolerance = Math.Clamp(settings.ReconciliationTolerance, 0d, 0.5d);
+        var aiProvider = AiProviderNames.Normalize(settings.AiProvider);
+        var aiBaseUrl = AiSettingsDefaults.NormalizeBaseUrl(aiProvider, settings.AiBaseUrl);
+        var aiModel = AiSettingsDefaults.NormalizeModel(settings.AiModel);
         if (medium < low)
         {
             (low, medium) = (medium, low);
@@ -60,7 +67,10 @@ public sealed partial class SettingsStore(RevaDbContext dbContext) : ISettingsSt
             ProductName = name,
             ConfidenceLowMax = low,
             ConfidenceMediumMax = medium,
-            ReconciliationTolerance = reconciliationTolerance
+            ReconciliationTolerance = reconciliationTolerance,
+            AiProvider = aiProvider,
+            AiBaseUrl = aiBaseUrl,
+            AiModel = aiModel
         };
     }
 
@@ -72,7 +82,11 @@ public sealed partial class SettingsStore(RevaDbContext dbContext) : ISettingsSt
         record.ConfidenceMediumMax,
         record.DefaultTemplateId,
         record.ReconciliationTolerance,
-        record.UseLlmAssist);
+        record.UseLlmAssist,
+        AiProviderNames.Normalize(record.AiProvider),
+        AiSettingsDefaults.NormalizeBaseUrl(record.AiProvider, record.AiBaseUrl),
+        record.AiApiKey,
+        AiSettingsDefaults.NormalizeModel(record.AiModel));
 
     [GeneratedRegex("^#[0-9a-fA-F]{6}$", RegexOptions.CultureInvariant)]
     private static partial Regex HexColor();

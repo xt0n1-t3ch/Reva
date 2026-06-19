@@ -7,7 +7,7 @@ const toneClasses: Record<Tone, string> = {
   neutral: "bg-surface-2 text-muted-foreground border-border",
   primary: "bg-primary-soft text-primary border-primary-border",
   success: "bg-success-soft text-success border-success/30",
-  warning: "bg-warning-soft text-warning-foreground border-warning/40",
+  warning: "bg-warning-soft text-warning border-warning/30",
   danger: "bg-danger-soft text-danger border-danger/30",
 };
 
@@ -23,7 +23,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium leading-none whitespace-nowrap",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium leading-none tracking-tight",
         toneClasses[tone],
         className,
       )}
@@ -48,16 +48,16 @@ type ButtonVariant = "primary" | "ghost" | "outline" | "subtle" | "danger";
 type ButtonSize = "sm" | "md" | "icon";
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-primary-foreground hover:opacity-90 shadow-soft",
-  outline: "border border-border-strong bg-surface text-foreground hover:bg-surface-2",
-  ghost: "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
-  subtle: "bg-surface-2 text-foreground hover:bg-surface-3",
-  danger: "bg-danger text-danger-foreground hover:opacity-90",
+  primary: "bg-primary text-primary-foreground shadow-soft hover:opacity-90 active:opacity-100",
+  outline: "border border-border-strong bg-surface text-foreground hover:bg-surface-2 active:bg-surface-3",
+  ghost: "text-muted-foreground hover:bg-surface-2 hover:text-foreground active:bg-surface-3",
+  subtle: "bg-surface-2 text-foreground hover:bg-surface-3 active:bg-surface-3",
+  danger: "bg-danger text-danger-foreground shadow-soft hover:opacity-90 active:opacity-100",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "h-7 px-2.5 text-xs gap-1.5",
-  md: "h-9 px-3.5 text-sm gap-2",
+  sm: "h-7 gap-1.5 px-2.5 text-xs",
+  md: "h-9 gap-2 px-3.5 text-sm",
   icon: "size-9 justify-center",
 };
 
@@ -74,7 +74,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center rounded-md font-medium transition-[background-color,opacity,color] disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center rounded-md font-medium transition-[background-color,opacity,color,border-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55 focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
         variantClasses[variant],
         sizeClasses[size],
         className,
@@ -93,7 +93,10 @@ export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(f
   return (
     <div
       ref={ref}
-      className={cn("rounded-lg border border-border bg-surface shadow-soft", className)}
+      className={cn(
+        "rounded-lg border border-border bg-surface shadow-soft transition-colors duration-200 hover:border-border-strong",
+        className,
+      )}
       {...rest}
     >
       {children}
@@ -140,7 +143,7 @@ export function ConfidenceMeter({
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <span
-        className="relative h-1.5 w-14 overflow-hidden rounded-full bg-surface-3"
+        className="relative h-1.5 w-16 overflow-hidden rounded-full bg-surface-3 ring-1 ring-inset ring-border/60"
         role="meter"
         aria-valuenow={Math.round(score * 100)}
         aria-valuemin={0}
@@ -148,7 +151,7 @@ export function ConfidenceMeter({
         aria-label={`Confidence ${formatPercent(score)}`}
       >
         <span
-          className={cn("absolute inset-y-0 left-0 rounded-full", tierColor[tier])}
+          className={cn("absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ease-out", tierColor[tier])}
           style={{ width: `${Math.max(4, Math.min(100, score * 100))}%` }}
         />
       </span>

@@ -1,6 +1,7 @@
-using System.Text;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Reva.Core.Contracts;
+using Reva.Core.Export;
 using Reva.Infrastructure;
 using Reva.Infrastructure.Export;
 using Reva.Infrastructure.Persistence;
@@ -65,6 +66,31 @@ public static class DocumentEndpoints
             return document is null ? Results.NotFound() : Results.Ok(assembler.Assemble(document));
         });
 
+        group.MapGet("/{id:guid}/process-stream", async (Guid id, RevaDbContext dbContext, IBdxReviewPayloadAssembler assembler, HttpContext http) =>
+        {
+            var document = await dbContext.Documents
+                .AsSplitQuery()
+                .Include(item => item.Fields)
+                .Include(item => item.Tables)
+                .Include(item => item.Exceptions)
+                .Include(item => item.SourceSpans)
+                .Include(item => item.Pages)
+                .FirstOrDefaultAsync(item => item.Id == id, http.RequestAborted);
+            if (document is null)
+            {
+                http.Response.StatusCode = StatusCodes.Status404NotFound;
+                return;
+            }
+
+            var payload = assembler.Assemble(document);
+            http.Features.Get<IHttpResponseBodyFeature>()?.DisableBuffering();
+            http.Response.Headers.ContentType = "text/event-stream; charset=utf-8";
+            http.Response.Headers.CacheControl = "no-cache, no-transform";
+            http.Response.Headers["X-Accel-Buffering"] = "no";
+
+            await DocumentProcessingStream.WriteAsync(http.Response, document.FileName, payload, http.RequestAborted);
+        });
+
         group.MapGet("/{id:guid}/pages/{page:int}.png", async (Guid id, int page, RevaDbContext dbContext, IPdfPageImageRenderer renderer, CancellationToken cancellationToken) =>
         {
             var document = await dbContext.Documents
@@ -119,6 +145,19 @@ public static class DocumentEndpoints
                 return Results.File(file.Content, file.ContentType, file.FileName);
             }
 
+            if (TryResolveExportFormat(format, out var exportFormat))
+            {
+                var detail = await workflow.GetAsync(id, cancellationToken);
+                if (detail is null)
+                {
+                    return Results.NotFound();
+                }
+
+                var template = ExportTemplateDefaults.All.First(candidate => candidate.Format == exportFormat);
+                var file = exporter.Export(detail, template);
+                return Results.File(file.Content, file.ContentType, file.FileName);
+            }
+
             ExportRecord? export;
             try
             {
@@ -134,39 +173,26 @@ public static class DocumentEndpoints
                 return Results.NotFound();
             }
 
-            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
-            {
-                var bytes = Encoding.UTF8.GetBytes(ToCsv(export));
-                return Results.File(bytes, "text/csv", $"reva-export-{id:N}.csv");
-            }
-
             return Results.Ok(export);
         });
 
         return group;
     }
 
-    private static string ToCsv(ExportRecord export)
+    private static bool TryResolveExportFormat(string? format, out ExportFormat exportFormat)
     {
-        var builder = new StringBuilder();
-        builder.AppendLine("Name,Value");
-        foreach (var field in export.Fields)
+        if (string.IsNullOrWhiteSpace(format))
         {
-            builder.Append(EscapeCsv(field.Key));
-            builder.Append(',');
-            builder.AppendLine(EscapeCsv(field.Value));
+            exportFormat = ExportFormat.Csv;
+            return false;
         }
 
-        return builder.ToString();
-    }
-
-    private static string EscapeCsv(string value)
-    {
-        if (!value.Contains(',') && !value.Contains('"') && !value.Contains('\n'))
+        if (format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
         {
-            return value;
+            exportFormat = ExportFormat.Excel;
+            return true;
         }
 
-        return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+        return Enum.TryParse(format, ignoreCase: true, out exportFormat);
     }
 }

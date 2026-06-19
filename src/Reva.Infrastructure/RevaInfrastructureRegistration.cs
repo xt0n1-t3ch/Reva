@@ -8,6 +8,7 @@ using Reva.Infrastructure.Agent;
 using Reva.Infrastructure.Extraction;
 using Reva.Infrastructure.Hashing;
 using Reva.Infrastructure.Ingestion;
+using Reva.Infrastructure.Knowledge;
 using Reva.Infrastructure.Ocr;
 using Reva.Infrastructure.Parsing;
 using Reva.Infrastructure.Persistence;
@@ -24,7 +25,6 @@ public static class RevaInfrastructureRegistration
     public static IServiceCollection AddRevaInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<RevaStorageOptions>(storage => storage.UploadRoot = configuration[RevaConfigurationKeys.StorageUploadRoot] ?? storage.UploadRoot);
-        services.Configure<DoclingFeatureOptions>(feature => feature.Enabled = bool.TryParse(configuration[RevaConfigurationKeys.FeaturesDocling], out var doclingEnabled) && doclingEnabled);
         services.Configure<FileEmailInboundOptions>(source => source.Directory = configuration[RevaConfigurationKeys.InboundFileEmailDirectory] ?? source.Directory);
         services.Configure<LlmExtractionOptions>(llm =>
         {
@@ -42,13 +42,6 @@ public static class RevaInfrastructureRegistration
             agent.MaxSteps = configured.MaxSteps;
             agent.Temperature = configured.Temperature;
         });
-        services.Configure<DoclingParserOptions>(parser =>
-        {
-            parser.PythonExecutable = configuration[RevaConfigurationKeys.ParserPythonExecutable] ?? parser.PythonExecutable;
-            parser.WorkerScriptPath = configuration[RevaConfigurationKeys.ParserWorkerScriptPath];
-            parser.TimeoutSeconds = int.TryParse(configuration[RevaConfigurationKeys.ParserTimeoutSeconds], out var timeoutSeconds) ? timeoutSeconds : parser.TimeoutSeconds;
-        });
-
         services.AddDbContext<RevaDbContext>(options =>
         {
             var provider = configuration[RevaConfigurationKeys.DatabaseProvider] ?? RevaDatabaseProviders.Sqlite;
@@ -70,7 +63,6 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IPdfPageImageRenderer, PdfiumPageImageRenderer>();
         services.AddSingleton<IDocumentParser, ParserRouter>();
         services.AddSingleton<IDocumentParserAdapter, DefaultDocumentParserAdapter>();
-        services.AddSingleton<IDocumentParserAdapter, OptionalDoclingDocumentParser>();
         services.AddSingleton<IInboundDocumentSource, FileEmailInboundDocumentSource>();
         services.AddSingleton<IInboundDocumentSource>(new DisabledOAuthInboundDocumentSource("gmail"));
         services.AddSingleton<IInboundDocumentSource>(new DisabledOAuthInboundDocumentSource("outlook"));
@@ -80,10 +72,16 @@ public static class RevaInfrastructureRegistration
         services.AddSingleton<IReinsuranceExtractor, ReinsuranceFieldExtractor>();
         services.AddSingleton<IExtractionMerger, ExtractionMerger>();
         services.AddSingleton<IAppActionBus, AppActionBus>();
+        services.AddHttpClient();
+        services.AddSingleton<ILlmChatClientFactory, LlmChatClientFactory>();
+        services.AddSingleton<ILlmModelDiscoveryService, LlmModelDiscoveryService>();
+        services.AddSingleton<IKnowledgeStore, EmbeddedKnowledgeStore>();
         services.AddSingleton<IAgentChatService>(provider => new AgentChatService(
-            CreateAgentOllamaChatClient(configuration),
+            provider.GetRequiredService<ILlmChatClientFactory>(),
             Microsoft.Extensions.Options.Options.Create(BuildAgentOptions(configuration)),
-            provider.GetRequiredService<IAppActionBus>()));
+            provider.GetRequiredService<IAppActionBus>(),
+            provider.GetRequiredService<Export.IDocumentExporter>(),
+            provider.GetRequiredService<IKnowledgeStore>()));
         services.AddSingleton<ILlmFieldExtractor>(provider =>
         {
             var configuredProvider = configuration[RevaConfigurationKeys.LlmProvider] ?? LlmExtractionOptions.ProviderNone;
@@ -123,16 +121,6 @@ public static class RevaInfrastructureRegistration
     {
         var options = BuildLlmOptions(configuration);
         return new OpenAI.Chat.ChatClient(options.Model, new ApiKeyCredential("ollama"), new OpenAIClientOptions { Endpoint = new Uri(options.BaseUrl) }).AsIChatClient();
-    }
-
-    private static IChatClient CreateAgentOllamaChatClient(IConfiguration configuration)
-    {
-        var options = BuildAgentOptions(configuration);
-        return new OpenAI.Chat.ChatClient(options.Model, new ApiKeyCredential("ollama"), new OpenAIClientOptions { Endpoint = new Uri(options.BaseUrl) })
-            .AsIChatClient()
-            .AsBuilder()
-            .UseFunctionInvocation(configure: client => client.MaximumIterationsPerRequest = options.MaxSteps)
-            .Build();
     }
 
     private static void EnsureSqliteDirectory(string connectionString)

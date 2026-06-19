@@ -1,13 +1,10 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Reva.Ai/Reva.Ai.csproj" />
-    <Project Path="src/Reva.App/Reva.App.csproj" />
     <Project Path="src/Reva.Core/Reva.Core.csproj" />
     <Project Path="src/Reva.Infrastructure/Reva.Infrastructure.csproj" />
     <Project Path="src/Reva.Web/Reva.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Reva.App.Tests/Reva.App.Tests.csproj" />
     <Project Path="tests/Reva.Integration/Reva.Integration.csproj" />
     <Project Path="tests/Reva.Unit/Reva.Unit.csproj" />
   </Folder>
