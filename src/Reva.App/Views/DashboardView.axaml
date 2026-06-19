@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Reva.App.ViewModels"
+             xmlns:views="using:Reva.App.Views"
              xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
              x:Class="Reva.App.Views.DashboardView"
              x:DataType="vm:DashboardViewModel"
@@ -11,14 +12,14 @@
             <Setter Property="Minimum" Value="0" />
             <Setter Property="Maximum" Value="1" />
             <Setter Property="Height" Value="8" />
-            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusSm}" />
-            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
+            <Setter Property="Background" Value="{DynamicResource Surface3Brush}" />
         </Style>
         <Style Selector="DataGrid.queue">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="GridLinesVisibility" Value="Horizontal" />
-            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Surface3Brush}" />
             <Setter Property="RowBackground" Value="Transparent" />
             <Setter Property="HeadersVisibility" Value="Column" />
             <Setter Property="IsReadOnly" Value="True" />
@@ -26,11 +27,11 @@
             <Setter Property="CanUserResizeColumns" Value="True" />
             <Setter Property="CanUserReorderColumns" Value="False" />
             <Setter Property="CanUserSortColumns" Value="False" />
-            <Setter Property="RowHeight" Value="44" />
+            <Setter Property="RowHeight" Value="48" />
         </Style>
         <Style Selector="DataGrid.queue DataGridColumnHeader">
             <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
-            <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSizeEyebrow}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="SeparatorBrush" Value="Transparent" />
@@ -50,50 +51,87 @@
     </UserControl.Styles>
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <Grid Margin="28" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+        <Grid Margin="32" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
 
-            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0 0 0 22">
-                <StackPanel Grid.Column="0" Spacing="6">
-                    <TextBlock Classes="display" Text="{Binding Title}" />
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0 0 0 26">
+                <StackPanel Grid.Column="0" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Classes="eyebrow" Text="WORKSPACE OVERVIEW" />
+                    <TextBlock Classes="pageTitle" Text="{Binding Title}" />
                     <TextBlock Classes="muted" Text="{Binding Description}" />
                 </StackPanel>
                 <Button Grid.Column="1"
-                        Classes="ghost"
-                        VerticalAlignment="Center"
+                        Classes="secondary"
+                        VerticalAlignment="Top"
                         Command="{Binding LoadCommand}"
                         IsEnabled="{Binding !IsLoading}"
                         Content="Refresh" />
             </Grid>
 
-            <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" Margin="0 0 0 18">
-                <Border Grid.Column="0" Classes="kpi" Margin="0 0 8 0">
-                    <StackPanel Spacing="8">
-                        <TextBlock Classes="caption" Text="TOTAL DOCUMENTS" />
+            <Border Grid.Row="1" Classes="hero" Margin="0 0 0 18">
+                <Grid ColumnDefinitions="Auto,*">
+                    <StackPanel Grid.Column="0" Spacing="6" Width="220" Margin="0 0 28 0" VerticalAlignment="Center">
+                        <TextBlock Classes="eyebrow" Text="INGEST" />
+                        <TextBlock Classes="subheading" Text="Add documents" />
+                        <TextBlock Classes="caption"
+                                   Text="Drop files or browse to start extraction." />
+                    </StackPanel>
+                    <views:UploadControl Grid.Column="1" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" Margin="0 0 0 18">
+                <Border Grid.Column="0" Classes="kpi" Margin="0 0 9 0">
+                    <StackPanel Spacing="10">
+                        <Border Classes="iconChip" HorizontalAlignment="Left">
+                            <TextBlock Text="▤" FontSize="16"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AccentBrush}" />
+                        </Border>
+                        <TextBlock Classes="eyebrow" Text="TOTAL DOCUMENTS" />
                         <TextBlock Classes="kpiValue" Text="{Binding TotalDocuments}" />
                         <TextBlock Classes="caption" Text="Across the workspace" />
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="1" Classes="kpi" Margin="8 0">
-                    <StackPanel Spacing="8">
-                        <TextBlock Classes="caption" Text="NEEDS REVIEW" />
-                        <TextBlock Classes="kpiValue"
-                                   Foreground="{DynamicResource WarningBrush}"
-                                   Text="{Binding NeedsReviewCount}" />
+                <Border Grid.Column="1" Classes="kpi" Margin="9 0">
+                    <StackPanel Spacing="10">
+                        <Border Classes="iconChip" HorizontalAlignment="Left">
+                            <TextBlock Text="◷" FontSize="16"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AccentBrush}" />
+                        </Border>
+                        <TextBlock Classes="eyebrow" Text="NEEDS REVIEW" />
+                        <TextBlock Classes="kpiValue" Text="{Binding NeedsReviewCount}" />
                         <TextBlock Classes="caption" Text="Pending or correction" />
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="2" Classes="kpi" Margin="8 0">
-                    <StackPanel Spacing="8">
-                        <TextBlock Classes="caption" Text="EXCEPTIONS" />
+                <Border Grid.Column="2" Classes="kpi" Margin="9 0">
+                    <StackPanel Spacing="10">
+                        <Border Width="34" Height="34"
+                                CornerRadius="{DynamicResource CornerRadiusMd}"
+                                Background="{DynamicResource DangerSoftBrush}"
+                                HorizontalAlignment="Left">
+                            <TextBlock Text="!" FontSize="16" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource DangerBrush}" />
+                        </Border>
+                        <TextBlock Classes="eyebrow" Text="EXCEPTIONS" />
                         <TextBlock Classes="kpiValue"
                                    Foreground="{DynamicResource DangerBrush}"
                                    Text="{Binding ExceptionCount}" />
                         <TextBlock Classes="caption" Text="Open findings" />
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="3" Classes="kpi" Margin="8 0 0 0">
-                    <StackPanel Spacing="8">
-                        <TextBlock Classes="caption" Text="AVG CONFIDENCE" />
+                <Border Grid.Column="3" Classes="kpi" Margin="9 0 0 0">
+                    <StackPanel Spacing="10">
+                        <Border Width="34" Height="34"
+                                CornerRadius="{DynamicResource CornerRadiusMd}"
+                                Background="{DynamicResource SuccessSoftBrush}"
+                                HorizontalAlignment="Left">
+                            <TextBlock Text="✓" FontSize="16" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SuccessBrush}" />
+                        </Border>
+                        <TextBlock Classes="eyebrow" Text="AVG CONFIDENCE" />
                         <TextBlock Classes="kpiValue"
                                    Foreground="{DynamicResource SuccessBrush}"
                                    Text="{Binding AverageConfidence}" />
@@ -102,15 +140,18 @@
                 </Border>
             </Grid>
 
-            <Border Grid.Row="2" Classes="card" Margin="0 0 0 18">
-                <StackPanel Spacing="16">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0" Classes="subheading" Text="Pipeline" />
-                        <TextBlock Grid.Column="1"
-                                   Classes="caption"
-                                   VerticalAlignment="Center"
-                                   Text="Uploaded → Extracted → Reviewed → Exported" />
-                    </Grid>
+            <Border Grid.Row="3" Classes="card" Margin="0 0 0 18">
+                <StackPanel Spacing="20">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="eyebrow" Text="PIPELINE" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Classes="subheading" Text="Processing flow" />
+                            <TextBlock Grid.Column="1"
+                                       Classes="caption"
+                                       VerticalAlignment="Center"
+                                       Text="Uploaded → Extracted → Reviewed → Exported" />
+                        </Grid>
+                    </StackPanel>
                     <ItemsControl ItemsSource="{Binding PipelineStages}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -119,12 +160,16 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:PipelineStage">
-                                <StackPanel Spacing="8" Margin="0 0 14 0">
+                                <StackPanel Spacing="10" Margin="0 0 16 0">
                                     <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Grid.Column="0" Classes="caption" Text="{Binding Label}" />
+                                        <TextBlock Grid.Column="0" Classes="eyebrow"
+                                                   VerticalAlignment="Center"
+                                                   Text="{Binding Label}" />
                                         <TextBlock Grid.Column="1"
-                                                   FontWeight="SemiBold"
+                                                   FontWeight="Bold"
                                                    FontSize="{DynamicResource FontSizeSubheading}"
+                                                   Foreground="{DynamicResource ForegroundBrush}"
+                                                   FontFeatures="tnum=1"
                                                    Text="{Binding Count}" />
                                     </Grid>
                                     <ProgressBar Classes="pipeline"
@@ -137,102 +182,127 @@
                 </StackPanel>
             </Border>
 
-            <Grid Grid.Row="3" ColumnDefinitions="*,*" Margin="0 0 0 18">
-                <Border Grid.Column="0" Classes="card" Margin="0 0 9 0">
-                    <Grid RowDefinitions="Auto,*">
-                        <StackPanel Grid.Row="0" Spacing="2" Margin="0 0 0 14">
-                            <TextBlock Classes="subheading" Text="Throughput" />
-                            <TextBlock Classes="caption" Text="Documents ingested, last 7 days" />
-                        </StackPanel>
-                        <Panel Grid.Row="1" MinHeight="220">
-                            <lvc:CartesianChart Series="{Binding ThroughputSeries}"
-                                                XAxes="{Binding ThroughputXAxes}"
-                                                YAxes="{Binding ThroughputYAxes}"
-                                                TooltipPosition="Top"
-                                                IsVisible="{Binding HasThroughput}" />
-                            <TextBlock Classes="muted"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Text="No ingestion in this window"
-                                       IsVisible="{Binding !HasThroughput}" />
-                        </Panel>
-                    </Grid>
-                </Border>
-                <Border Grid.Column="1" Classes="card" Margin="9 0 0 0">
-                    <Grid RowDefinitions="Auto,*">
-                        <StackPanel Grid.Row="0" Spacing="2" Margin="0 0 0 14">
-                            <TextBlock Classes="subheading" Text="Exceptions by type" />
-                            <TextBlock Classes="caption" Text="Open queue, grouped by reason" />
-                        </StackPanel>
-                        <Panel Grid.Row="1" MinHeight="220">
-                            <lvc:CartesianChart Series="{Binding ExceptionSeries}"
-                                                XAxes="{Binding ExceptionXAxes}"
-                                                YAxes="{Binding ExceptionYAxes}"
-                                                TooltipPosition="Top"
-                                                LegendPosition="Hidden"
-                                                IsVisible="{Binding HasExceptionBreakdown}" />
-                            <TextBlock Classes="muted"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Text="No open exceptions"
-                                       IsVisible="{Binding !HasExceptionBreakdown}" />
-                        </Panel>
-                    </Grid>
-                </Border>
-            </Grid>
+            <Grid Grid.Row="4" RowDefinitions="Auto,Auto">
 
-            <Border Grid.Row="4" Classes="card">
-                <Grid RowDefinitions="Auto,*">
-                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0 0 0 12">
-                        <TextBlock Grid.Column="0" Classes="subheading" Text="Work queue" />
-                        <TextBlock Grid.Column="1"
-                                   Classes="caption"
-                                   VerticalAlignment="Center"
-                                   Text="Most recently updated" />
-                    </Grid>
-
-                    <DataGrid Grid.Row="1"
-                              Classes="queue"
-                              ItemsSource="{Binding RecentDocuments}"
-                              IsVisible="{Binding HasDocuments}"
-                              SelectionChanged="OnRowSelectionChanged"
-                              MaxHeight="420">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="DOCUMENT" Width="2.4*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:DataType="vm:DashboardRow">
-                                        <TextBlock Text="{Binding FileName}"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   VerticalAlignment="Center" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="TYPE" Width="1.4*" Binding="{Binding DocumentType}" />
-                            <DataGridTextColumn Header="STATUS" Width="1.3*" Binding="{Binding Status}" />
-                            <DataGridTextColumn Header="CONFIDENCE" Width="Auto" Binding="{Binding Confidence}" />
-                            <DataGridTextColumn Header="EXCEPTIONS" Width="Auto" Binding="{Binding Exceptions}" />
-                            <DataGridTextColumn Header="UPDATED" Width="Auto" Binding="{Binding Updated}" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <Border Grid.Row="1"
-                            MinHeight="160"
-                            IsVisible="{Binding !HasDocuments}">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
-                            <Border Width="48" Height="48"
-                                    CornerRadius="{DynamicResource CornerRadiusMd}"
-                                    Background="{DynamicResource Surface2Brush}">
-                                <TextBlock Text="↧" FontSize="22"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource MutedForegroundBrush}" />
-                            </Border>
-                            <TextBlock Classes="muted"
-                                       HorizontalAlignment="Center"
-                                       Text="{Binding EmptyStateMessage}" />
-                        </StackPanel>
+                <Grid Grid.Row="0" ColumnDefinitions="*,*" Margin="0 0 0 18">
+                    <Border Grid.Column="0" Classes="card" Margin="0 0 9 0">
+                        <Grid RowDefinitions="Auto,*">
+                            <StackPanel Grid.Row="0" Spacing="4" Margin="0 0 0 18">
+                                <TextBlock Classes="eyebrow" Text="THROUGHPUT" />
+                                <TextBlock Classes="subheading" Text="Documents ingested" />
+                                <TextBlock Classes="caption" Text="Last 7 days" />
+                            </StackPanel>
+                            <Panel Grid.Row="1" MinHeight="220">
+                                <lvc:CartesianChart Series="{Binding ThroughputSeries}"
+                                                    XAxes="{Binding ThroughputXAxes}"
+                                                    YAxes="{Binding ThroughputYAxes}"
+                                                    TooltipPosition="Top"
+                                                    IsVisible="{Binding HasThroughput}" />
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Spacing="10" IsVisible="{Binding !HasThroughput}">
+                                    <Border Width="48" Height="48"
+                                            CornerRadius="{DynamicResource CornerRadiusMd}"
+                                            Background="{DynamicResource Surface2Brush}">
+                                        <TextBlock Text="◔" FontSize="22"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource MutedForegroundBrush}" />
+                                    </Border>
+                                    <TextBlock Classes="muted"
+                                               HorizontalAlignment="Center"
+                                               Text="No ingestion in this window" />
+                                </StackPanel>
+                            </Panel>
+                        </Grid>
+                    </Border>
+                    <Border Grid.Column="1" Classes="card" Margin="9 0 0 0">
+                        <Grid RowDefinitions="Auto,*">
+                            <StackPanel Grid.Row="0" Spacing="4" Margin="0 0 0 18">
+                                <TextBlock Classes="eyebrow" Text="EXCEPTIONS" />
+                                <TextBlock Classes="subheading" Text="By type" />
+                                <TextBlock Classes="caption" Text="Open queue, grouped by reason" />
+                            </StackPanel>
+                            <Panel Grid.Row="1" MinHeight="220">
+                                <lvc:CartesianChart Series="{Binding ExceptionSeries}"
+                                                    XAxes="{Binding ExceptionXAxes}"
+                                                    YAxes="{Binding ExceptionYAxes}"
+                                                    TooltipPosition="Top"
+                                                    LegendPosition="Hidden"
+                                                    IsVisible="{Binding HasExceptionBreakdown}" />
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Spacing="10" IsVisible="{Binding !HasExceptionBreakdown}">
+                                    <Border Width="48" Height="48"
+                                            CornerRadius="{DynamicResource CornerRadiusMd}"
+                                            Background="{DynamicResource SuccessSoftBrush}">
+                                        <TextBlock Text="✓" FontSize="22"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SuccessBrush}" />
+                                    </Border>
+                                    <TextBlock Classes="muted"
+                                               HorizontalAlignment="Center"
+                                               Text="No open exceptions" />
+                                </StackPanel>
+                            </Panel>
+                        </Grid>
                     </Border>
                 </Grid>
-            </Border>
+
+                <Border Grid.Row="1" Classes="card">
+                    <Grid RowDefinitions="Auto,*">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0 0 0 14">
+                            <StackPanel Grid.Column="0" Spacing="4">
+                                <TextBlock Classes="eyebrow" Text="RECENT DOCUMENTS" />
+                                <TextBlock Classes="subheading" Text="Work queue" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Classes="caption"
+                                       VerticalAlignment="Center"
+                                       Text="Most recently updated" />
+                        </Grid>
+
+                        <DataGrid Grid.Row="1"
+                                  Classes="queue"
+                                  ItemsSource="{Binding RecentDocuments}"
+                                  IsVisible="{Binding HasDocuments}"
+                                  SelectionChanged="OnRowSelectionChanged"
+                                  MaxHeight="420">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="DOCUMENT" Width="2.4*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:DashboardRow">
+                                            <TextBlock Text="{Binding FileName}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="TYPE" Width="1.4*" Binding="{Binding DocumentType}" />
+                                <DataGridTextColumn Header="STATUS" Width="1.3*" Binding="{Binding Status}" />
+                                <DataGridTextColumn Header="CONFIDENCE" Width="Auto" Binding="{Binding Confidence}" />
+                                <DataGridTextColumn Header="EXCEPTIONS" Width="Auto" Binding="{Binding Exceptions}" />
+                                <DataGridTextColumn Header="UPDATED" Width="Auto" Binding="{Binding Updated}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Border Grid.Row="1"
+                                MinHeight="180"
+                                IsVisible="{Binding !HasDocuments}">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                                <Border Width="48" Height="48"
+                                        CornerRadius="{DynamicResource CornerRadiusMd}"
+                                        Background="{DynamicResource Surface2Brush}">
+                                    <TextBlock Text="↧" FontSize="22"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource MutedForegroundBrush}" />
+                                </Border>
+                                <TextBlock Classes="muted"
+                                           HorizontalAlignment="Center"
+                                           Text="{Binding EmptyStateMessage}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+            </Grid>
 
         </Grid>
     </ScrollViewer>

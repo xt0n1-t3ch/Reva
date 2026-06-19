@@ -602,6 +602,8 @@ public partial class TemplateEditorViewModel : ViewModelBase
 
     public string StatusLabel => IsBuiltIn ? "Built-in" : IsPersisted ? "Saved" : "Unsaved";
 
+    public bool HasColumns => Columns.Count > 0;
+
     private TemplateEditorViewModel(Guid id, string name, ExportFormat format, bool isBuiltIn, bool isPersisted)
     {
         Id = id;
@@ -609,6 +611,7 @@ public partial class TemplateEditorViewModel : ViewModelBase
         _format = format;
         _isBuiltIn = isBuiltIn;
         _isPersisted = isPersisted;
+        Columns.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasColumns));
     }
 
     public bool IsEditable => !IsBuiltIn;

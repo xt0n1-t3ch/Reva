@@ -80,13 +80,34 @@ public partial class SettingsViewModel : ViewModelBase
     private const string SavedConfirmation = "Settings saved.";
     private const string SaveFailedText = "Could not save settings. Try again.";
     private const string LoadFailedText = "Could not load settings.";
-    private const string MaintenanceUnavailableNote = "Workspace maintenance is performed from the data pipeline and is not yet connected to this build.";
+    private const string NoModelsText = "No local models were found. Reva still extracts deterministically; install Ollama and pull a vision model to enable OCR-grade reads, then refresh.";
+    private const string DoclingActiveNote = "Layout-aware OCR conversion runs on PDFs and scanned pages before extraction. Requires the Docling feature in this deployment.";
+    private const string DoclingInactiveNote = "Deterministic parsing handles native PDFs. Enable layout-aware OCR conversion for scanned pages where the Docling feature is deployed.";
+    private const string ThemeNoteText = "Applies instantly. System follows your operating-system appearance.";
+    private const string MaintenanceRoutedNote = "Reseed and clear are run by the Copilot assistant, which has confirmed, audited access to these destructive operations. Use a clear request such as \"reseed the demo data\" or \"clear the workspace\".";
+    private const string ReseedTitle = "Reseed demo data";
+    private const string ReseedMessage = "This replaces the current workspace with the demo dataset. Existing documents and reviews are removed.";
+    private const string ClearTitle = "Clear workspace";
+    private const string ClearMessage = "This permanently removes every document, review, and export from the workspace. This cannot be undone.";
+    private const string ReseedActionLabel = "Reseed";
+    private const string ClearActionLabel = "Clear everything";
+    private const string ReseedRoutedStatus = "Open Copilot and ask it to reseed the demo data — it runs the operation with a confirmation step.";
+    private const string ClearRoutedStatus = "Open Copilot and ask it to clear the workspace — it runs the operation with a confirmation step.";
 
     private static readonly Guid EmptyTemplateId = Guid.Empty;
 
     private readonly IRevaClient _client;
 
     private bool _isLoading;
+
+    private MaintenanceAction _pendingAction = MaintenanceAction.None;
+
+    private enum MaintenanceAction
+    {
+        None,
+        Reseed,
+        Clear
+    }
 
     [ObservableProperty]
     private string _title = "Settings";
@@ -130,6 +151,7 @@ public partial class SettingsViewModel : ViewModelBase
     private double _confidenceMediumMax;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DoclingNote))]
     private bool _enableDocling;
 
     [ObservableProperty]
@@ -154,7 +176,10 @@ public partial class SettingsViewModel : ViewModelBase
     private string _confirmMessage = string.Empty;
 
     [ObservableProperty]
-    private string _maintenanceNote = MaintenanceUnavailableNote;
+    private string _maintenanceNote = MaintenanceRoutedNote;
+
+    [ObservableProperty]
+    private string _confirmActionLabel = string.Empty;
 
     public SettingsViewModel(IRevaClient client)
     {
@@ -177,6 +202,16 @@ public partial class SettingsViewModel : ViewModelBase
     public ObservableCollection<ThemeOption> Themes { get; }
 
     public bool IsVisionToggleEnabled => IsOllamaResolved && IsOllamaOnline && !IsBusy;
+
+    public bool HasModels => Models.Count > 0;
+
+    public bool HasNoModels => Models.Count == 0;
+
+    public string NoModelsNote { get; } = NoModelsText;
+
+    public string ThemeNote { get; } = ThemeNoteText;
+
+    public string DoclingNote => EnableDocling ? DoclingActiveNote : DoclingInactiveNote;
 
     public string DeterministicAlwaysOnNote { get; } = DeterministicNote;
 
@@ -250,30 +285,34 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private void RequestReseed()
     {
-        OpenConfirm("Reseed demo data", "This replaces the current workspace with the demo dataset. Existing documents and reviews are removed.");
+        _pendingAction = MaintenanceAction.Reseed;
+        OpenConfirm(ReseedTitle, ReseedMessage, ReseedActionLabel);
     }
 
     [RelayCommand]
     private void RequestClearWorkspace()
     {
-        OpenConfirm("Clear workspace", "This permanently removes every document, review, and export from the workspace. This cannot be undone.");
+        _pendingAction = MaintenanceAction.Clear;
+        OpenConfirm(ClearTitle, ClearMessage, ClearActionLabel);
     }
 
     [RelayCommand]
     private void CancelConfirm()
     {
-        IsConfirmOpen = false;
-        ConfirmTitle = string.Empty;
-        ConfirmMessage = string.Empty;
+        CloseConfirm();
     }
 
     [RelayCommand]
     private void AcknowledgeConfirm()
     {
-        IsConfirmOpen = false;
-        ConfirmTitle = string.Empty;
-        ConfirmMessage = string.Empty;
-        SetStatus(MaintenanceUnavailableNote);
+        var action = _pendingAction;
+        CloseConfirm();
+        SetStatus(action switch
+        {
+            MaintenanceAction.Reseed => ReseedRoutedStatus,
+            MaintenanceAction.Clear => ClearRoutedStatus,
+            _ => MaintenanceRoutedNote
+        });
     }
 
     [RelayCommand]
@@ -374,6 +413,9 @@ public partial class SettingsViewModel : ViewModelBase
         {
             Models.Add(new ModelOption(descriptor));
         }
+
+        OnPropertyChanged(nameof(HasModels));
+        OnPropertyChanged(nameof(HasNoModels));
 
         string? activeId;
         try
@@ -489,11 +531,21 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    private void OpenConfirm(string title, string message)
+    private void OpenConfirm(string title, string message, string actionLabel)
     {
         ConfirmTitle = title;
         ConfirmMessage = message;
+        ConfirmActionLabel = actionLabel;
         IsConfirmOpen = true;
+    }
+
+    private void CloseConfirm()
+    {
+        IsConfirmOpen = false;
+        ConfirmTitle = string.Empty;
+        ConfirmMessage = string.Empty;
+        ConfirmActionLabel = string.Empty;
+        _pendingAction = MaintenanceAction.None;
     }
 
     private static void ApplyTheme(AppTheme theme)

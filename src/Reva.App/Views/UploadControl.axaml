@@ -14,53 +14,72 @@
 
     <DockPanel LastChildFill="True">
 
-        <Panel DockPanel.Dock="Top" Margin="0 0 0 12">
+        <Panel DockPanel.Dock="Top">
 
-            <Border CornerRadius="{DynamicResource CornerRadiusMd}"
-                    BorderThickness="2"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    Background="{DynamicResource Surface2Brush}">
+            <Border CornerRadius="{DynamicResource CornerRadiusXl}"
+                    BorderThickness="1.5"
+                    BorderBrush="{DynamicResource AccentBorderBrush}"
+                    Background="{DynamicResource HeroWashBrush}"
+                    BoxShadow="{DynamicResource ShadowSoft}"
+                    MinHeight="148">
 
-                <StackPanel HorizontalAlignment="Center"
+                <Grid ColumnDefinitions="Auto,*,Auto"
+                      VerticalAlignment="Center"
+                      Margin="22 18">
+
+                    <Border Grid.Column="0"
+                            Width="46" Height="46"
+                            CornerRadius="{DynamicResource CornerRadiusMd}"
+                            Background="{DynamicResource GlassStrongBrush}"
+                            BorderBrush="{DynamicResource AccentBorderBrush}"
+                            BorderThickness="1"
+                            BoxShadow="{DynamicResource ShadowSoft}"
+                            Margin="0 0 16 0">
+                        <TextBlock Text="↑"
+                                   FontSize="22"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AccentBrush}" />
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="Drop documents to ingest"
+                                   Classes="subheading" />
+                        <TextBlock Text="PDF · DOCX · XLSX · CSV · EML · PNG and more"
+                                   Classes="caption" />
+                    </StackPanel>
+
+                    <Button Grid.Column="2"
+                            Classes="accent"
                             VerticalAlignment="Center"
-                            Spacing="10"
-                            Margin="32 28">
-
-                    <TextBlock Text="↑"
-                               FontSize="28"
-                               FontWeight="Bold"
-                               HorizontalAlignment="Center"
-                               Foreground="{DynamicResource PrimaryBrush}" />
-
-                    <TextBlock Text="Drop documents here"
-                               Classes="subheading"
-                               HorizontalAlignment="Center" />
-
-                    <TextBlock Text="PDF · DOCX · XLSX · CSV · EML · PNG and more"
-                               Classes="caption"
-                               HorizontalAlignment="Center" />
-
-                    <Button Classes="ghost"
-                            HorizontalAlignment="Center"
-                            Margin="0 6 0 0"
+                            Margin="16 0 0 0"
                             IsEnabled="{Binding !IsUploading}"
                             Click="OnBrowseClicked"
-                            Content="Browse files…" />
+                            Content="Browse" />
 
-                </StackPanel>
+                </Grid>
             </Border>
 
-            <Border CornerRadius="{DynamicResource CornerRadiusMd}"
-                    BorderThickness="2"
-                    BorderBrush="{DynamicResource PrimaryBrush}"
-                    Background="{DynamicResource PrimarySoftBrush}"
+            <Border CornerRadius="{DynamicResource CornerRadiusXl}"
+                    BorderThickness="1.5"
+                    BorderBrush="{DynamicResource AccentBrush}"
+                    Background="{DynamicResource AccentSoftBrush}"
+                    BoxShadow="{DynamicResource ShadowHover}"
                     IsVisible="{Binding IsDragOver}"
-                    IsHitTestVisible="False" />
+                    IsHitTestVisible="False">
+                <TextBlock Text="Release to upload"
+                           Classes="subheading"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource AccentBrush}" />
+            </Border>
 
         </Panel>
 
         <Grid DockPanel.Dock="Bottom"
               RowDefinitions="*,Auto"
+              Margin="0 14 0 0"
               IsVisible="{Binding HasEntries}">
 
             <ScrollViewer Grid.Row="0" MaxHeight="240" VerticalScrollBarVisibility="Auto">
@@ -101,9 +120,10 @@
                                                  Minimum="0"
                                                  Maximum="100"
                                                  Value="{Binding Progress}"
+                                                 CornerRadius="{DynamicResource CornerRadiusPill}"
                                                  IsVisible="{Binding Status, Converter={StaticResource ProgressVisible}}"
-                                                 Foreground="{DynamicResource PrimaryBrush}"
-                                                 Background="{DynamicResource Surface2Brush}" />
+                                                 Foreground="{DynamicResource AccentBrush}"
+                                                 Background="{DynamicResource Surface3Brush}" />
 
                                 </Grid>
                             </Border>

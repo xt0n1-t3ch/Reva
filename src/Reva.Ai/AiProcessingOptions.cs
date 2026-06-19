@@ -19,4 +19,5 @@ public sealed class AiProcessingOptions
     public string ActiveModel { get; set; } = DefaultActiveModel;
     public bool UseVisionExtraction { get; set; } = DefaultUseVisionExtraction;
     public int TimeoutSeconds { get; set; } = DefaultTimeoutSeconds;
+    public string? StateDirectory { get; set; }
 }

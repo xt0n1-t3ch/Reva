@@ -134,9 +134,17 @@ public sealed class ModelRegistry(IHttpClientFactory httpClientFactory, IOptions
         return string.IsNullOrWhiteSpace(configured) ? AiProcessingOptions.DefaultActiveModel : configured.Trim();
     }
 
-    private static string? ReadPersistedModel()
+    private string ResolveStatePath()
     {
-        var path = AiStatePaths.ModelStateFilePath();
+        var directory = options.Value.StateDirectory;
+        return string.IsNullOrWhiteSpace(directory)
+            ? AiStatePaths.ModelStateFilePath()
+            : Path.Combine(directory, AiStatePaths.ModelStateFileName);
+    }
+
+    private string? ReadPersistedModel()
+    {
+        var path = ResolveStatePath();
         try
         {
             if (!File.Exists(path))
@@ -153,9 +161,9 @@ public sealed class ModelRegistry(IHttpClientFactory httpClientFactory, IOptions
         }
     }
 
-    private static void PersistModel(string modelId)
+    private void PersistModel(string modelId)
     {
-        var path = AiStatePaths.ModelStateFilePath();
+        var path = ResolveStatePath();
         try
         {
             var directory = Path.GetDirectoryName(path);

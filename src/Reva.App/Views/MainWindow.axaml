@@ -7,10 +7,11 @@
         x:Class="Reva.App.Views.MainWindow"
         x:DataType="vm:ShellViewModel"
         x:CompileBindings="True"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/reva-icon.png"
         Width="1280" Height="800"
         MinWidth="1024" MinHeight="680"
-        Background="{DynamicResource BgBrush}"
+        TransparencyLevelHint="Mica, AcrylicBlur, Blur"
+        Background="{DynamicResource CanvasBrush}"
         Title="Reva">
 
     <ContentControl Content="{Binding}" />

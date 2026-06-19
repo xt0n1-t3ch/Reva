@@ -40,6 +40,15 @@ public partial class TourOverlayViewModel : ObservableObject
     private bool _hasHighlight;
 
     [ObservableProperty]
+    private double _stepTotal;
+
+    [ObservableProperty]
+    private double _stepProgress;
+
+    [ObservableProperty]
+    private bool _hasStepProgress;
+
+    [ObservableProperty]
     private double _highlightX;
 
     [ObservableProperty]
@@ -115,6 +124,9 @@ public partial class TourOverlayViewModel : ObservableObject
         Title = step.Title;
         Body = step.Body;
         Counter = total > 0 ? $"{index + 1} of {total}" : string.Empty;
+        StepTotal = total;
+        StepProgress = total > 0 ? index + 1 : 0;
+        HasStepProgress = total > 0;
         PrimaryActionText = index >= total - 1 ? FinishLabel : NextLabel;
         RaiseNavigationChanged();
 

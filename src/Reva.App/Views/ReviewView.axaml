@@ -5,59 +5,96 @@
              x:DataType="vm:ReviewViewModel"
              x:CompileBindings="True">
 
-    <Grid RowDefinitions="Auto,*" Margin="28 24 28 24" RowSpacing="18">
+    <Grid RowDefinitions="Auto,*" Margin="32 28 32 28" RowSpacing="24">
 
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-            <StackPanel Grid.Column="0" Spacing="4">
-                <TextBlock Classes="display" Text="{Binding Title}" />
+            <StackPanel Grid.Column="0" Spacing="6">
+                <TextBlock Text="REVIEW COCKPIT" Classes="eyebrow" />
+                <TextBlock Classes="pageTitle" Text="{Binding Title}" />
                 <TextBlock Classes="muted" Text="{Binding Description}" />
             </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                 <Border Classes="chip" IsVisible="{Binding HasStatusMessage}">
-                    <TextBlock Text="{Binding StatusMessage}" Classes="caption" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Border Classes="statusDot" Background="{DynamicResource AccentBrush}" />
+                        <TextBlock Text="{Binding StatusMessage}" Classes="caption" VerticalAlignment="Center" />
+                    </StackPanel>
                 </Border>
-                <Button Classes="ghost" Command="{Binding RefreshCommand}" Content="Refresh" />
+                <Button Classes="secondary" Command="{Binding RefreshCommand}" Content="Refresh" />
             </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="1" ColumnDefinitions="288,*,420" ColumnSpacing="18">
+        <Grid Grid.Row="1" ColumnDefinitions="300,*,440" ColumnSpacing="24">
 
-            <Border Grid.Column="0" Classes="panel" Padding="0">
+            <Border Grid.Column="0" Classes="glass" Padding="0">
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Grid.Row="0" Text="DOCUMENTS" Classes="caption" Margin="18 16 18 10" />
+                    <StackPanel Grid.Row="0" Spacing="4" Margin="22 22 22 14">
+                        <TextBlock Text="DOCUMENTS" Classes="eyebrow" />
+                        <TextBlock Text="{Binding Documents.Count, StringFormat='{}{0} in queue'}"
+                                   Classes="caption" />
+                    </StackPanel>
+
+                    <Border Grid.Row="1"
+                            Padding="40 32"
+                            VerticalAlignment="Top"
+                            IsVisible="{Binding !Documents.Count}">
+                        <StackPanel Spacing="10" HorizontalAlignment="Center">
+                            <Border Classes="iconChip"
+                                    Width="40"
+                                    Height="40"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="▤"
+                                           FontSize="18"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Queue empty" Classes="subheading" HorizontalAlignment="Center" />
+                            <TextBlock Classes="caption"
+                                       TextAlignment="Center"
+                                       Text="No documents are waiting for review." />
+                        </StackPanel>
+                    </Border>
+
                     <ListBox Grid.Row="1"
                              Background="Transparent"
                              BorderThickness="0"
-                             Padding="10 0 10 12"
+                             Padding="14 0 14 16"
                              SelectionMode="Single"
+                             IsVisible="{Binding Documents.Count}"
                              ItemsSource="{Binding Documents}"
                              SelectedItem="{Binding SelectedDocument, Mode=TwoWay}">
                         <ListBox.Styles>
                             <Style Selector="ListBoxItem">
                                 <Setter Property="Padding" Value="0" />
-                                <Setter Property="Margin" Value="0 3" />
-                                <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusSm}" />
+                                <Setter Property="Margin" Value="0 4" />
+                                <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
                                 <Setter Property="Cursor" Value="Hand" />
                             </Style>
                         </ListBox.Styles>
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:DocumentPickerItem">
-                                <Border BorderBrush="{DynamicResource BorderBrush}"
+                                <Border Background="{DynamicResource Surface2Brush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1"
-                                        CornerRadius="{DynamicResource CornerRadiusSm}"
-                                        Padding="12 10">
-                                    <StackPanel Spacing="6">
-                                        <TextBlock Text="{Binding FileName}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                        CornerRadius="{DynamicResource CornerRadiusMd}"
+                                        Padding="14 12">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="{Binding FileName}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource ForegroundBrush}"
+                                                   TextTrimming="CharacterEllipsis" />
                                         <StackPanel Orientation="Horizontal" Spacing="8">
                                             <Border Classes="statusDot" Background="{Binding StateBrush}" />
                                             <TextBlock Text="{Binding StateLabel}" Classes="caption" VerticalAlignment="Center" />
                                             <TextBlock Text="·" Classes="caption" VerticalAlignment="Center" />
                                             <TextBlock Text="{Binding TypeLabel}" Classes="caption" VerticalAlignment="Center" />
                                         </StackPanel>
-                                        <TextBlock Text="{Binding ExceptionLabel}"
-                                                   Classes="caption"
-                                                   IsVisible="{Binding HasExceptions}"
-                                                   Foreground="{DynamicResource WarningBrush}" />
+                                        <Border Classes="badge warning"
+                                                HorizontalAlignment="Left"
+                                                IsVisible="{Binding HasExceptions}">
+                                            <TextBlock Text="{Binding ExceptionLabel}" />
+                                        </Border>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -66,58 +103,83 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="1" Classes="panel" Padding="0" ClipToBounds="True">
+            <Border Grid.Column="1" Classes="card" Padding="0" ClipToBounds="True">
                 <Grid RowDefinitions="Auto,*">
-                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="18 16 18 12">
-                        <TextBlock Grid.Column="0" Text="SOURCE PAGE" Classes="caption" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1"
-                                   Classes="caption"
-                                   VerticalAlignment="Center"
-                                   IsVisible="{Binding HasDocument}"
-                                   Text="{Binding CurrentPage, StringFormat='Page {0}'}" />
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="22 22 22 14">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="SOURCE PAGE" Classes="eyebrow" />
+                            <TextBlock Classes="caption"
+                                       IsVisible="{Binding HasDocument}"
+                                       Text="{Binding SelectedDocument.FileName}"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <Border Grid.Column="1"
+                                Classes="badge info"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding HasDocument}">
+                            <TextBlock Text="{Binding CurrentPage, StringFormat='Page {0}'}" />
+                        </Border>
                     </Grid>
 
                     <Panel Grid.Row="1">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                      VerticalScrollBarVisibility="Auto"
-                                      IsVisible="{Binding HasPageImage}">
-                            <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="18">
-                                <Image Name="PageImageSurface"
-                                       Source="{Binding PageImage}"
-                                       Stretch="Uniform"
-                                       Width="{Binding PageImageWidth}"
-                                       Height="{Binding PageImageHeight}" />
-                                <ItemsControl ItemsSource="{Binding Citations}"
-                                              Width="{Binding #PageImageSurface.Bounds.Width}"
-                                              Height="{Binding #PageImageSurface.Bounds.Height}"
-                                              SizeChanged="OnOverlaySizeChanged">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <Canvas />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:CitationRegion">
-                                            <Border Canvas.Left="{Binding Left}"
-                                                    Canvas.Top="{Binding Top}"
-                                                    Width="{Binding Width}"
-                                                    Height="{Binding Height}"
-                                                    Background="{Binding FillBrush}"
-                                                    BorderBrush="{Binding StrokeBrush}"
-                                                    BorderThickness="{Binding StrokeThickness}"
-                                                    ToolTip.Tip="{Binding Quote}"
-                                                    CornerRadius="3" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Grid>
-                        </ScrollViewer>
+                        <Border Background="{DynamicResource Surface2Brush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="0 1 0 0"
+                                IsVisible="{Binding HasPageImage}">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
+                                    <Border CornerRadius="{DynamicResource CornerRadiusMd}"
+                                            BoxShadow="{DynamicResource ShadowSoft}"
+                                            ClipToBounds="True">
+                                        <Image Name="PageImageSurface"
+                                               Source="{Binding PageImage}"
+                                               Stretch="Uniform"
+                                               Width="{Binding PageImageWidth}"
+                                               Height="{Binding PageImageHeight}" />
+                                    </Border>
+                                    <ItemsControl ItemsSource="{Binding Citations}"
+                                                  Width="{Binding #PageImageSurface.Bounds.Width}"
+                                                  Height="{Binding #PageImageSurface.Bounds.Height}"
+                                                  SizeChanged="OnOverlaySizeChanged">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <Canvas />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:CitationRegion">
+                                                <Border Canvas.Left="{Binding Left}"
+                                                        Canvas.Top="{Binding Top}"
+                                                        Width="{Binding Width}"
+                                                        Height="{Binding Height}"
+                                                        Background="{Binding FillBrush}"
+                                                        BorderBrush="{Binding StrokeBrush}"
+                                                        BorderThickness="{Binding StrokeThickness}"
+                                                        ToolTip.Tip="{Binding Quote}"
+                                                        CornerRadius="3" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </ScrollViewer>
+                        </Border>
 
                         <Border IsVisible="{Binding !HasPageImage}"
-                                Padding="32"
+                                Padding="40"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
-                            <StackPanel Spacing="8" MaxWidth="320" HorizontalAlignment="Center">
+                            <StackPanel Spacing="12" MaxWidth="340" HorizontalAlignment="Center">
+                                <Border Classes="iconChip"
+                                        Width="44"
+                                        Height="44"
+                                        HorizontalAlignment="Center">
+                                    <TextBlock Text="◰"
+                                               FontSize="20"
+                                               Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
                                 <TextBlock Text="No page preview" Classes="subheading" HorizontalAlignment="Center" />
                                 <TextBlock Classes="muted"
                                            TextAlignment="Center"
@@ -127,27 +189,73 @@
 
                         <Border IsVisible="{Binding !HasDocument}"
                                 Background="{DynamicResource SurfaceBrush}"
-                                Padding="32"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
-                            <StackPanel Spacing="8" MaxWidth="320" HorizontalAlignment="Center">
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="0 1 0 0"
+                                Padding="40">
+                            <StackPanel Spacing="12"
+                                        MaxWidth="340"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                <Border Classes="iconChip"
+                                        Width="44"
+                                        Height="44"
+                                        HorizontalAlignment="Center">
+                                    <TextBlock Text="▤"
+                                               FontSize="20"
+                                               Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
                                 <TextBlock Text="Select a document" Classes="subheading" HorizontalAlignment="Center" />
                                 <TextBlock Classes="muted"
                                            TextAlignment="Center"
                                            Text="Choose a document from the list to review its citations, fields, and reconciliation." />
                             </StackPanel>
                         </Border>
+
+                        <Border Background="{DynamicResource GlassStrongBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="0 1 0 0"
+                                IsVisible="{Binding IsBusy}">
+                            <StackPanel Spacing="14"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                <Border Classes="iconChip"
+                                        Width="44"
+                                        Height="44"
+                                        HorizontalAlignment="Center">
+                                    <TextBlock Text="◴"
+                                               FontSize="20"
+                                               Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="Loading document"
+                                           Classes="subheading"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Classes="caption"
+                                           TextAlignment="Center"
+                                           Text="Fetching page image, fields, and reconciliation." />
+                            </StackPanel>
+                        </Border>
                     </Panel>
                 </Grid>
             </Border>
 
-            <Border Grid.Column="2" Classes="panel" Padding="0">
+            <Border Grid.Column="2" Classes="glass" Padding="0" ClipToBounds="True">
                 <Grid RowDefinitions="*,Auto">
-                    <ScrollViewer Grid.Row="0" Padding="18 16 18 8">
-                        <StackPanel Spacing="18">
+                    <ScrollViewer Grid.Row="0" Padding="22 22 22 10">
+                        <StackPanel Spacing="24">
 
-                            <StackPanel Spacing="10">
-                                <TextBlock Text="CANONICAL FIELDS" Classes="caption" />
+                            <StackPanel Spacing="14">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" Text="CANONICAL FIELDS" Classes="eyebrow" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1"
+                                            Classes="badge neutral"
+                                            IsVisible="{Binding HasFields}">
+                                        <TextBlock Text="{Binding Fields.Count, StringFormat='{}{0} fields'}" />
+                                    </Border>
+                                </Grid>
 
                                 <ItemsControl ItemsSource="{Binding Fields}" IsVisible="{Binding HasFields}">
                                     <ItemsControl.ItemTemplate>
@@ -155,26 +263,32 @@
                                             <Border Background="{Binding HighlightBrush}"
                                                     BorderBrush="{DynamicResource BorderBrush}"
                                                     BorderThickness="1"
-                                                    CornerRadius="{DynamicResource CornerRadiusSm}"
-                                                    Padding="12 10"
-                                                    Margin="0 3"
+                                                    CornerRadius="{DynamicResource CornerRadiusMd}"
+                                                    Padding="16 14"
+                                                    Margin="0 5"
                                                     PointerEntered="OnFieldPointerEntered"
                                                     PointerExited="OnFieldPointerExited">
-                                                <StackPanel Spacing="8">
+                                                <StackPanel Spacing="10">
                                                     <Grid ColumnDefinitions="*,Auto">
                                                         <TextBlock Grid.Column="0"
                                                                    Text="{Binding Label}"
-                                                                   FontWeight="Medium"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource ForegroundBrush}"
                                                                    VerticalAlignment="Center"
                                                                    TextTrimming="CharacterEllipsis" />
                                                         <Border Grid.Column="1"
-                                                                CornerRadius="{DynamicResource CornerRadiusSm}"
-                                                                Padding="8 3"
+                                                                CornerRadius="{DynamicResource CornerRadiusPill}"
+                                                                Padding="10 4"
                                                                 Background="{DynamicResource Surface2Brush}"
+                                                                BorderBrush="{DynamicResource BorderBrush}"
+                                                                BorderThickness="1"
                                                                 ToolTip.Tip="{Binding ConfidenceTier}">
                                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                                 <Border Classes="statusDot" Background="{Binding ConfidenceBrush}" />
-                                                                <TextBlock Text="{Binding ConfidenceLabel}" Classes="caption" VerticalAlignment="Center" />
+                                                                <TextBlock Text="{Binding ConfidenceLabel}"
+                                                                           Classes="caption"
+                                                                           FontWeight="SemiBold"
+                                                                           VerticalAlignment="Center" />
                                                             </StackPanel>
                                                         </Border>
                                                     </Grid>
@@ -183,20 +297,20 @@
                                                              FontSize="{DynamicResource FontSizeBody}" />
                                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                                         <TextBlock Text="{Binding StatusLabel}" Classes="caption" VerticalAlignment="Center" />
-                                                        <TextBlock Text="· cited"
-                                                                   Classes="caption"
-                                                                   VerticalAlignment="Center"
-                                                                   IsVisible="{Binding HasCitations}"
-                                                                   Foreground="{DynamicResource PrimaryBrush}" />
-                                                        <Border Classes="chip"
-                                                                Padding="7 2"
-                                                                IsVisible="{Binding IsEdited}">
-                                                            <TextBlock Text="Edited" Classes="caption" Foreground="{DynamicResource AccentBrush}" />
+                                                        <Border Classes="badge info"
+                                                                Padding="8 3"
+                                                                IsVisible="{Binding HasCitations}">
+                                                            <TextBlock Text="Cited" />
                                                         </Border>
-                                                        <Border Classes="chip"
-                                                                Padding="7 2"
+                                                        <Border Classes="badge info"
+                                                                Padding="8 3"
+                                                                IsVisible="{Binding IsEdited}">
+                                                            <TextBlock Text="Edited" />
+                                                        </Border>
+                                                        <Border Classes="badge success"
+                                                                Padding="8 3"
                                                                 IsVisible="{Binding IsReviewed}">
-                                                            <TextBlock Text="Confirmed" Classes="caption" Foreground="{DynamicResource SuccessBrush}" />
+                                                            <TextBlock Text="Confirmed" />
                                                         </Border>
                                                     </StackPanel>
                                                 </StackPanel>
@@ -205,47 +319,69 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
-                                <TextBlock Classes="muted"
-                                           Text="No fields were extracted from this document."
-                                           IsVisible="{Binding !HasFields}" />
+                                <Border Padding="20"
+                                        Background="{DynamicResource Surface2Brush}"
+                                        CornerRadius="{DynamicResource CornerRadiusMd}"
+                                        IsVisible="{Binding !HasFields}">
+                                    <TextBlock Classes="muted"
+                                               TextAlignment="Center"
+                                               Text="No fields were extracted from this document." />
+                                </Border>
                             </StackPanel>
 
-                            <StackPanel Spacing="10" IsVisible="{Binding HasReconciliation}">
-                                <TextBlock Text="RECONCILIATION" Classes="caption" />
+                            <StackPanel Spacing="14" IsVisible="{Binding HasReconciliation}">
+                                <TextBlock Text="RECONCILIATION" Classes="eyebrow" />
                                 <ItemsControl ItemsSource="{Binding Reconciliation}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:ReconciliationItem">
                                             <Border BorderBrush="{DynamicResource BorderBrush}"
                                                     BorderThickness="1"
-                                                    CornerRadius="{DynamicResource CornerRadiusSm}"
+                                                    CornerRadius="{DynamicResource CornerRadiusMd}"
                                                     Background="{DynamicResource Surface2Brush}"
-                                                    Padding="12 10"
-                                                    Margin="0 3">
-                                                <StackPanel Spacing="8">
+                                                    Padding="16 14"
+                                                    Margin="0 5">
+                                                <StackPanel Spacing="12">
                                                     <Grid ColumnDefinitions="*,Auto">
-                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="Medium" VerticalAlignment="Center" />
+                                                        <TextBlock Grid.Column="0"
+                                                                   Text="{Binding Name}"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource ForegroundBrush}"
+                                                                   VerticalAlignment="Center" />
                                                         <Border Grid.Column="1"
-                                                                CornerRadius="{DynamicResource CornerRadiusSm}"
-                                                                Padding="8 3"
-                                                                Background="{DynamicResource SurfaceBrush}">
+                                                                CornerRadius="{DynamicResource CornerRadiusPill}"
+                                                                Padding="10 4"
+                                                                Background="{DynamicResource SurfaceBrush}"
+                                                                BorderBrush="{DynamicResource BorderBrush}"
+                                                                BorderThickness="1">
                                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                                 <Border Classes="statusDot" Background="{Binding StatusBrush}" />
-                                                                <TextBlock Text="{Binding StatusLabel}" Classes="caption" VerticalAlignment="Center" />
+                                                                <TextBlock Text="{Binding StatusLabel}"
+                                                                           Classes="caption"
+                                                                           FontWeight="SemiBold"
+                                                                           VerticalAlignment="Center" />
                                                             </StackPanel>
                                                         </Border>
                                                     </Grid>
-                                                    <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
-                                                        <StackPanel Grid.Column="0" Spacing="2">
-                                                            <TextBlock Text="Detected" Classes="caption" />
-                                                            <TextBlock Text="{Binding DetectedValue}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                                    <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="14">
+                                                        <StackPanel Grid.Column="0" Spacing="3">
+                                                            <TextBlock Text="DETECTED" Classes="eyebrow" />
+                                                            <TextBlock Text="{Binding DetectedValue}"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource ForegroundBrush}"
+                                                                       TextTrimming="CharacterEllipsis" />
                                                         </StackPanel>
-                                                        <StackPanel Grid.Column="1" Spacing="2">
-                                                            <TextBlock Text="Expected" Classes="caption" />
-                                                            <TextBlock Text="{Binding ExpectedValue}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                                        <StackPanel Grid.Column="1" Spacing="3">
+                                                            <TextBlock Text="EXPECTED" Classes="eyebrow" />
+                                                            <TextBlock Text="{Binding ExpectedValue}"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource ForegroundBrush}"
+                                                                       TextTrimming="CharacterEllipsis" />
                                                         </StackPanel>
-                                                        <StackPanel Grid.Column="2" Spacing="2">
-                                                            <TextBlock Text="Delta" Classes="caption" />
-                                                            <TextBlock Text="{Binding DeltaLabel}" FontWeight="Medium" />
+                                                        <StackPanel Grid.Column="2" Spacing="3">
+                                                            <TextBlock Text="DELTA" Classes="eyebrow" />
+                                                            <TextBlock Text="{Binding DeltaLabel}"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{Binding StatusBrush}" />
                                                         </StackPanel>
                                                     </Grid>
                                                     <TextBlock Text="{Binding Explanation}"
@@ -262,17 +398,18 @@
                     </ScrollViewer>
 
                     <Border Grid.Row="1"
-                            BorderBrush="{DynamicResource BorderBrush}"
+                            Background="{DynamicResource GlassStrongBrush}"
+                            BorderBrush="{DynamicResource GlassBorderBrush}"
                             BorderThickness="0 1 0 0"
-                            Padding="18 14"
+                            Padding="22 18"
                             IsVisible="{Binding HasDocument}">
-                        <StackPanel Spacing="12">
+                        <StackPanel Spacing="14">
                             <TextBox Text="{Binding ReviewerNotes, Mode=TwoWay}"
                                      PlaceholderText="Reviewer notes (optional)"
                                      AcceptsReturn="True"
-                                     MaxHeight="72"
+                                     MaxHeight="76"
                                      TextWrapping="Wrap" />
-                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                                 <Button Grid.Column="0"
                                         Classes="primary"
                                         HorizontalAlignment="Stretch"
@@ -280,14 +417,12 @@
                                         Command="{Binding ApproveCommand}"
                                         Content="Approve" />
                                 <Button Grid.Column="1"
-                                        Classes="ghost"
-                                        HorizontalAlignment="Stretch"
+                                        Classes="secondary"
                                         HorizontalContentAlignment="Center"
                                         Command="{Binding NeedsCorrectionCommand}"
                                         Content="Needs fix" />
                                 <Button Grid.Column="2"
                                         Classes="ghost"
-                                        HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center"
                                         Command="{Binding RejectCommand}"
                                         Content="Reject" />

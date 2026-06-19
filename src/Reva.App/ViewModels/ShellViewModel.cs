@@ -35,7 +35,7 @@ public partial class ShellViewModel : ViewModelBase, IDisposable
     private bool _isOnline;
 
     [ObservableProperty]
-    private bool _isDarkTheme = true;
+    private bool _isDarkTheme;
 
     [ObservableProperty]
     private bool _isCopilotOpen;
@@ -71,14 +71,14 @@ public partial class ShellViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void ToggleCopilot() => IsCopilotOpen = !IsCopilotOpen;
 
-#pragma warning disable CA1822
     [RelayCommand]
-    private void StartTour()
-    {
-    }
-#pragma warning restore CA1822
+    private Task RefreshModelStatusAsync(CancellationToken cancellationToken) =>
+        RefreshStatusCoreAsync(cancellationToken);
 
-    public async Task RefreshStatusAsync(CancellationToken cancellationToken = default)
+    public Task RefreshStatusAsync(CancellationToken cancellationToken = default) =>
+        RefreshStatusCoreAsync(cancellationToken);
+
+    private async Task RefreshStatusCoreAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -86,7 +86,10 @@ public partial class ShellViewModel : ViewModelBase, IDisposable
             var model = await _client.GetActiveModelAsync(cancellationToken);
             IsOnline = online;
             StatusText = online ? OnlineStatus : OfflineStatus;
-            ActiveModel = string.IsNullOrWhiteSpace(model) ? string.Empty : model!;
+            if (!string.IsNullOrWhiteSpace(model))
+            {
+                ActiveModel = model!;
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

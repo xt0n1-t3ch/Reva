@@ -7,7 +7,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>Reva</AssemblyName>
     <Product>Reva</Product>
-    <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\reva.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

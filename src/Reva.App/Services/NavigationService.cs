@@ -12,13 +12,13 @@ public sealed class NavigationService : INavigationService, IDisposable
 {
     private readonly IServiceProvider _services;
     private readonly IDisposable? _actionSubscription;
-    private readonly Dictionary<string, Type> _routes = new(StringComparer.OrdinalIgnoreCase)
+    private readonly Dictionary<string, RouteRegistration> _routes = new(StringComparer.OrdinalIgnoreCase)
     {
-        [AppRoutes.Dashboard] = typeof(DashboardViewModel),
-        [AppRoutes.Review] = typeof(ReviewViewModel),
-        [AppRoutes.Mappings] = typeof(MappingsViewModel),
-        [AppRoutes.Export] = typeof(ExportViewModel),
-        [AppRoutes.Settings] = typeof(SettingsViewModel)
+        [AppRoutes.Dashboard] = new RouteRegistration(AppRoutes.Dashboard, typeof(DashboardViewModel)),
+        [AppRoutes.Review] = new RouteRegistration(AppRoutes.Review, typeof(ReviewViewModel)),
+        [AppRoutes.Mappings] = new RouteRegistration(AppRoutes.Mappings, typeof(MappingsViewModel)),
+        [AppRoutes.Export] = new RouteRegistration(AppRoutes.Export, typeof(ExportViewModel)),
+        [AppRoutes.Settings] = new RouteRegistration(AppRoutes.Settings, typeof(SettingsViewModel))
     };
 
     public NavigationService(IServiceProvider services, IAppActionBus actionBus)
@@ -35,23 +35,23 @@ public sealed class NavigationService : INavigationService, IDisposable
 
     public void NavigateTo(string route)
     {
-        if (string.IsNullOrWhiteSpace(route) || !_routes.TryGetValue(route, out var viewModelType))
+        if (string.IsNullOrWhiteSpace(route) || !_routes.TryGetValue(route, out var registration))
         {
             return;
         }
 
-        if (string.Equals(CurrentRoute, route, StringComparison.OrdinalIgnoreCase) && Current is not null)
+        if (string.Equals(CurrentRoute, registration.Route, StringComparison.Ordinal) && Current is not null)
         {
             return;
         }
 
-        if (_services.GetService(viewModelType) is not ViewModelBase viewModel)
+        if (_services.GetService(registration.ViewModelType) is not ViewModelBase viewModel)
         {
             return;
         }
 
         Current = viewModel;
-        CurrentRoute = route;
+        CurrentRoute = registration.Route;
         CurrentChanged?.Invoke(viewModel);
     }
 
@@ -81,6 +81,8 @@ public sealed class NavigationService : INavigationService, IDisposable
                 break;
         }
     }
+
+    private readonly record struct RouteRegistration(string Route, Type ViewModelType);
 
     private sealed class ActionObserver(NavigationService owner) : IObserver<AppAction>
     {

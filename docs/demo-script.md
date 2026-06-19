@@ -48,19 +48,19 @@ Reva can also process Excel/CSV, digital PDFs, scanned PDFs and images, Word, Po
 - **Trustworthy:** every extracted field carries provenance; geometry-backed citations highlight source regions; analyst edits become **Reviewed** instead of artificial confidence.
 - **Adaptive:** schema mapping starts with aliases and fuzzy matching, then learns sender/domain rules from corrections.
 - **Operational:** reconciliation turns mismatches into actionable field-level exceptions instead of burying them in tables.
-- **Simple to deploy:** the release is one `Reva.exe` serving the UI, API, OCR, and assistant endpoint from one localhost origin.
+- **Simple to deploy:** the release is one self-contained `Reva.exe`. Double-clicking it opens a native window that hosts the full pipeline, database, OCR, and copilot in one process — no installer, no web server, no port.
 
 ## Proof commands
 
 ```powershell
-dotnet test Reva.slnx
-cd web
-npx playwright test
+dotnet build Reva.slnx -warnaserror
+dotnet test
 ```
 
 Package proof:
 
 ```powershell
-./scripts/package-windows.ps1 -Version 1.3.0
-./tests/package-smoke.ps1
+./scripts/package-windows.ps1 -Version 2.0.0
 ```
+
+The native build runs warnings-as-errors, so a green build is a real correctness signal. The Playwright suite under `web/` exercises the legacy browser host and is not part of the 2.0 product.

@@ -1,12 +1,15 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
+using Microsoft.Extensions.DependencyInjection;
 using Reva.App.ViewModels;
 using Reva.Core.Documents;
 
@@ -14,32 +17,44 @@ namespace Reva.App.Views;
 
 public sealed class UploadStatusBrushConverter : IValueConverter
 {
-    public static readonly UploadStatusBrushConverter Instance = new();
+    private static readonly IBrush Fallback = new SolidColorBrush(Color.FromRgb(0x6B, 0x6A, 0x73));
 
-    private static readonly IBrush Pending = new SolidColorBrush(Color.FromRgb(0x8A, 0x95, 0xAD));
-    private static readonly IBrush Uploading = new SolidColorBrush(Color.FromRgb(0x4F, 0x7D, 0xF9));
-    private static readonly IBrush Done = new SolidColorBrush(Color.FromRgb(0x34, 0xD3, 0x99));
-    private static readonly IBrush Warning = new SolidColorBrush(Color.FromRgb(0xF5, 0x9E, 0x0B));
-    private static readonly IBrush Failed = new SolidColorBrush(Color.FromRgb(0xF8, 0x71, 0x71));
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var token = value is UploadFileStatus status
+            ? status switch
+            {
+                UploadFileStatus.Uploading => "AccentBrush",
+                UploadFileStatus.Done => "SuccessBrush",
+                UploadFileStatus.Warning => "WarningBrush",
+                UploadFileStatus.Failed => "DangerBrush",
+                _ => "MutedForegroundBrush",
+            }
+            : "MutedForegroundBrush";
 
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is UploadFileStatus status ? status switch
-        {
-            UploadFileStatus.Uploading => Uploading,
-            UploadFileStatus.Done => Done,
-            UploadFileStatus.Warning => Warning,
-            UploadFileStatus.Failed => Failed,
-            _ => Pending,
-        } : Pending;
+        return ResolveBrush(token);
+    }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
+
+    private static IBrush ResolveBrush(string token)
+    {
+        if (Application.Current is { } application)
+        {
+            var theme = application.ActualThemeVariant ?? ThemeVariant.Light;
+            if (application.TryGetResource(token, theme, out var resource) && resource is IBrush brush)
+            {
+                return brush;
+            }
+        }
+
+        return Fallback;
+    }
 }
 
 public sealed class UploadProgressVisibleConverter : IValueConverter
 {
-    public static readonly UploadProgressVisibleConverter Instance = new();
-
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         value is UploadFileStatus.Uploading;
 
@@ -60,6 +75,12 @@ public partial class UploadControl : UserControl
         AddHandler(DragDrop.DropEvent, OnDrop);
         AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
         AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
+
+        if (DataContext is null &&
+            (Application.Current as App)?.Services is { } services)
+        {
+            DataContext = services.GetService<UploadViewModel>();
+        }
     }
 
     private void OnDragEnter(object? sender, DragEventArgs e)

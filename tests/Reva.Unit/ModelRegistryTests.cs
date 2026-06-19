@@ -9,12 +9,19 @@ namespace Reva.Unit;
 
 public sealed class ModelRegistryTests
 {
+    private static IOptions<AiProcessingOptions> IsolatedOptions(AiProcessingOptions? options = null)
+    {
+        options ??= new AiProcessingOptions();
+        options.StateDirectory = Path.Combine(Path.GetTempPath(), "reva-modelreg-tests", Guid.NewGuid().ToString("N"));
+        return Options.Create(options);
+    }
+
     [Fact]
     public async Task IsOllamaAvailableAsyncReturnsFalseWhenHttpFails()
     {
         using var registry = new ModelRegistry(
             new FailingHttpClientFactory(),
-            Options.Create(new AiProcessingOptions()));
+            IsolatedOptions());
 
         var available = await registry.IsOllamaAvailableAsync(CancellationToken.None);
 
@@ -26,7 +33,7 @@ public sealed class ModelRegistryTests
     {
         using var registry = new ModelRegistry(
             new FailingHttpClientFactory(),
-            Options.Create(new AiProcessingOptions()));
+            IsolatedOptions());
 
         var models = await registry.ListAsync(CancellationToken.None);
 
@@ -48,7 +55,7 @@ public sealed class ModelRegistryTests
 
         using var registry = new ModelRegistry(
             new FixedResponseHttpClientFactory(HttpStatusCode.OK, json),
-            Options.Create(new AiProcessingOptions()));
+            IsolatedOptions());
 
         var models = await registry.ListAsync(CancellationToken.None);
 
@@ -73,7 +80,7 @@ public sealed class ModelRegistryTests
 
         using var registry = new ModelRegistry(
             new FixedResponseHttpClientFactory(HttpStatusCode.OK, json),
-            Options.Create(new AiProcessingOptions()));
+            IsolatedOptions());
 
         var models = await registry.ListAsync(CancellationToken.None);
 
@@ -86,7 +93,7 @@ public sealed class ModelRegistryTests
     {
         using var registry = new ModelRegistry(
             new FailingHttpClientFactory(),
-            Options.Create(new AiProcessingOptions()));
+            IsolatedOptions());
 
         await registry.SetActiveModelAsync("seeded-model", CancellationToken.None);
         var active = await registry.GetActiveModelAsync(CancellationToken.None);
@@ -99,7 +106,7 @@ public sealed class ModelRegistryTests
     {
         using var registry = new ModelRegistry(
             new FailingHttpClientFactory(),
-            Options.Create(new AiProcessingOptions { ActiveModel = string.Empty }));
+            IsolatedOptions(new AiProcessingOptions { ActiveModel = string.Empty }));
 
         await registry.SetActiveModelAsync(AiProcessingOptions.DefaultActiveModel, CancellationToken.None);
         var active = await registry.GetActiveModelAsync(CancellationToken.None);
@@ -112,7 +119,7 @@ public sealed class ModelRegistryTests
     {
         using var registry = new ModelRegistry(
             new FailingHttpClientFactory(),
-            Options.Create(new AiProcessingOptions()));
+            IsolatedOptions());
 
         await registry.SetActiveModelAsync("my-custom-model", CancellationToken.None);
         var active = await registry.GetActiveModelAsync(CancellationToken.None);
@@ -125,7 +132,7 @@ public sealed class ModelRegistryTests
     {
         using var registry = new ModelRegistry(
             new FailingHttpClientFactory(),
-            Options.Create(new AiProcessingOptions()));
+            IsolatedOptions());
 
         await registry.SetActiveModelAsync("established-model", CancellationToken.None);
         await registry.SetActiveModelAsync(string.Empty, CancellationToken.None);
@@ -139,7 +146,7 @@ public sealed class ModelRegistryTests
     {
         using var registry = new ModelRegistry(
             new FixedResponseHttpClientFactory(HttpStatusCode.ServiceUnavailable, string.Empty),
-            Options.Create(new AiProcessingOptions()));
+            IsolatedOptions());
 
         var available = await registry.IsOllamaAvailableAsync(CancellationToken.None);
 
@@ -153,7 +160,7 @@ public sealed class ModelRegistryTests
 
         using var registry = new ModelRegistry(
             new FixedResponseHttpClientFactory(HttpStatusCode.OK, json),
-            Options.Create(new AiProcessingOptions()));
+            IsolatedOptions());
 
         var available = await registry.IsOllamaAvailableAsync(CancellationToken.None);
 

@@ -13,24 +13,26 @@
         <conv:StringEqualsConverter x:Key="RouteActive" />
     </UserControl.Resources>
 
-    <Grid ColumnDefinitions="248,*,Auto" Background="{DynamicResource BgBrush}">
+    <Grid ColumnDefinitions="264,*,Auto" Background="Transparent">
 
         <Border Grid.Column="0"
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="0 0 1 0">
-            <Grid RowDefinitions="Auto,*,Auto" Margin="14">
+                Background="{DynamicResource GlassBrush}"
+                BorderBrush="{DynamicResource GlassBorderBrush}"
+                BorderThickness="0 0 1 0"
+                BoxShadow="{DynamicResource ShadowSoft}">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="16">
 
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="6 12 6 22">
-                    <Border Width="32" Height="32" CornerRadius="9" Background="{DynamicResource PrimaryBrush}">
-                        <TextBlock Text="R" FontWeight="Bold" FontSize="18" Foreground="#FFFFFFFF"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="11" Margin="6 14 6 26">
+                    <Border Width="36" Height="36" CornerRadius="10" ClipToBounds="True"
+                            BoxShadow="{DynamicResource ShadowSoft}">
+                        <Image Source="/Assets/reva-icon.png" Stretch="UniformToFill" />
                     </Border>
-                    <TextBlock Text="{Binding AppTitle}" Classes="heading" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding AppTitle}" Classes="subheading" FontSize="19"
+                               VerticalAlignment="Center" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Spacing="0">
-                    <TextBlock Text="WORKSPACE" Classes="caption" Margin="10 0 0 8" />
+                    <TextBlock Text="WORKSPACE" Classes="eyebrow" Margin="12 0 0 10" />
 
                     <Button Name="TourTargetNavDashboard"
                             Classes="nav"
@@ -88,7 +90,7 @@
                     </Button>
                 </StackPanel>
 
-                <Border Grid.Row="2" Classes="chip" Margin="4 0 4 4">
+                <Border Grid.Row="2" Classes="chip" Margin="2 18 2 4" HorizontalAlignment="Left">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Border Classes="statusDot"
                                 Background="{Binding IsOnline, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
@@ -101,23 +103,34 @@
         <Grid Grid.Column="1" RowDefinitions="Auto,*">
 
             <Border Grid.Row="0"
-                    Background="{DynamicResource SurfaceBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
+                    Background="{DynamicResource GlassBrush}"
+                    BorderBrush="{DynamicResource GlassBorderBrush}"
                     BorderThickness="0 0 0 1"
-                    Padding="22 14">
+                    BoxShadow="{DynamicResource ShadowSoft}"
+                    Padding="24 0"
+                    Height="64"
+                    ZIndex="1">
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding AppTitle}" Classes="subheading" VerticalAlignment="Center" />
-                        <Border Classes="chip" IsVisible="{Binding ActiveModel, Converter={x:Static conv:NonEmptyConverter.Instance}}">
-                            <StackPanel Orientation="Horizontal" Spacing="7">
-                                <Border Classes="statusDot"
-                                        Background="{Binding IsOnline, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
-                                <TextBlock Text="{Binding ActiveModel}" Classes="caption" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
+                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="WORKSPACE" Classes="eyebrow" />
+                        <TextBlock Text="Programmer Analyst" Classes="subheading" />
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button Classes="icon"
+                                Padding="0"
+                                CornerRadius="{DynamicResource CornerRadiusPill}"
+                                Command="{Binding RefreshModelStatusCommand}"
+                                ToolTip.Tip="{Binding StatusText}"
+                                IsVisible="{Binding ActiveModel, Converter={x:Static conv:NonEmptyConverter.Instance}}">
+                            <Border Classes="chip">
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <Border Classes="statusDot"
+                                            Background="{Binding IsOnline, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
+                                    <TextBlock Text="{Binding ActiveModel}" Classes="caption" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </Button>
                         <Button Name="TourTargetTourButton"
                                 Classes="ghost"
                                 Click="OnStartTourClicked"
@@ -128,21 +141,25 @@
                 </Grid>
             </Border>
 
-            <ContentControl Name="TourTargetContentHost" Grid.Row="1" Content="{Binding Current}" />
+            <ContentControl Name="TourTargetContentHost" Grid.Row="1" Content="{Binding Current}"
+                            Background="{DynamicResource BgBrush}" />
         </Grid>
 
         <Border Name="TourTargetCopilotDock"
                 Grid.Column="2"
                 Width="380"
                 IsVisible="{Binding IsCopilotOpen}"
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="1 0 0 0">
+                Background="{DynamicResource GlassBrush}"
+                BorderBrush="{DynamicResource GlassBorderBrush}"
+                BorderThickness="1 0 0 0"
+                BoxShadow="{DynamicResource ShadowSoft}">
             <Grid RowDefinitions="Auto,*">
-                <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0 0 0 1" Padding="18 14">
+                <Border Grid.Row="0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0 0 0 1"
+                        Padding="20 0" Height="64">
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Grid.Column="0" Text="Copilot" Classes="subheading" VerticalAlignment="Center" />
-                        <Button Grid.Column="1" Classes="icon" Command="{Binding ToggleCopilotCommand}" Content="✕" />
+                        <Button Grid.Column="1" Classes="icon" Command="{Binding ToggleCopilotCommand}"
+                                Content="✕" VerticalAlignment="Center" />
                     </Grid>
                 </Border>
                 <ContentControl Grid.Row="1" Content="{Binding Copilot}" />

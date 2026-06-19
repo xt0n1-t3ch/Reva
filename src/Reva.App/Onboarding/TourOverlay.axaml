@@ -7,79 +7,93 @@
              IsVisible="{Binding IsVisible}"
              IsHitTestVisible="True">
 
-    <UserControl.Resources>
-        <SolidColorBrush x:Key="TourScrimBrush" Color="#B3060912" />
-    </UserControl.Resources>
-
     <Grid>
 
         <Canvas IsVisible="{Binding HasHighlight}" IsHitTestVisible="True">
             <Border Canvas.Left="0" Canvas.Top="0"
                     Width="{Binding SurfaceWidth}"
                     Height="{Binding DimTopHeight}"
-                    Background="{StaticResource TourScrimBrush}" />
+                    Background="{DynamicResource ScrimBrush}" />
             <Border Canvas.Left="0"
                     Canvas.Top="{Binding DimBottomY}"
                     Width="{Binding SurfaceWidth}"
                     Height="{Binding DimBottomHeight}"
-                    Background="{StaticResource TourScrimBrush}" />
+                    Background="{DynamicResource ScrimBrush}" />
             <Border Canvas.Left="0"
                     Canvas.Top="{Binding DimMiddleY}"
                     Width="{Binding DimLeftWidth}"
                     Height="{Binding DimMiddleHeight}"
-                    Background="{StaticResource TourScrimBrush}" />
+                    Background="{DynamicResource ScrimBrush}" />
             <Border Canvas.Left="{Binding DimRightX}"
                     Canvas.Top="{Binding DimMiddleY}"
                     Width="{Binding DimRightWidth}"
                     Height="{Binding DimMiddleHeight}"
-                    Background="{StaticResource TourScrimBrush}" />
+                    Background="{DynamicResource ScrimBrush}" />
             <Border Canvas.Left="{Binding HighlightX}"
                     Canvas.Top="{Binding HighlightY}"
                     Width="{Binding HighlightWidth}"
                     Height="{Binding HighlightHeight}"
                     CornerRadius="{Binding HighlightCornerRadiusValue}"
+                    Background="Transparent"
                     BorderThickness="2"
-                    BorderBrush="{DynamicResource PrimaryBrush}"
+                    BorderBrush="{DynamicResource AccentBrush}"
+                    BoxShadow="{DynamicResource ShadowGlass}"
                     IsHitTestVisible="False" />
         </Canvas>
 
         <Border IsVisible="{Binding !HasHighlight}"
-                Background="{StaticResource TourScrimBrush}" />
+                Background="{DynamicResource ScrimBrush}" />
 
-        <Border Width="{Binding CardWidthValue}"
+        <Border Classes="glassStrong"
+                Padding="{DynamicResource SpacingCard}"
+                Width="{Binding CardWidthValue}"
                 VerticalAlignment="{Binding CardCentered, Converter={x:Static onb:TourCenteredVerticalAlignmentConverter.Instance}}"
                 HorizontalAlignment="{Binding CardCentered, Converter={x:Static onb:TourCenteredHorizontalAlignmentConverter.Instance}}"
-                Margin="{Binding CardMargin}"
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="1"
-                CornerRadius="{DynamicResource CornerRadiusLg}"
-                BoxShadow="0 18 48 0 #5C000000"
-                Padding="22">
-            <StackPanel Spacing="14">
+                Margin="{Binding CardMargin}">
+            <StackPanel Spacing="20">
 
-                <StackPanel Spacing="8">
-                    <TextBlock Text="{Binding Counter}"
-                               Foreground="{DynamicResource PrimaryBrush}"
-                               FontWeight="SemiBold"
-                               FontSize="{DynamicResource FontSizeCaption}" />
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Border Classes="logoChip" Width="22" Height="22">
+                            <TextBlock Text="R"
+                                       FontWeight="Bold"
+                                       FontSize="{DynamicResource FontSizeCaption}"
+                                       Foreground="{DynamicResource AccentForegroundBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{Binding Counter}"
+                                   Classes="eyebrow"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AccentBrush}" />
+                    </StackPanel>
                     <TextBlock Text="{Binding Title}"
-                               Classes="heading"
+                               Classes="subheading"
                                TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Body}"
                                Classes="muted"
+                               LineHeight="21"
                                TextWrapping="Wrap" />
                 </StackPanel>
 
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0 4 0 0">
+                <ProgressBar Minimum="0"
+                             Maximum="{Binding StepTotal}"
+                             Value="{Binding StepProgress}"
+                             Height="4"
+                             CornerRadius="{DynamicResource CornerRadiusPill}"
+                             Background="{DynamicResource Surface3Brush}"
+                             Foreground="{DynamicResource AccentBrush}"
+                             IsVisible="{Binding HasStepProgress}" />
+
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                     <Button Grid.Column="0"
                             Classes="ghost"
                             Content="Skip"
                             Command="{Binding SkipCommand}" />
                     <Button Grid.Column="2"
-                            Classes="ghost"
+                            Classes="secondary"
                             Content="Back"
-                            Margin="0 0 8 0"
+                            Margin="0 0 10 0"
                             IsEnabled="{Binding CanGoBack}"
                             Command="{Binding BackCommand}" />
                     <Button Grid.Column="3"

@@ -70,6 +70,7 @@ public partial class CopilotViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
+    [NotifyCanExecuteChangedFor(nameof(UseSuggestionCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -102,7 +103,13 @@ public partial class CopilotViewModel : ViewModelBase, IDisposable
 
     public bool HasActivity => !string.IsNullOrEmpty(ActivityText);
 
+    public bool IsOffline => !IsOnline;
+
+    public static string OfflineNotice => OfflineHint;
+
     partial void OnActivityTextChanged(string value) => OnPropertyChanged(nameof(HasActivity));
+
+    partial void OnIsOnlineChanged(bool value) => OnPropertyChanged(nameof(IsOffline));
 
     public async Task RefreshStatusAsync(CancellationToken cancellationToken = default)
     {
@@ -411,6 +418,8 @@ public partial class CopilotMessageViewModel : ObservableObject
 
     public bool HasSteps => Steps.Count > 0;
 
+    public bool IsThinking => IsStreaming && _builder.Length == 0 && Steps.Count == 0;
+
     public void AppendText(string delta)
     {
         if (string.IsNullOrEmpty(delta))
@@ -420,6 +429,7 @@ public partial class CopilotMessageViewModel : ObservableObject
 
         _builder.Append(delta);
         Text = _builder.ToString();
+        OnPropertyChanged(nameof(IsThinking));
     }
 
     public CopilotStepViewModel AddStep(string callId, string name, string arguments)
@@ -432,6 +442,7 @@ public partial class CopilotMessageViewModel : ObservableObject
 
         Steps.Add(step);
         OnPropertyChanged(nameof(HasSteps));
+        OnPropertyChanged(nameof(IsThinking));
         return step;
     }
 
@@ -452,6 +463,8 @@ public partial class CopilotMessageViewModel : ObservableObject
     }
 
     public void Complete() => IsStreaming = false;
+
+    partial void OnIsStreamingChanged(bool value) => OnPropertyChanged(nameof(IsThinking));
 }
 
 public partial class CopilotStepViewModel : ObservableObject

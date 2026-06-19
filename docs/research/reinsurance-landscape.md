@@ -124,7 +124,7 @@ Reva borrows the best interaction pattern from intelligent document processing: 
 | Quantiphi / Dociphi-style document AI | Insurance-oriented document AI and extraction workflows. See [Quantiphi](https://www.quantiphi.com/). | Reva keeps the workflow local, transparent, and source-cited. |
 | Generic IDP / OCR tools | Extract fields and tables from documents, often with confidence and review queues. | Reva adds reinsurance canonical fields, sender-specific mapping memory, and computed reconciliation exceptions. |
 
-The practical UX pattern is consistent: ingest any-format files, map fields into a canonical model, validate with rules, route exceptions to humans, show source evidence, and export clean data. Reva implements that loop in a single localhost package.
+The practical UX pattern is consistent: ingest any-format files, map fields into a canonical model, validate with rules, route exceptions to humans, show source evidence, and export clean data. Reva implements that loop in a single self-contained native desktop application that runs fully on-device.
 
 ## 7. Product implications
 
