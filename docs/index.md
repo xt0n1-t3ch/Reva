@@ -1,46 +1,50 @@
-# Reva docs
+# Reva documentation
 
-Reva is a reinsurance document-intelligence web app. It ingests operational documents, extracts source-cited fields, reconciles totals, lets analysts review exceptions, and exports clean data.
+Reva is a local-first document-intelligence workspace for reinsurance operations. It turns inbound documents into source-cited, reconciled, reviewable, export-ready data.
+
+This documentation is written for two audiences:
+
+- **Non-programmers** who need to understand what the product does and why it matters.
+- **Interviewers and engineers** who need to understand the architecture, tradeoffs, and proof points quickly.
 
 ## Start here
 
-| Page | Use it for |
+| Page | Best for | What you will learn |
+|:---|:---|:---|
+| [README](../README.md) | First impression | Product value, screenshots, quick start, and repo map. |
+| [Product guide](product-guide.md) | Non-technical overview | The end-to-end workflow in plain language. |
+| [Demo script](demo-script.md) | Interviews and showcases | A short, reliable walkthrough with talk track. |
+| [Architecture](architecture.md) | Technical review | Boundaries, data flow, runtime shape, and extension points. |
+| [AI and pipeline](ai-pipeline.md) | Workflow explanation | Deterministic stages, optional model assist, and agent tools. |
+| [Packaging](packaging.md) | Release handoff | Development, static export, Windows packaging, and validation. |
+
+## Learning track
+
+| Page | Use it when |
 |:---|:---|
-| [README](../README.md) | Product overview, stack, quick start, architecture diagram. |
-| [Architecture](architecture.md) | Web frontend, API, domain core, infrastructure, storage, and provider seams. |
-| [AI pipeline](ai-pipeline.md) | Deterministic path, optional model assist, agent tool loop, and provider choices. |
-| [Demo script](demo-script.md) | A short walkthrough for upload, review, copilot, Knowledge Hub, and export. |
-| [Packaging](packaging.md) | Build and run shape for the API-hosted static web app. |
+| [Interview cheatsheet](learn/interview-cheatsheet.md) | You need short answers to likely questions. |
+| [Code tour](learn/code-tour.md) | You want to find the right folder or class quickly. |
+| [Tech stack](learn/tech-stack.md) | You need to explain why each technology was chosen. |
+| [Model landscape](learn/model-landscape.md) | You need to discuss local and hosted model options. |
 
-## Learn
+## Domain track
 
-| Page | Use it for |
+| Page | Use it when |
 |:---|:---|
-| [Interview cheatsheet](learn/interview-cheatsheet.md) | Elevator pitch, Q&A, and demo script. |
-| [Code tour](learn/code-tour.md) | Where each project fits. |
-| [Tech stack](learn/tech-stack.md) | How to explain each technology choice. |
-| [Model landscape](learn/model-landscape.md) | Local and provider-backed model options. |
-
-## Research
-
-| Page | Use it for |
-|:---|:---|
-| [Reinsurance landscape](research/reinsurance-landscape.md) | Domain, document types, reconciliation breaks, and competitive patterns. |
-
-```mermaid
-flowchart LR
-  User["Analyst"] --> Web["Next.js web app"]
-  Web --> Api["ASP.NET Core API"]
-  Api --> Infra["Workflow + OCR + extraction + agent tools"]
-  Infra --> Core["Reinsurance domain contracts"]
-  Infra --> Db[("SQLite")]
-  Infra -. optional .-> Models["Local or compatible model providers"]
-```
+| [Reinsurance landscape](research/reinsurance-landscape.md) | You need the business context: documents, roles, breaks, and why source citations matter. |
 
 ## Product constraints
 
-- The deterministic path must work without keys, network access, or model providers.
-- AI features are optional and settings-driven.
-- Every field carries provenance.
-- Geometry-backed citations use normalized coordinates.
-- The web app is the product surface; docs should not describe retired UI shells.
+These rules keep Reva trustworthy:
+
+- The deterministic path works without keys, hosted models, or network-only services.
+- AI is optional and settings-driven.
+- Every extracted value carries provenance.
+- Citation boxes use normalized coordinates when geometry is available.
+- Reconciliation compares stated totals to computed totals under a configured tolerance.
+- The frontend talks to the backend through one centralized API client contract.
+- The web app is the product surface; docs should describe the current `web/` experience.
+
+## Short product summary
+
+Reva receives the files a reinsurance analyst already handles, reads them, extracts the canonical fields, cites where each value came from, flags financial mismatches, lets the analyst approve or correct the result, and exports clean data.

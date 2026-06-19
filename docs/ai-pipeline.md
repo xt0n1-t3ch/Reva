@@ -1,56 +1,78 @@
 # AI and document pipeline
 
-Reva's pipeline is deterministic first. Model features are optional assists layered on top of a source-cited extraction and reconciliation workflow.
+Reva is deterministic first. AI can assist, but it is not the foundation of trust.
 
-## Stage order
+That distinction is the core design decision. Financial document processing needs repeatable extraction, visible evidence, and explicit review. Models can help explain, summarize, and propose. They should not silently replace reviewed values.
 
-1. **Ingest.** Store upload, compute SHA-256, deduplicate, and record metadata.
-2. **Parse.** Route by content and parser capability: PDF, Office, spreadsheets, text, email, images.
-3. **OCR.** Use local PaddleOCR for scanned images and image-only pages.
-4. **Classify.** Pick the reinsurance document type.
-5. **Extract.** Read canonical fields with deterministic rules and table/header signals.
-6. **Map.** Convert sender-specific headers to canonical fields using learned rules, aliases, and bounded fuzzy matching.
-7. **Assist.** If enabled, ask a configured model for proposals with provenance.
-8. **Reconcile.** Compare stated totals with line-item totals under tolerance.
-9. **Review.** Return fields, confidence, citations, issues, and suggested actions.
-10. **Export.** Write CSV, Excel, or JSON from templates.
+## Pipeline stages
 
-## Deterministic path
+| Stage | What happens | Output |
+|:---|:---|:---|
+| Ingest | Store the file, hash it, detect duplicates, and record metadata. | A tracked document record. |
+| Parse | Route by format and parser capability. | Text, tables, metadata, and attachments. |
+| OCR | Read scans and images locally. | Text with normalized geometry when available. |
+| Classify | Identify the reinsurance document type. | Document type and confidence. |
+| Extract | Find canonical fields and line-item values. | Source-cited field candidates. |
+| Map | Convert sender-specific headers to canonical fields. | Normalized field names and mapping confidence. |
+| Assist | Optionally ask a configured model for proposals or explanations. | Suggestions, never unchecked truth. |
+| Reconcile | Compare stated totals against computed totals. | Exceptions with detected and expected values. |
+| Review | Present evidence, confidence, and actions to the analyst. | Approved, corrected, rejected, or pending state. |
+| Export | Write selected output templates. | CSV, Excel, or JSON files. |
 
-The default path uses no keys and no model provider. It owns the source of truth:
+## Deterministic source of truth
 
-- format parsers for PDF, Office, spreadsheets, email, text, and images
-- PaddleOCR for local OCR
+The default workflow works without API keys and without remote AI. It includes:
+
+- format-aware parsers
+- local OCR
 - label and table extraction
-- canonical reinsurance fields
-- sender-learned schema mapping
+- canonical field normalization
+- sender-specific schema mapping
+- bounded fuzzy matching
 - reconciliation rules
-- provenance and normalized citation geometry
+- provenance and citation geometry
+- export templates
+
+This makes Reva demoable, testable, and useful even when no model provider is configured.
+
+## Learned schema mapping
+
+Senders often use their own column names. One file may say `Gross Premium`; another may say `Premium Amount`; another may abbreviate it.
+
+Reva resolves mappings in a controlled order:
+
+1. learned sender override
+2. static reinsurance alias
+3. bounded fuzzy match
+4. unmapped field
+
+That order lets analyst corrections become durable without letting fuzzy matching override known decisions.
 
 ## Optional model assist
 
-When enabled in Settings, a provider can assist extraction or chat. Supported provider classes:
+Model providers can be enabled in settings. Supported provider classes include:
 
 - local Ollama through an OpenAI-compatible endpoint
-- OpenAI-compatible hosted endpoints
+- hosted OpenAI-compatible endpoints
 - HuggingFace-backed cloud inference paths
+- optional document-layout workers where configured
 
-Model output is treated as a proposal. It must carry enough evidence to be useful, and it does not replace reviewed deterministic values.
+Model output is treated as assistance. It can propose, explain, summarize, or power chat. It does not erase the deterministic audit trail.
 
-## Agentic copilot
+## Assistant tool loop
 
-The copilot is a Vercel AI SDK chat surface backed by an OpenAI-compatible streaming protocol. Backend tools expose real product actions:
+The assistant is useful because it talks to Reva's backend tools. It can answer questions such as:
 
-| Tool class | Examples |
-|:---|:---|
-| Document lookup | list documents, open a document, summarize status |
-| Review action | explain a field, correct a value, set review state |
-| Reconciliation | explain Detected vs Expected, list exceptions |
-| Export | create CSV, Excel, or JSON output |
-| Knowledge Hub | search reference notes and cite the result |
+- Which documents have reconciliation exceptions?
+- Why did this premium field get flagged?
+- Where did this value come from?
+- Which file is ready for export?
+- What does the Knowledge Hub say about bordereaux?
 
-The agent can help only through registered tools. The workflow remains auditable because the backend owns all mutations.
+Tool-backed answers are better than free-form guesses because the backend still owns document state, exports, and review actions.
 
-## Real-time processing stream
+## Streaming progress
 
-The processing stream reports stages, scanned lines, extracted fields, reconciliation figures, completion, and safe errors over server-sent events. The UI uses it to show what the system is reading while a document runs.
+Processing can emit live status over server-sent events. The UI can show stages such as parse, OCR, extraction, mapping, reconciliation, completion, and safe errors.
+
+This turns a black-box upload into an observable workflow.

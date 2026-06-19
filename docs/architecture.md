@@ -1,74 +1,72 @@
 # Architecture
 
-Reva is a web app backed by a .NET document-intelligence API. The frontend gives analysts a review workspace; the backend owns ingestion, OCR, extraction, reconciliation, persistence, export, Knowledge Hub, and agent tools.
+Reva is a web application backed by a typed .NET document-intelligence API.
 
-```mermaid
-flowchart TB
-  subgraph Client["web/"]
-    Shell["App shell"]
-    Review["Review workspace"]
-    Chat["Vercel AI SDK chat"]
-    Knowledge["Knowledge Hub"]
-  end
+The architecture is intentionally split by responsibility: the browser owns the analyst experience, the API owns product boundaries, the domain core owns vocabulary, and infrastructure owns the document workflow.
 
-  subgraph Api["src/Reva.Web"]
-    Documents["Document endpoints"]
-    Streams["Processing SSE"]
-    Agent["Agent streaming endpoint"]
-    Settings["Settings endpoints"]
-    KnowledgeApi["Knowledge endpoints"]
-  end
+## System map
 
-  subgraph Domain["Core + Infrastructure"]
-    Core["Reinsurance contracts"]
-    Workflow["DocumentWorkflow"]
-    Parsers["Format parsers + OCR"]
-    Extract["Extraction + mapping"]
-    Recon["Reconciliation"]
-    Export["Export templates"]
-    Tools["Agent tools"]
-  end
-
-  Store[("SQLite EF Core")]
-  Providers["Optional model providers"]
-
-  Client -->|HTTP| Api
-  Chat -->|streaming protocol| Agent
-  Streams --> Client
-  Api --> Domain
-  Domain --> Store
-  Domain -. configured .-> Providers
-```
-
-## Runtime shape
-
-- `web/` is the product frontend: Next.js 16, React 19, Tailwind v4, Vercel AI SDK, and a Geist-style design system.
-- `src/Reva.Web` is the ASP.NET Core .NET 10 host. It maps feature endpoints once and serves the static export in production.
-- `src/Reva.Core` owns domain contracts, document states, canonical field names, and shared value formatting.
-- `src/Reva.Infrastructure` owns the workflow machinery: storage, EF Core, parser routing, PaddleOCR, field extraction, schema mapping, reconciliation, Knowledge Hub, export, settings, and agent tools.
-- SQLite is the default EF Core provider. SQL Server remains a provider option by configuration.
-
-## Request boundaries
-
-| Boundary | Owner | Notes |
+| Area | Path | Responsibility |
 |:---|:---|:---|
-| Frontend API client | `web/lib/api/client.ts` | Keep request/response shapes centralized here. |
-| HTTP endpoints | `src/Reva.Web/Endpoints` | Map each endpoint group once. |
-| Domain contracts | `src/Reva.Core` | Keep canonical field names and review payloads stable. |
-| Workflow operations | `src/Reva.Infrastructure` | Deterministic path first; optional providers only when enabled. |
-| Contract schemas | `contracts/` | Review payload schema and normalized geometry. |
+| Product frontend | `web/` | Workspace, review, export, mappings, settings, Knowledge Hub, assistant, and the shared API client. |
+| API host | `src/Reva.Web/` | HTTP endpoints, server-sent events, agent streaming, settings, exports, and static frontend hosting. |
+| Domain core | `src/Reva.Core/` | Reinsurance document types, canonical fields, document states, contracts, and shared value rules. |
+| Infrastructure | `src/Reva.Infrastructure/` | Storage, EF Core, parser routing, OCR, extraction, schema mapping, reconciliation, export, Knowledge Hub, and agent tools. |
+| Contracts | `contracts/` | JSON schemas and normalized geometry contracts used by the review payload. |
+| Tests | `tests/` | Unit and integration coverage for core behavior and API flows. |
 
-## Data flow
+## Runtime flow
 
-1. Analyst uploads a document from the web app.
-2. API stores the file, hashes it for deduplication, and starts the workflow.
-3. Parser routing reads the format; scanned images use PaddleOCR.
-4. Extraction finds canonical reinsurance fields and source spans.
-5. Schema mapping normalizes sender headers.
-6. Reconciliation compares stated totals to computed line-item values.
-7. Review payloads return fields, citations, issues, and export options.
-8. The agent can call backend tools over the same persisted state.
+1. The analyst uses the browser application.
+2. The frontend calls the backend through `web/lib/api/client.ts`.
+3. `src/Reva.Web` receives uploads, review requests, export requests, settings updates, and chat streams.
+4. `DocumentWorkflow` in infrastructure processes documents through ingest, parse, OCR, classify, extract, map, reconcile, and persist stages.
+5. Results are stored in SQLite by default.
+6. Review payloads return fields, confidence, provenance, citations, exceptions, and available actions.
+7. The assistant uses backend tools over the same persisted state.
+8. Exports are produced from templates after data is available for review.
 
-## Provider model
+## Boundary rules
 
-Model providers are optional. The default path is deterministic. When configured, Reva can use local Ollama, OpenAI-compatible streaming endpoints, or HuggingFace cloud paths for chat and extraction assist.
+### Frontend boundary
+
+The frontend should not duplicate backend contracts. API calls are centralized in `web/lib/api/client.ts`, so request and response shapes have one client-side owner.
+
+### Domain boundary
+
+Canonical reinsurance concepts live in `src/Reva.Core`. UI and persistence details should not leak into the domain vocabulary.
+
+### Infrastructure boundary
+
+Document processing details live in `src/Reva.Infrastructure`. This includes file storage, OCR, parsers, extraction heuristics, learned mappings, reconciliation rules, export templates, settings, and optional provider adapters.
+
+### Provider boundary
+
+Model providers are optional. Reva can connect to local Ollama, OpenAI-compatible endpoints, HuggingFace-backed inference, or no provider at all. Missing providers must not break the deterministic workflow.
+
+## Data contracts
+
+Review payloads must preserve:
+
+- document identity and state
+- canonical fields
+- confidence levels
+- provenance
+- citations
+- normalized bounding boxes when geometry exists
+- reconciliation exceptions
+- available review actions
+
+Normalized geometry is important because the browser may render pages at different sizes. Coordinates are stored in `0..1` space against the rendered page.
+
+## Scaling path
+
+The current shape is optimized for a local-first demo and analyst workstation. The clean scale-out path is:
+
+1. Move SQLite to shared SQL Server or PostgreSQL.
+2. Move document processing into background workers.
+3. Add mailbox/API ingestion for production intake.
+4. Add tenant-aware storage and provider settings.
+5. Add queue-based export and audit logging for high-volume operations.
+
+The current boundaries already separate the pieces that would need to move.

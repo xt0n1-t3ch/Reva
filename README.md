@@ -1,57 +1,103 @@
 <div align="center">
-  <img src="docs/assets/reva-banner.png" alt="Reva document intelligence" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/reva-logo-light.png">
+    <img src="docs/assets/reva-logo-dark.png" alt="Reva" width="112">
+  </picture>
 
   <h1>Reva</h1>
-  <p><strong>A web app for reinsurance document intelligence: ingest, extract, cite, reconcile, review, and export.</strong></p>
+
+  <p><strong>Local-first document intelligence for reinsurance operations.</strong></p>
+  <p>Ingest messy submissions, extract source-cited data, reconcile control totals, review exceptions, and export clean records from one analyst workspace.</p>
 
   <p>
-    <img src="https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 16">
-    <img src="https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react&logoColor=white" alt="React 19">
-    <img src="https://img.shields.io/badge/Tailwind-v4-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind v4">
-    <img src="https://img.shields.io/badge/.NET-10-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 10">
-    <img src="https://img.shields.io/badge/EF%20Core-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="EF Core SQLite">
-    <img src="https://img.shields.io/badge/OCR-PaddleOCR-0A8754?style=for-the-badge" alt="PaddleOCR">
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-00B3A4?style=for-the-badge" alt="MIT License"></a>
+    <a href="https://github.com/xt0n1-t3ch/Reva/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/xt0n1-t3ch/Reva/actions/workflows/ci.yml/badge.svg"></a>
+    <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?style=flat-square&logo=dotnet&logoColor=white">
+    <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white">
+    <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white">
+    <img alt="Tailwind 4" src="https://img.shields.io/badge/Tailwind-4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white">
+    <img alt="SQLite default" src="https://img.shields.io/badge/SQLite-default-003B57?style=flat-square&logo=sqlite&logoColor=white">
+    <img alt="Offline by default" src="https://img.shields.io/badge/offline-by_default-111111?style=flat-square">
   </p>
 </div>
 
-Reva turns the files a reinsurance operations team receives into structured, reviewable data. It handles bordereaux, statements of account, slips, loss runs, claim notices, endorsements, spreadsheets, emails, scanned images, and PDFs. Every extracted value carries provenance. When page geometry is available, the review view can point back to the exact source region.
+---
 
-The product is one web app: a Next.js 16 + React 19 + Tailwind v4 frontend in `web/`, backed by an ASP.NET Core .NET 10 minimal API in `src/Reva.Web` on port `5158`. The domain core lives in `src/Reva.Core`; parsing, OCR, extraction, reconciliation, persistence, export, Knowledge Hub, and agent tooling live in `src/Reva.Infrastructure`. SQLite EF Core is the default store.
+## What Reva does
 
-## What Reva shows in an interview
+Reva is built for the document flow between cedents, brokers, and reinsurers. Those teams receive spreadsheets, PDFs, scanned images, emails, bordereaux, statements, slips, loss runs, and claim notices. Reva turns that inbound noise into reviewable data with evidence attached.
 
-- **Any-format intake.** PDF, XLSX, XLS, ODS, CSV, TSV, DOCX, PPTX, EML, MSG, PNG, and JPG route through format-aware parsers. Scans use local PaddleOCR.
-- **Deterministic first.** Label regexes, CSV/header mapping, table parsing, and reconciliation work without keys or model access.
-- **Optional model assist.** Local Ollama, OpenAI-compatible endpoints, and HuggingFace-backed providers can assist extraction or chat when enabled.
-- **Source-cited review.** Fields show confidence, provenance, citations, and reconciliation exceptions before export.
-- **Agentic copilot.** A friendly-name agent can list documents, explain fields, open records, correct values, change review state, export, and search the Knowledge Hub through tools.
-- **Knowledge Hub.** Reference material and project notes are searchable from the same analyst workspace.
-- **Real-time processing stream.** The UI can subscribe to document-processing events and show the pipeline as it scans, extracts, maps, and reconciles.
+In plain English:
 
-The chat surface is a modern agentic stack built on the Vercel AI SDK and an OpenAI-compatible streaming protocol, the same class of tooling used by leading AI products. Reva does not brand the product as any one assistant or hosted model.
+1. **Drop in the files.** Reva accepts common office, email, image, spreadsheet, text, and PDF formats.
+2. **It reads and classifies them.** Digital documents are parsed directly; scanned documents use local OCR.
+3. **It extracts the important fields.** Cedent, broker, reinsurer, period, currency, premium, claims, commission, cession percentage, retention, limit, and contract references are normalized.
+4. **It proves where values came from.** Every value carries provenance, and geometry-backed citations can point back to the source area.
+5. **It checks the money.** Control totals are compared against line-item totals under a configurable tolerance.
+6. **It lets an analyst decide.** Exceptions, confidence, citations, and suggested corrections are reviewed before export.
+7. **It exports clean records.** Data can leave as CSV, Excel, or JSON using reusable templates.
 
-## Processing model
+The important product decision: **the default workflow is deterministic and keyless**. AI providers can assist when configured, but upload, extraction, reconciliation, review, and export do not depend on a hosted model.
 
-| Layer | What it does | Default |
+## Showcase
+
+<p align="center">
+  <img src="docs/assets/showcase/marketing-workspace.png" alt="Reva workspace marketing screenshot" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/assets/showcase/marketing-review.png" alt="Reva source-cited review marketing screenshot" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/assets/showcase/marketing-export.png" alt="Reva export marketing screenshot" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/assets/showcase/marketing-assistant.png" alt="Reva grounded assistant marketing screenshot" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/assets/showcase/marketing-showcase-tour.png" alt="Reva guided showcase marketing screenshot" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/assets/showcase/marketing-mobile.png" alt="Reva mobile-friendly documentation marketing screenshot" width="650">
+</p>
+
+## Capabilities at a glance
+
+| Capability | What it means for a non-programmer | Why it matters |
 |:---|:---|:---|
-| Deterministic pipeline | Parse, OCR, classify, extract canonical fields, map sender headers, reconcile totals, persist citations, export templates. | On |
-| Local model assist | Uses a selected local model for extra extraction or agent reasoning. | Off |
-| OpenAI-compatible providers | Streams chat and tool calls through provider-neutral endpoints when configured. | Off |
-| HuggingFace cloud | Optional remote inference path for experiments or stronger models. | Off |
-| Docling worker | Optional layout parser for hard documents. | Off |
+| Any-format intake | Reva can accept the file types a real operations inbox receives. | Less manual file cleanup before review. |
+| Local OCR | Scans and photographed tables can still become searchable text. | Paper and image submissions do not become dead ends. |
+| Source-cited fields | Values can point back to the original document text or region. | Reviewers can trust but verify quickly. |
+| Reconciliation | Stated totals are checked against computed line-item totals. | Financial breaks are visible before data leaves the system. |
+| Learned mappings | Sender-specific column names can be remembered after correction. | The second file from the same sender is faster than the first. |
+| Knowledge Hub | Product and domain notes are searchable inside the analyst workspace. | The assistant can answer with project context instead of guessing. |
+| Export templates | Data leaves in the shape the market or downstream team expects. | Review work turns into usable operational output. |
 
-Missing optional providers never break upload, review, reconciliation, or export.
+## How the system fits together
+
+| Layer | Responsibility |
+|:---|:---|
+| `web/` | The analyst application: workspace, review, export, mappings, settings, Knowledge Hub, and assistant. |
+| `src/Reva.Web/` | The ASP.NET Core host: HTTP API, streaming endpoints, agent endpoint, and production static-file serving. |
+| `src/Reva.Core/` | The shared reinsurance vocabulary: document states, canonical fields, contracts, and value formatting. |
+| `src/Reva.Infrastructure/` | The document machinery: storage, parsing, OCR, extraction, mapping, reconciliation, export, settings, and agent tools. |
+| `contracts/` | Stable JSON schemas for review payloads and citation geometry. |
+| `docs/` | Product, architecture, demo, packaging, interview, and learning documentation. |
+
+The runtime path is simple: **analyst browser → Next.js app → ASP.NET Core API → deterministic workflow → SQLite storage → review/export**. Optional model providers attach through settings and never replace the deterministic source of truth.
 
 ## Quick start
 
-Run the API:
+### 1. Run the API
 
 ```powershell
 dotnet run --project src/Reva.Web/Reva.Web.csproj -- --no-open
 ```
 
-Run the web app:
+### 2. Run the web app
 
 ```powershell
 cd web
@@ -60,47 +106,45 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000`. Upload a reinsurance document, review extracted fields with citations, reconcile totals, ask the copilot what happened, then export CSV, Excel, or JSON.
+Open `http://localhost:3000`.
 
-Optional local model path:
+### 3. Try the demo flow
 
-```powershell
-winget install Ollama.Ollama
-ollama pull qwen3-vl:8b
-```
+1. Open **Workspace** and load demo scenarios or upload a document.
+2. Open **Review** and inspect fields, citations, confidence, and exceptions.
+3. Ask **Assistant** which documents need review or where a value came from.
+4. Open **Mappings** to see sender-specific header normalization.
+5. Open **Export** and download CSV or JSON.
+6. Open **Showcase** for the guided product tour.
 
-Enable model assist in Settings only when a provider is reachable. The deterministic path stays usable without it.
+## Production packaging
 
-## Architecture at a glance
+Reva packages as a single ASP.NET Core host that can serve both the API and the exported frontend. The Windows packaging script builds the static web app, copies it into the API host, publishes `Reva.exe`, and smoke-tests the package against real HTTP routes.
 
-```mermaid
-flowchart LR
-  Analyst["Analyst"] --> Web["web/<br/>Next.js 16 + React 19<br/>Tailwind v4 + Vercel AI SDK"]
-  Web -->|HTTP + SSE + AI streams| Api["src/Reva.Web<br/>ASP.NET Core .NET 10<br/>minimal API :5158"]
-  Api --> Core["src/Reva.Core<br/>contracts, document states,<br/>canonical fields"]
-  Api --> Infra["src/Reva.Infrastructure<br/>parsers, OCR, extraction,<br/>mapping, reconciliation,<br/>export, Knowledge Hub, agent tools"]
-  Infra --> Store[("SQLite EF Core")]
-  Infra -. optional .-> Ollama["Local Ollama"]
-  Infra -. optional .-> Compatible["OpenAI-compatible providers"]
-  Infra -. optional .-> HF["HuggingFace cloud"]
-  Infra -. optional .-> Docling["Docling worker"]
-```
-
-## Repository map
-
-| Path | Owns |
-|:---|:---|
-| `web/` | Product frontend: app shell, review workspace, Knowledge Hub, copilot, API client contract in `web/lib/api/client.ts`. |
-| `src/Reva.Web/` | ASP.NET Core API, endpoint groups, streaming surfaces, static export host. |
-| `src/Reva.Core/` | Domain contracts, document states, canonical reinsurance fields, money formatting. |
-| `src/Reva.Infrastructure/` | Persistence, storage, parsers, PaddleOCR, extraction, reconciliation, schema mapping, export, settings, agent tools, Knowledge Hub. |
-| `contracts/` | Review payload schema and normalized citation geometry. |
-| `docs/` | Architecture, pipeline, packaging, research, and interview learning notes. |
-| `tests/` | Unit, integration, and end-to-end test projects. |
+See [docs/packaging.md](docs/packaging.md) for the exact shape.
 
 ## Documentation
 
-Start at [docs/index.md](docs/index.md). For interview prep, read [docs/learn/interview-cheatsheet.md](docs/learn/interview-cheatsheet.md), then [docs/learn/code-tour.md](docs/learn/code-tour.md).
+| Page | Purpose |
+|:---|:---|
+| [Product guide](docs/product-guide.md) | Plain-English explanation of the workflow and value. |
+| [Architecture](docs/architecture.md) | System boundaries, data flow, and extension points. |
+| [AI and pipeline](docs/ai-pipeline.md) | Deterministic workflow, optional model assist, and agent tools. |
+| [Demo script](docs/demo-script.md) | Interview-ready walkthrough and talk track. |
+| [Packaging](docs/packaging.md) | Development and Windows release shape. |
+| [Interview cheatsheet](docs/learn/interview-cheatsheet.md) | Questions, answers, and concise selling points. |
+| [Code tour](docs/learn/code-tour.md) | Where to look in the repository. |
+| [Tech stack](docs/learn/tech-stack.md) | How to explain each technology choice. |
+| [Model landscape](docs/learn/model-landscape.md) | Local and hosted model-provider options. |
+
+## Validation
+
+```powershell
+dotnet build Reva.slnx -warnaserror
+dotnet test
+```
+
+For UI-facing changes, run the API and web app, then verify the browser flow live.
 
 ## License
 

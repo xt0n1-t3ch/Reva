@@ -1,29 +1,40 @@
 # Model landscape
 
-Reva treats model access as a setting, not a product identity. The deterministic pipeline works without it. Providers add extraction proposals, chat reasoning, summarization, and Knowledge Hub answers when configured.
+Reva treats model access as a setting, not as the product identity.
 
-## Provider classes
+The core workflow must run without a hosted model. Providers can improve chat, summaries, extraction suggestions, and difficult document understanding when configured.
 
-| Provider class | Best use | Notes |
+## Provider choices
+
+| Provider class | Best for | Product rule |
 |:---|:---|:---|
-| Local Ollama | Private local testing, offline demos, small/medium models. | Uses an OpenAI-compatible endpoint. |
-| OpenAI-compatible hosted endpoint | Stronger chat and extraction assist behind a standard streaming shape. | Configure endpoint, model, and key outside source control. |
-| HuggingFace cloud | Experiments with document or vision models. | Useful when comparing model families. |
-| No provider | Default deterministic workflow. | Upload, OCR, extraction, reconciliation, review, and export remain usable. |
+| No provider | Offline review, deterministic demos, locked-down environments. | Core upload, extraction, reconciliation, review, and export still work. |
+| Local Ollama | Private demos and local experimentation. | Good for showing optional AI without sending data to a hosted service. |
+| OpenAI-compatible endpoint | Stronger hosted models behind a standard API shape. | Configure base URL, model, and key outside source control. |
+| HuggingFace-backed inference | Comparing model families and document/vision experiments. | Useful for research, not required for baseline workflow. |
+| Optional layout worker | Harder document-layout extraction. | Disabled unless configured. |
 
-## Local models worth knowing
+## Local model families worth discussing
 
-| Model family | Why it matters |
+| Family | Why it is relevant |
 |:---|:---|
-| Qwen VL family | Strong document and chart understanding for local vision tests. |
-| Granite document models | Small document-focused models with layout/OCR relevance. |
-| Llama family | General text reasoning and chat. |
-| Gemma family | Smaller general chat models for constrained hardware. |
+| Qwen VL | Strong document and visual understanding for local tests. |
+| Granite document models | Document-oriented models that are useful for extraction experiments. |
+| Llama | General reasoning and assistant-style chat. |
+| Gemma | Smaller general models for constrained hardware. |
 
-## Product rule
+## Guardrail for product quality
 
-A model can assist; it does not become the source of truth. Proposals need provenance, confidence, and a conservative merge path. Reviewed deterministic values win.
+A model can propose. A model can explain. A model can summarize. It should not silently overwrite reviewed financial data.
+
+Reva keeps the trust loop in the application:
+
+- provenance stays attached to values
+- reconciliation stays deterministic
+- analyst review stays explicit
+- mutations go through backend tools
+- provider configuration stays optional
 
 ## Interview line
 
-"The product uses a provider-neutral model seam. Local Ollama is great for privacy demos, compatible hosted endpoints give stronger streaming models, and HuggingFace is useful for experiments. The important part is that none of those are required for the core workflow."
+"The model layer is deliberately replaceable. The product value is the workflow: source-cited extraction, reconciliation, review, and export. AI improves the experience when available, but the system remains useful without it."
