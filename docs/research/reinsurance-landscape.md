@@ -1,95 +1,78 @@
-# Reinsurance document-intelligence landscape
+# Reinsurance landscape
 
-Reva is grounded in a specific operational problem: turning reinsurance bordereaux, technical accounts, statements of account, and related submission files into structured, reconciled, reviewable data analysts can trust.
+This page explains the business context behind Reva in practical terms.
 
-## 1. Domain model
+## The roles
 
-Reinsurance transfers risk from an insurer or cedent to one or more reinsurers. A broker, managing agent, MGA, coverholder, or service company may sit in the reporting path. In delegated authority and bordereaux-heavy operations, data arrives as spreadsheets, PDFs, emails, scans, or semi-structured statements that must be normalized before booking, reporting, audit, or analytics.
-
-| Term | Meaning for document intelligence |
+| Role | Plain-English description |
 |:---|:---|
-| Cedent / reinsured | Party ceding risk and premium. Often appears as company name, cedant code, insurer, or reinsured. |
-| Reinsurer | Accepting carrier or market participant. May be shown by share, layer, participant, or reference. |
-| Broker | Intermediary sending cover notes, accounts, bordereaux, or settlement instructions. |
-| Treaty | Contract covering a book or class of business. Reporting is periodic and table-heavy. |
-| Facultative | Individually underwritten risk. Documents are more deal-specific and slip-like. |
-| Bordereau | Periodic row-level report of policies, risks, premiums, claims, or movements. |
-| Technical account | Statement of premium, commission, claims, taxes, brokerage, and balance due. |
+| Cedent | The insurer or company transferring part of its risk. |
+| Broker | The intermediary that structures, places, or administers the transaction. |
+| Reinsurer | The party accepting part of the risk in exchange for premium. |
+| Analyst | The person who reviews submissions, checks totals, resolves exceptions, and prepares data for downstream systems. |
 
-## 2. Core document types
+## The documents
 
-| Document type | What it carries | Reva implication |
-|:---|:---|:---|
-| Premium bordereau | Policy/risk rows, gross written premium, ceded premium, commission, taxes, share, dates, line, territory, currency. | Header mapping, money/date/currency normalization, table totals. |
-| Claims / loss bordereau | Claim rows, paid/outstanding/incurred amounts, status, dates, reserves, recoveries, policy or UMR. | Status normalization and links back to premium/risk references. |
-| Risk bordereau | Insured, location, limits, class, period, coverholder references. | Canonical mapping and downstream template export. |
-| Statement of account / technical account | Premium, commission, claims, brokerage, taxes, balance due, settlement currency. | Reconcile stated totals and explain balance deltas. |
-| Broker cover note | Narrative or semi-structured headline figures attached to a bordereau or account. | Common source of Detected values. |
-| Claim notice / cash call / debit-credit note | Event-driven loss or settlement instruction. | Fast money extraction and explicit provenance. |
+Reinsurance operations receive many document types. Reva focuses on the ones that carry operational and financial values.
 
-## 3. Canonical fields
-
-Reva maps sender-specific headers into canonical reinsurance concepts. `GWP`, `Gross Written Premium`, and `Written Premium` may all target Premium. `Cedant Co`, `Cedent`, and `Reinsured` may target the same party concept.
-
-| Canonical concept | Typical aliases and source shapes |
+| Document | What it usually contains |
 |:---|:---|
-| Contract reference | UMR, Treaty No, Contract ID, Policy No. |
-| Cedent / reinsured | Cedent, Cedant Co, Reinsured, Client. |
-| Broker | Broker, Intermediary, Producing Broker. |
-| Reinsurer | Reinsurer, Market, Participant. |
-| Line of business | LOB, Class, Risk Class, Product. |
-| Period | Month, Quarter, Accounting Period, Start/End. |
-| Premium | GWP, Gross Premium, Written Premium, Ceded Premium. |
-| Claims | Paid Loss, Losses, Incurred, Outstanding. |
-| Commission | Ceding Commission, Brokerage, Acquisition Cost. |
-| Cession % | Share, Ceded %, Participation, Quota Share. |
-| Retention | Retained %, Net Share, Retention. |
-| Limit | Limit, Sum Insured, Cover Limit. |
-| Currency | ISO code, symbol, settlement currency. |
+| Bordereau | Line-item reporting for premium, claims, risks, periods, and exposure. |
+| Statement of Account | Accounting totals, balances, commissions, and settlement values. |
+| Treaty | Contract structure and reinsurance terms. |
+| Facultative slip | A placement document for a specific risk. |
+| Loss run | Claims history and loss detail. |
+| Endorsement | A contract change or amendment. |
+| Claim notice | Notification and details of a claim event. |
 
-## 4. Common reconciliation breaks
+## The data problem
 
-| Break | Example | Product behavior |
-|:---|:---|:---|
-| Stated premium differs from rows | Cover note states one value; attached bordereau sums to another. | Raise a Premium exception with Detected vs Expected. |
-| Commission basis mismatch | Commission is calculated on gross premium in one file and ceded premium in another. | Preserve both values with citations. |
-| Cession-rate mismatch | Header states 40%; rows carry mixed shares. | Flag the rate break and point to source rows. |
-| Currency conflict | Account summary says USD while rows contain mixed currencies. | Flag before export. |
-| Period misalignment | Statement period is Q1 but rows include dates outside Q1. | Surface a review exception. |
-| Duplicate rows | Same risk or claim appears twice after attachment merges. | Mark as suspicious, not auto-approved. |
+The same business meaning appears under many names. For example, premium may arrive as:
 
-## 5. Standards and reporting references
+- `Premium`
+- `Gross Premium`
+- `Written Premium`
+- `Premium Amount`
+- `GWP`
 
-| Reference | Why it matters |
-|:---|:---|
-| Lloyd's Coverholder Reporting Standards | Common delegated authority reporting shapes for risk, premium, and claims bordereaux. |
-| Lloyd's Delegated Authority resources | Context for coverholder and service-company reporting workflows. |
-| ACORD standards | Insurance data standards relevant to exchange patterns. |
-| ISO 4217 | Currency normalization should use standard codes while preserving source evidence. |
+A simple parser can read the text. A useful reinsurance workflow must normalize it, cite it, and know whether it reconciles.
 
-## 6. Competitive and UX landscape
+## Why reconciliation matters
 
-The consistent intelligent-document-processing pattern is: ingest files, map fields into a canonical model, validate with rules, route exceptions to humans, show source evidence, and export clean data. Reva applies that pattern to reinsurance documents with local-first defaults, source citations, learned sender mappings, and reconciliation.
+Bordereaux and statements often include control totals. The line items should add up to those totals within an agreed tolerance.
 
-| Product / category | Observable pattern | Reva positioning |
-|:---|:---|:---|
-| Rossum | Capture, validation, user feedback, audit trails. | Reva applies the trust loop to reinsurance fields and totals. |
-| Send | Bordereaux ingestion, validation, standardization, exceptions. | Reva focuses on document review and export rather than a broader underwriting suite. |
-| Sapiens | Reinsurance administration and core-system context. | Reva prepares trusted data for downstream systems. |
-| Generic IDP / OCR tools | Extract fields and tables with confidence and queues. | Reva adds canonical reinsurance fields, mapping memory, and computed exceptions. |
+When the detected total and expected total do not match, the analyst needs to know:
 
-## 7. Product implications
+- which value was stated
+- which value was computed
+- how large the break is
+- which document or line contributed to it
+- whether it is severe enough to block approval
 
-1. Schema mapping must be visible.
-2. Corrections should reduce future work for the same sender or domain.
-3. Every field needs provenance.
-4. Reconciliation must use actual document values.
-5. Export needs CSV, Excel, JSON, and saved templates.
-6. The web app should demo without cloud setup.
+Reva surfaces those breaks as review exceptions.
 
-## 8. What Reva intentionally does not claim
+## Why citations matter
 
-- No live mailbox sync is shipped; inbound email support is file-based `.eml` and `.msg`.
-- No cloud OCR or cloud LLM is required for the default workflow.
-- No Python runtime is required unless the optional Docling path is enabled.
-- No straight-through-processing percentage is claimed without live operational measurement.
+Financial review needs evidence. If a system extracts `1,250,000` as premium, the reviewer must be able to ask where it came from.
+
+Source citations make the answer concrete. They reduce blind trust, speed up correction, and create a better audit trail.
+
+## Why local-first matters
+
+Reinsurance files can contain sensitive commercial data. A local-first default lets the core workflow run without relying on a hosted model provider. That is important for demos, privacy-conscious teams, and environments where external services need explicit approval.
+
+## Competitive angle
+
+Many tools can OCR or parse documents. Reva's stronger positioning is the combined workflow:
+
+1. accept real file variety
+2. read scans and digital documents
+3. normalize reinsurance fields
+4. cite extracted values
+5. reconcile financial totals
+6. learn sender-specific mappings
+7. let analysts review decisions
+8. export clean operational data
+9. answer questions through grounded backend tools
+
+That full loop is what makes it interview-ready as a product, not just as a technical experiment.

@@ -2,52 +2,62 @@
 
 ## Elevator pitch
 
-"Reva is a reinsurance document-intelligence web app. It ingests the files brokers and cedents send every day, extracts canonical fields with source citations, reconciles stated totals against line items, and gives analysts a review workspace with export and an agentic copilot. The default pipeline is deterministic and keyless; model providers are optional."
+Reva is a local-first document-intelligence workspace for reinsurance operations. It reads the files brokers and cedents send every day, extracts canonical fields with citations, reconciles control totals, gives analysts a review workflow, and exports clean data.
 
-## Architecture answer
+## The one-minute architecture answer
 
-"The product surface is `web/`: Next.js 16, React 19, Tailwind v4, and the Vercel AI SDK. The backend is `src/Reva.Web`, an ASP.NET Core .NET 10 minimal API. `Reva.Core` owns the reinsurance vocabulary and contracts. `Reva.Infrastructure` owns parsing, OCR, extraction, mapping, reconciliation, EF Core persistence, export, Knowledge Hub, and agent tools. The frontend talks to the API through one client contract, and SQLite is the default store."
+The product surface is `web/`, a Next.js 16 and React 19 app with Tailwind v4 and a Geist-style design system. The backend is `src/Reva.Web`, an ASP.NET Core .NET 10 API. `src/Reva.Core` owns the reinsurance vocabulary and contracts. `src/Reva.Infrastructure` owns storage, parsing, OCR, extraction, mapping, reconciliation, export, Knowledge Hub, settings, and assistant tools. SQLite is the default local store.
 
-## Why this stack?
+## What makes Reva credible
 
-"The UI needs fast iteration and a polished analyst workflow, so I used the modern React stack. The backend needs strong typing, file processing, EF Core, and reliable long-running services, so .NET fits. The agent layer uses the Vercel AI SDK and OpenAI-compatible streaming because that gives provider flexibility without tying the product to one hosted assistant."
+- It works without a hosted model key.
+- It handles real operational file variety.
+- It preserves provenance for every extracted value.
+- It checks stated totals against computed totals.
+- It lets analysts approve, correct, reject, and export.
+- It keeps optional AI behind explicit provider settings.
+- It uses backend tools so assistant actions stay typed and auditable.
 
-## What makes it more than a parser?
+## Strong answers
 
-"It closes the trust loop. A parser gives fields. Reva gives fields with provenance, source highlights, confidence, reconciliation exceptions, learned sender mappings, and export templates. An analyst can see why a value exists and correct it. The next similar file gets easier."
+### Why deterministic first?
 
-## Why deterministic first?
+Reinsurance documents contain financial values. A system that silently trusts a model is not enough. Reva's baseline path uses parsers, OCR, rules, mappings, and reconciliation so it can run locally and produce reviewable evidence. Models can help, but reviewed deterministic state wins.
 
-"Reinsurance documents carry financial values. The baseline has to run without a key, without a network call, and without trusting a model. Rules, tables, OCR, and reconciliation produce the source of truth. Models can propose or explain, but they don't silently override reviewed data."
+### How does source citation work?
 
-## How does the copilot work?
+Parsers and OCR create source spans. When geometry is available, coordinates are normalized from `0..1` against the rendered page. That lets the frontend highlight the right region regardless of zoom or screen size.
 
-"The chat UI streams through the Vercel AI SDK. The backend exposes a tool loop over real product actions: list documents, explain a field, correct a value, set review state, export, and search Knowledge Hub. Tool calls execute in backend code, so mutations stay typed and auditable."
+### What are the canonical fields?
 
-## Demo script
+Cedent, Broker, Reinsurer, Contract Reference, Line of Business, Period, Currency, Premium, Claims, Commission, Cession %, Retention, and Limit.
 
-1. Upload a bordereau or statement.
-2. Show the live processing stream.
-3. Open Review and point to citations.
-4. Explain Detected vs Expected on Premium or Claims.
-5. Correct a sender mapping.
-6. Ask the copilot what needs review.
-7. Search Knowledge Hub.
-8. Export CSV, Excel, or JSON.
+### How do learned mappings work?
 
-## Sharp Q&A
+Sender headers are resolved in a controlled order: learned sender override, static alias, bounded fuzzy match, then unmapped. Analyst corrections can improve the next document from the same sender without making fuzzy matching too aggressive.
 
-**What are the canonical fields?**
-Cedent, Broker, Reinsurer, Contract Reference, Line of Business, Period, Currency, Premium, Claims, Commission, Cession %, Retention, Limit.
+### What does the assistant actually do?
 
-**How do citations work?**
-OCR and PDF parsing create source spans with page and normalized geometry. Fields link to those spans, so the browser can highlight the source region.
+The assistant streams through an OpenAI-compatible protocol and uses backend tools. It can list documents, explain fields, inspect exceptions, search Knowledge Hub, open records, update review state, and create exports through Reva's API boundary.
 
-**How do learned mappings work?**
-When an analyst corrects a sender header, Reva stores a per-sender rule. Next time, mapping precedence is learned rule, static alias, bounded fuzzy match, then unmapped.
+### What happens with no AI provider?
 
-**What happens if no model is configured?**
-Upload, extraction, reconciliation, review, and export still work. Optional chat or model-assisted extraction reports that no provider is available.
+Upload, parse, OCR, extraction, mapping, reconciliation, review, and export still work. Optional chat or model-assist surfaces can report that no provider is configured, but the core workflow remains usable.
 
-**Where would you scale it next?**
-Move storage to shared SQL Server or Postgres, add background workers for high-volume ingestion, add mailbox/API ingestion, and make provider routing policy-based per tenant.
+### Where would you scale it next?
+
+Move persistence from local SQLite to shared SQL Server or PostgreSQL, run document processing in background workers, add mailbox/API ingestion, add tenant-aware settings, and route provider policy per tenant or workload.
+
+## Demo checklist
+
+1. Open Workspace and show intake status.
+2. Open Review and show confidence, source citations, and reconciliation exceptions.
+3. Open Mappings and explain sender-specific learning.
+4. Ask Assistant which documents need review.
+5. Open Knowledge and show domain context.
+6. Open Export and download CSV or JSON.
+7. Open Showcase for the guided tour.
+
+## Closing line
+
+Reva is not just extracting text. It is building a trust loop around reinsurance documents: read, cite, reconcile, review, learn, and export.
