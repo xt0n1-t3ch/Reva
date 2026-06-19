@@ -27,15 +27,27 @@ const glyphFor = (documentType?: ReinsuranceDocumentType) => {
 
 // Lazily probes the document's first page image. Digital documents (e-mail, CSV,
 // plain text) have no rendered page, so the request 404s and the type glyph stays.
+// Only these formats render a page image; requesting one for any other type
+// (CSV, Excel, e-mail, plain text) just 404s and noises up the console.
+const PAGE_IMAGE_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff"];
+
+const rendersPage = (fileName?: string): boolean => {
+  const lower = (fileName ?? "").toLowerCase();
+  return PAGE_IMAGE_EXTENSIONS.some((extension) => lower.endsWith(extension));
+};
+
 export function QueueThumbnail({
   documentId,
   documentType,
+  fileName,
 }: {
   documentId: string;
   documentType?: ReinsuranceDocumentType;
+  fileName?: string;
 }) {
   const [hasImage, setHasImage] = useState(false);
   const Glyph = glyphFor(documentType);
+  const canRenderPage = rendersPage(fileName);
 
   return (
     <span className="relative flex h-12 w-[2.375rem] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-surface-2 text-subtle-foreground shadow-soft ring-1 ring-inset ring-border/40 transition-[border-color,box-shadow] group-hover:border-border-strong group-hover:shadow-pop">
@@ -44,19 +56,23 @@ export function QueueThumbnail({
           <Glyph width={15} height={15} />
         </span>
       )}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={api.pageImageUrl(documentId, 1)}
-        alt=""
-        aria-hidden="true"
-        loading="lazy"
-        onLoad={() => setHasImage(true)}
-        onError={() => setHasImage(false)}
-        className={cn(
-          "absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-300",
-          hasImage ? "opacity-100" : "opacity-0",
-        )}
-      />
+      {canRenderPage && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={api.pageImageUrl(documentId, 1)}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            onLoad={() => setHasImage(true)}
+            onError={() => setHasImage(false)}
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-300",
+              hasImage ? "opacity-100" : "opacity-0",
+            )}
+          />
+        </>
+      )}
       {/* A faint top sheen sells the thumbnail as a real page edge, not a flat box. */}
       {hasImage && (
         <span

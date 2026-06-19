@@ -27,7 +27,7 @@ function QueueRow({ document }: { document: DocumentSummary }) {
         className="absolute inset-y-0 left-0 w-0.5 origin-center scale-y-0 bg-primary transition-transform duration-200 ease-out group-hover:scale-y-100 group-focus-visible:scale-y-100"
       />
       <div className="flex min-w-0 items-center gap-3.5">
-        <QueueThumbnail documentId={document.id} documentType={document.documentType} />
+        <QueueThumbnail documentId={document.id} documentType={document.documentType} fileName={document.fileName} />
         <span className="flex min-w-0 flex-col gap-1">
           <span className="truncate text-sm font-medium tracking-tight text-foreground/90 transition-colors group-hover:text-foreground">
             {document.fileName}
