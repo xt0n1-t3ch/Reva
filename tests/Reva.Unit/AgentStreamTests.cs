@@ -40,7 +40,7 @@ public sealed class AgentStreamTests
 
     private static Func<string> FixedIds()
     {
-        var ids = new Queue<string>(["text1"]);
+        var ids = new Queue<string>(["text1", "reasoning1"]);
         return () => ids.Dequeue();
     }
 }

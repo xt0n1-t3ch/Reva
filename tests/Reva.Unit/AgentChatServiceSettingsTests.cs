@@ -61,10 +61,10 @@ public sealed class AgentChatServiceSettingsTests
     [Theory]
     [InlineData("OFF", null, false)]
     [InlineData("Low", "low", null)]
-    [InlineData("Medium", "medium", null)]
-    [InlineData("High", "high", null)]
+    [InlineData("Medium", "medium", true)]
+    [InlineData("High", "high", true)]
     [InlineData("Max", "high", true)]
-    [InlineData("bad-value", "medium", null)]
+    [InlineData("bad-value", "medium", true)]
     public void ReasoningHeaderMapsToOpenAiCompatibleProperties(string header, string? expectedEffort, bool? expectedThinking)
     {
         var reasoning = AgentReasoningOptions.FromHeader(header);
