@@ -5,9 +5,11 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Reva.Core.Contracts;
 using Reva.Core.Documents;
 using Reva.Core.Reinsurance;
+using Reva.Infrastructure.Persistence;
 
 namespace Reva.Integration;
 
@@ -21,7 +23,7 @@ public sealed class RevaWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration(configuration =>
         {
-            var root = FindRepositoryRoot();
+            var root = TestPaths.RepositoryRoot();
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Reva:Database:Provider"] = "Sqlite",
@@ -33,21 +35,6 @@ public sealed class RevaWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
-    private static string FindRepositoryRoot()
-    {
-        var current = new DirectoryInfo(AppContext.BaseDirectory);
-        while (current is not null)
-        {
-            if (File.Exists(Path.Combine(current.FullName, "Reva.slnx")))
-            {
-                return current.FullName;
-            }
-
-            current = current.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Repository root containing Reva.slnx was not found.");
-    }
 }
 
 public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFactory>
@@ -93,7 +80,7 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
     {
         using var client = factory.CreateClient();
         using var multipart = new MultipartFormDataContent();
-        var content = new ByteArrayContent(File.ReadAllBytes(SamplePath("technical-account-statement.txt")));
+        var content = new ByteArrayContent(File.ReadAllBytes(TestPaths.SamplePath("technical-account-statement.txt")));
         multipart.Add(content, "file", "technical-account-statement.txt");
 
         var uploadResponse = await client.PostAsync("/api/documents/", multipart);
@@ -125,11 +112,69 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
     }
 
     [Fact]
+    public async Task FrontendReadEndpointsReturnDocumentReviewPayloadReconciliationAndPageImage()
+    {
+        using var client = factory.CreateClient();
+        using var multipart = new MultipartFormDataContent();
+        multipart.Add(new ByteArrayContent(File.ReadAllBytes(TestPaths.SamplePath("technical-account-statement.txt"))), "file", "frontend-read.txt");
+        var upload = await (await client.PostAsync("/api/documents/", multipart))
+            .Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(upload);
+
+        (await client.GetAsync("/api/documents")).EnsureSuccessStatusCode();
+        (await client.GetAsync($"/api/documents/{upload.Id}")).EnsureSuccessStatusCode();
+        (await client.GetAsync($"/api/documents/{upload.Id}/review-payload")).EnsureSuccessStatusCode();
+        (await client.GetAsync($"/api/reconciliation/{upload.Id}")).EnsureSuccessStatusCode();
+
+        var pageDocumentId = Guid.NewGuid();
+        var pagePath = await WriteTinyPngAsync(pageDocumentId);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<RevaDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            context.Documents.Add(new DocumentRecord
+            {
+                Id = pageDocumentId,
+                FileName = "page-proof.png",
+                Sha256Hash = Convert.ToHexString(pageDocumentId.ToByteArray()),
+                Extension = ".png",
+                StoragePath = pagePath,
+                Status = DocumentStatus.Extracted.ToString(),
+                ReviewState = ReviewState.Pending.ToString(),
+                DocumentType = ReinsuranceDocumentType.Unknown.ToString(),
+                Confidence = 0,
+                ParsedMarkdown = string.Empty,
+                ParsedJson = "{}",
+                ParserProfile = "test",
+                CreatedAt = now,
+                UpdatedAt = now,
+                Pages =
+                [
+                    new DocumentPageRecord
+                    {
+                        Page = 1,
+                        ImagePath = pagePath,
+                        Width = 1,
+                        Height = 1,
+                        Rotation = 0
+                    }
+                ]
+            });
+            await context.SaveChangesAsync();
+        }
+
+        var pageResponse = await client.GetAsync($"/api/documents/{pageDocumentId}/pages/1.png");
+        pageResponse.EnsureSuccessStatusCode();
+        Assert.Equal("image/png", pageResponse.Content.Headers.ContentType?.MediaType);
+        File.Delete(pagePath);
+    }
+
+    [Fact]
     public async Task CsvBordereauUploadExtractsTableWithoutPythonRuntime()
     {
         using var client = factory.CreateClient();
         using var multipart = new MultipartFormDataContent();
-        var content = new ByteArrayContent(File.ReadAllBytes(SamplePath("bordereau.csv")));
+        var content = new ByteArrayContent(File.ReadAllBytes(TestPaths.SamplePath("bordereau.csv")));
         multipart.Add(content, "file", "bordereau.csv");
 
         var uploadResponse = await client.PostAsync("/api/documents/", multipart);
@@ -228,7 +273,7 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
     {
         using var client = factory.CreateClient();
         using var multipart = new MultipartFormDataContent();
-        var content = new ByteArrayContent(File.ReadAllBytes(SamplePath("technical-account-statement.txt")));
+        var content = new ByteArrayContent(File.ReadAllBytes(TestPaths.SamplePath("technical-account-statement.txt")));
         multipart.Add(content, "file", "technical-account-statement.txt");
 
         var upload = await (await client.PostAsync("/api/documents/", multipart))
@@ -249,21 +294,93 @@ public sealed class DocumentApiFlowTests : IClassFixture<RevaWebApplicationFacto
         Assert.DoesNotContain(reviewed.Fields, field => field.Name == ReinsuranceFieldNames.Cedent && field.IsCorrected);
     }
 
-    private static string SamplePath(string name)
+    [Theory]
+    [InlineData("Approved", ReviewState.Approved)]
+    [InlineData("Rejected", ReviewState.Rejected)]
+    [InlineData("NeedsCorrection", ReviewState.NeedsCorrection)]
+    public async Task ReviewEndpointPersistsFrontendDecisionStringsEvenWithOpenExceptions(string decision, ReviewState expected)
     {
-        var current = new DirectoryInfo(AppContext.BaseDirectory);
-        while (current is not null)
+        using var client = factory.CreateClient();
+        var upload = await UploadOperationsNoteAsync(client, $"review-decision-{decision}.txt");
+
+        var before = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{upload.Id}", SerializerOptions);
+        Assert.NotNull(before);
+        Assert.NotEmpty(before.Exceptions);
+
+        var response = await client.PostAsJsonAsync(
+            $"/api/documents/{upload.Id}/review",
+            new ReviewDecision(decision, "Tony", null, []),
+            SerializerOptions);
+
+        response.EnsureSuccessStatusCode();
+        var reviewed = await response.Content.ReadFromJsonAsync<DocumentDetail>(SerializerOptions);
+        Assert.NotNull(reviewed);
+        Assert.Equal(expected, reviewed.ReviewState);
+        Assert.NotEmpty(reviewed.Exceptions);
+
+        var persisted = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{upload.Id}", SerializerOptions);
+        Assert.NotNull(persisted);
+        Assert.Equal(expected, persisted.ReviewState);
+        Assert.NotEmpty(persisted.Exceptions);
+    }
+
+    [Fact]
+    public async Task ReviewEndpointPersistsFieldAndMappingCorrectionsOnCurrentDocument()
+    {
+        using var client = factory.CreateClient();
+        using var multipart = new MultipartFormDataContent();
+        multipart.Add(new ByteArrayContent(BuildEmailBordereau("Mapping correction persists", "GWP,CCY\n450,USD\n", "persist.example")), "file", "mapping-current.eml");
+
+        var upload = await (await client.PostAsync("/api/documents/", multipart))
+            .Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(upload);
+
+        var review = new ReviewDecision(
+            "Approved",
+            "Tony",
+            "Correct premium and teach current mapping.",
+            [new FieldCorrection(ReinsuranceFieldNames.Premium, "USD 999")])
         {
-            var candidate = Path.Combine(current.FullName, "samples", name);
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
+            MappingCorrections = [new SchemaMappingCorrection("GWP", ReinsuranceFieldNames.Claims)]
+        };
+        var response = await client.PostAsJsonAsync($"/api/documents/{upload.Id}/review", review, SerializerOptions);
+        response.EnsureSuccessStatusCode();
 
-            current = current.Parent;
-        }
+        var reviewed = await response.Content.ReadFromJsonAsync<DocumentDetail>(SerializerOptions);
+        Assert.NotNull(reviewed);
+        Assert.Equal(ReviewState.Approved, reviewed.ReviewState);
+        Assert.Contains(reviewed.Fields, field => field.Name == ReinsuranceFieldNames.Premium && field.Value == "USD 999" && field.IsCorrected);
+        Assert.Contains(reviewed.Fields, field => field.Name == ReinsuranceFieldNames.Claims && field.Value == "USD 450" && field.IsCorrected);
+        Assert.Contains(reviewed.SchemaMappings, mapping => mapping.SourceHeader == "GWP"
+            && mapping.CanonicalField == ReinsuranceFieldNames.Claims
+            && mapping.IsCorrected
+            && mapping.IsLearned);
 
-        throw new FileNotFoundException($"Sample file was not found: {name}.");
+        var persisted = await client.GetFromJsonAsync<DocumentDetail>($"/api/documents/{upload.Id}", SerializerOptions);
+        Assert.NotNull(persisted);
+        Assert.Equal(ReviewState.Approved, persisted.ReviewState);
+        Assert.Contains(persisted.Fields, field => field.Name == ReinsuranceFieldNames.Claims && field.Value == "USD 450" && field.IsCorrected);
+    }
+
+    private static async Task<DocumentUploadResult> UploadOperationsNoteAsync(HttpClient client, string fileName)
+    {
+        using var multipart = new MultipartFormDataContent();
+        var text = $"Internal note: process later. This is not a reinsurance document. {Guid.NewGuid():N}";
+        multipart.Add(new ByteArrayContent(Encoding.UTF8.GetBytes(text)), "file", fileName);
+        var uploadResponse = await client.PostAsync("/api/documents/", multipart);
+        uploadResponse.EnsureSuccessStatusCode();
+        var upload = await uploadResponse.Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(upload);
+        return upload;
+    }
+
+    private static async Task<string> WriteTinyPngAsync(Guid id)
+    {
+        var path = Path.Combine(Path.GetTempPath(), "reva-page-tests", $"{id:N}.png");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var bytes = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=");
+        await File.WriteAllBytesAsync(path, bytes);
+        return path;
     }
 
     private static byte[] BuildEmailBordereau(string subject, string csv, string senderDomain = "orion.example")

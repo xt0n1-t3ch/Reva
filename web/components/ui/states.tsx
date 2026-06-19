@@ -17,9 +17,9 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-surface-2/30 px-6 py-12 text-center">
+    <div className="bg-dotgrid flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-surface-2/30 px-6 py-12 text-center">
       {icon && (
-        <span className="flex size-11 items-center justify-center rounded-full bg-surface-2 text-muted-foreground">
+        <span className="flex size-11 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground shadow-soft">
           {icon}
         </span>
       )}

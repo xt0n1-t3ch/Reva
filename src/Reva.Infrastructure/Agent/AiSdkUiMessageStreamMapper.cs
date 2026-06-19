@@ -24,7 +24,11 @@ public static class AiSdkUiMessageStreamMapper
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var textId = idFactory();
+        var reasoningId = idFactory();
         var textStarted = false;
+        var reasoningStarted = false;
+        var reasoningEnded = false;
+        var inThink = false;
         yield return Frame(StartJson(messageId));
 
         await foreach (var update in updates.WithCancellation(cancellationToken))
@@ -33,14 +37,54 @@ public static class AiSdkUiMessageStreamMapper
             {
                 switch (content)
                 {
-                    case TextContent text when !string.IsNullOrEmpty(text.Text):
-                        if (!textStarted)
+                    case TextReasoningContent reasoning when !string.IsNullOrEmpty(reasoning.Text):
+                        if (!reasoningStarted)
                         {
-                            textStarted = true;
-                            yield return Frame(TextStartJson(textId));
+                            reasoningStarted = true;
+                            yield return Frame(ReasoningStartJson(reasoningId));
                         }
 
-                        yield return Frame(TextDeltaJson(textId, text.Text));
+                        yield return Frame(ReasoningDeltaJson(reasoningId, reasoning.Text));
+                        break;
+                    case TextContent text when !string.IsNullOrEmpty(text.Text):
+                        // Some thinking models stream their chain-of-thought inline as a
+                        // <think>...</think> block in the content. Route those segments to
+                        // the reasoning channel so the answer bubble stays clean prose.
+                        foreach (var segment in SplitThink(text.Text, ref inThink))
+                        {
+                            if (segment.Text.Length == 0)
+                            {
+                                continue;
+                            }
+
+                            if (segment.IsReasoning)
+                            {
+                                if (!reasoningStarted)
+                                {
+                                    reasoningStarted = true;
+                                    yield return Frame(ReasoningStartJson(reasoningId));
+                                }
+
+                                yield return Frame(ReasoningDeltaJson(reasoningId, segment.Text));
+                            }
+                            else
+                            {
+                                if (reasoningStarted && !reasoningEnded)
+                                {
+                                    reasoningEnded = true;
+                                    yield return Frame(ReasoningEndJson(reasoningId));
+                                }
+
+                                if (!textStarted)
+                                {
+                                    textStarted = true;
+                                    yield return Frame(TextStartJson(textId));
+                                }
+
+                                yield return Frame(TextDeltaJson(textId, segment.Text));
+                            }
+                        }
+
                         break;
                     case FunctionCallContent call:
                         yield return Frame(ToolInputJson(call.CallId, call.Name, ToJsonElement(call.Arguments, emptyObject: true)));
@@ -52,6 +96,11 @@ public static class AiSdkUiMessageStreamMapper
             }
         }
 
+        if (reasoningStarted && !reasoningEnded)
+        {
+            yield return Frame(ReasoningEndJson(reasoningId));
+        }
+
         if (textStarted)
         {
             yield return Frame(TextEndJson(textId));
@@ -60,6 +109,74 @@ public static class AiSdkUiMessageStreamMapper
         yield return Frame(FinishJson());
         yield return Frame(AgentStreamConstants.Done);
     }
+
+    private readonly record struct ThinkSegment(bool IsReasoning, string Text);
+
+    private static List<ThinkSegment> SplitThink(string value, ref bool inThink)
+    {
+        const string open = "<think>";
+        const string close = "</think>";
+        var segments = new List<ThinkSegment>();
+        var index = 0;
+        while (index < value.Length)
+        {
+            if (!inThink)
+            {
+                var openAt = value.IndexOf(open, index, StringComparison.Ordinal);
+                if (openAt < 0)
+                {
+                    segments.Add(new ThinkSegment(false, value[index..]));
+                    break;
+                }
+
+                if (openAt > index)
+                {
+                    segments.Add(new ThinkSegment(false, value[index..openAt]));
+                }
+
+                inThink = true;
+                index = openAt + open.Length;
+            }
+            else
+            {
+                var closeAt = value.IndexOf(close, index, StringComparison.Ordinal);
+                if (closeAt < 0)
+                {
+                    segments.Add(new ThinkSegment(true, value[index..]));
+                    break;
+                }
+
+                if (closeAt > index)
+                {
+                    segments.Add(new ThinkSegment(true, value[index..closeAt]));
+                }
+
+                inThink = false;
+                index = closeAt + close.Length;
+            }
+        }
+
+        return segments;
+    }
+
+    private static string ReasoningStartJson(string id) => FixedJson(writer =>
+    {
+        writer.WriteString(AgentStreamConstants.TypeProperty, "reasoning-start");
+        writer.WriteString(AgentStreamConstants.Id, id);
+    });
+
+    private static string ReasoningDeltaJson(string id, string delta) => FixedJson(writer =>
+    {
+        writer.WriteString(AgentStreamConstants.TypeProperty, "reasoning-delta");
+        writer.WriteString(AgentStreamConstants.Id, id);
+        writer.WriteString(AgentStreamConstants.Delta, delta);
+    });
+
+    private static string ReasoningEndJson(string id) => FixedJson(writer =>
+    {
+        writer.WriteString(AgentStreamConstants.TypeProperty, "reasoning-end");
+        writer.WriteString(AgentStreamConstants.Id, id);
+    });
 
     public static async IAsyncEnumerable<string> GracefulMessageAsync(
         string message,

@@ -11,9 +11,16 @@ interface Kpi {
 
 const toneText: Record<Kpi["tone"], string> = {
   neutral: "text-foreground",
-  warning: "text-warning-foreground",
+  warning: "text-warning",
   danger: "text-danger",
   success: "text-success",
+};
+
+const toneAccent: Record<Kpi["tone"], string> = {
+  neutral: "bg-border-strong",
+  warning: "bg-warning",
+  danger: "bg-danger",
+  success: "bg-success",
 };
 
 const computeKpis = (documents: DocumentSummary[]): Kpi[] => {
@@ -34,28 +41,33 @@ const computeKpis = (documents: DocumentSummary[]): Kpi[] => {
 
 export function KpiStrip({ documents, loading }: { documents: DocumentSummary[]; loading: boolean }) {
   if (loading) {
-    return (
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton key={index} className="h-[4.75rem]" />
-        ))}
-      </div>
-    );
+    return <Skeleton className="h-[7.5rem] rounded-lg" />;
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {computeKpis(documents).map((kpi) => (
-        <div key={kpi.label} className="rounded-lg border border-border bg-surface p-3.5 shadow-soft">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-subtle-foreground">
-            {kpi.label}
-          </p>
-          <p className={`mt-1.5 font-mono text-2xl font-semibold tabular leading-none ${toneText[kpi.tone]}`}>
-            {kpi.value}
-          </p>
-          <p className="mt-1.5 text-[11px] text-muted-foreground">{kpi.hint}</p>
-        </div>
-      ))}
+    <div className="overflow-hidden rounded-lg border border-border bg-border">
+      <div className="grid grid-cols-2 gap-px lg:grid-cols-4">
+        {computeKpis(documents).map((kpi) => (
+          <div
+            key={kpi.label}
+            className="group/kpi relative bg-background p-4 transition-colors duration-200 hover:bg-surface-2/40 sm:p-5"
+          >
+            <span
+              aria-hidden="true"
+              className={`absolute left-0 top-4 h-7 w-0.5 rounded-full opacity-70 sm:top-5 ${toneAccent[kpi.tone]}`}
+            />
+            <p className="pl-3 text-[11px] font-medium uppercase tracking-[0.1em] text-subtle-foreground">
+              {kpi.label}
+            </p>
+            <p
+              className={`mt-3 pl-3 font-mono text-[2.125rem] font-semibold leading-none tracking-[-0.03em] tabular ${toneText[kpi.tone]}`}
+            >
+              {kpi.value}
+            </p>
+            <p className="mt-2.5 pl-3 text-xs text-muted-foreground">{kpi.hint}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

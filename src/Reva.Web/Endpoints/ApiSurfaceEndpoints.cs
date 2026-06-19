@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Reva.Core.Contracts;
 using Reva.Infrastructure;
+using Reva.Infrastructure.Agent;
 using Reva.Infrastructure.Ingestion;
 using Reva.Infrastructure.Persistence;
 using Reva.Infrastructure.Review;
+using Reva.Infrastructure.SchemaMapping;
 using Reva.Infrastructure.Settings;
 
 namespace Reva.Web.Endpoints;
@@ -21,9 +23,24 @@ public static class ApiSurfaceEndpoints
             return Results.Ok(mappings);
         }).WithTags("Schema mappings");
 
+        routes.MapPut("/api/schema-mappings", async (SchemaMappingOverrideDraft draft, ISchemaMappingService schemaMapping, CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                return Results.Ok(await schemaMapping.UpsertOverrideAsync(draft, cancellationToken));
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        }).WithTags("Schema mappings");
+
         routes.MapGet("/api/settings", async (ISettingsStore settings, CancellationToken cancellationToken) => Results.Ok(await settings.GetAsync(cancellationToken))).WithTags("Settings");
 
         routes.MapPut("/api/settings", async (Reva.Core.Settings.AppSettings draft, ISettingsStore settings, CancellationToken cancellationToken) => Results.Ok(await settings.SaveAsync(draft, cancellationToken))).WithTags("Settings");
+
+        routes.MapPost("/api/models/discover", async (ModelDiscoveryRequest request, ILlmModelDiscoveryService discovery, CancellationToken cancellationToken) =>
+            Results.Ok(await discovery.DiscoverAsync(request, cancellationToken))).WithTags("Models");
 
         var data = routes.MapGroup("/api/data").WithTags("Data management");
         data.MapPost("/reseed", async (IDataMaintenance maintenance, CancellationToken cancellationToken) =>

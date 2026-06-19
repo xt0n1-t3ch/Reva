@@ -1,28 +1,36 @@
 import type { Metadata, Viewport } from "next";
-import { Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { config } from "@/lib/config";
 import { themeScript } from "@/lib/theme-script";
 import { ThemeProvider } from "@/components/shell/theme-provider";
 import { AppShell } from "@/components/shell/app-shell";
 import "./globals.css";
 
-const sans = Hanken_Grotesk({
-  variable: "--font-hanken",
-  subsets: ["latin"],
+const sans = localFont({
+  variable: "--font-geist-sans",
   display: "swap",
+  src: [
+    { path: "./fonts/Geist-Regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/Geist-Medium.ttf", weight: "500", style: "normal" },
+    { path: "./fonts/Geist-SemiBold.ttf", weight: "600", style: "normal" },
+    { path: "./fonts/Geist-Bold.ttf", weight: "700", style: "normal" },
+  ],
 });
 
-const mono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  weight: ["400", "500", "600"],
-  subsets: ["latin"],
+const mono = localFont({
+  variable: "--font-geist-mono",
   display: "swap",
+  src: [
+    { path: "./fonts/GeistMono-Regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/GeistMono-Medium.ttf", weight: "500", style: "normal" },
+    { path: "./fonts/GeistMono-SemiBold.ttf", weight: "600", style: "normal" },
+  ],
 });
 
 export const metadata: Metadata = {
-  title: `${config.productName} — Bordereaux intelligence`,
+  title: `${config.productName} — Reinsurance document intelligence`,
   description:
-    "Local-first reinsurance bordereaux ingestion, extraction, reconciliation, and source-cited review.",
+    "Reinsurance document processing — extraction, reconciliation, and source-cited review.",
 };
 
 export const viewport: Viewport = {
@@ -34,11 +42,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} h-full antialiased`}>
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable} h-full antialiased`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="h-full">
+      <body className="h-full" suppressHydrationWarning>
         <ThemeProvider>
           <AppShell>{children}</AppShell>
         </ThemeProvider>

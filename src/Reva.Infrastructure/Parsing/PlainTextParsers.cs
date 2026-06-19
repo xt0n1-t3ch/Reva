@@ -18,25 +18,35 @@ public sealed class TextFileParser : IFileParser
     }
 }
 
-// CSV: first row is the header, remaining rows become one table.
+// CSV / TSV: first row is the header, remaining rows become one table.
+// For .tsv the delimiter is always tab. For .csv the delimiter is auto-detected
+// (comma / tab / semicolon) by sampling the first non-empty lines.
 public sealed class CsvFileParser : IFileParser
 {
+    private static readonly char[] CandidateDelimiters = [',', '\t', ';'];
+    private const int DetectionSampleLines = 5;
+
     public string Profile => "csv";
 
     public bool CanParse(string extension) => extension is ".csv" or ".tsv";
 
     public async Task<ParsedDocument> ParseAsync(string filePath, CancellationToken cancellationToken)
     {
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
         var raw = await File.ReadAllTextAsync(filePath, Encoding.UTF8, cancellationToken);
         var lines = raw.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
         if (lines.Length == 0)
         {
-            return ParseSupport.Build(Profile, "csv", raw, string.Empty, warnings: ["CSV document was empty after trimming blank lines."]);
+            var fmt = extension == ".tsv" ? "tsv" : "csv";
+            return ParseSupport.Build(Profile, fmt, raw, string.Empty, warnings: [$"{fmt.ToUpperInvariant()} document was empty after trimming blank lines."]);
         }
 
-        var headers = ParseSupport.SplitCsvLine(lines[0]);
+        var delimiter = extension == ".tsv" ? '\t' : DetectDelimiter(lines);
+        var sourceFormat = extension == ".tsv" ? "tsv" : "csv";
+
+        var headers = SplitDelimited(lines[0], delimiter);
         var rows = lines.Skip(1)
-            .Select(ParseSupport.SplitCsvLine)
+            .Select(line => SplitDelimited(line, delimiter))
             .Where(values => values.Count > 0)
             .Select(values => (IReadOnlyDictionary<string, string>)headers
                 .Select((header, index) => (header, value: index < values.Count ? values[index] : string.Empty))
@@ -45,7 +55,45 @@ public sealed class CsvFileParser : IFileParser
 
         var table = ParseSupport.TableFromRows(ParseSupport.FriendlyName(filePath), headers, rows);
         var markdown = ParseSupport.ToMarkdownTable(headers, rows);
-        return ParseSupport.Build(Profile, "csv", raw, markdown, [table]);
+        return ParseSupport.Build(Profile, sourceFormat, raw, markdown, [table]);
+    }
+
+    private static char DetectDelimiter(string[] lines)
+    {
+        var sample = lines.Take(DetectionSampleLines).ToArray();
+        var scores = CandidateDelimiters
+            .Select(d => (delimiter: d, score: ScoreDelimiter(sample, d)))
+            .OrderByDescending(x => x.score)
+            .ToList();
+        return scores[0].score > 0 ? scores[0].delimiter : ',';
+    }
+
+    private static int ScoreDelimiter(string[] lines, char delimiter)
+    {
+        if (lines.Length == 0)
+        {
+            return 0;
+        }
+
+        var counts = lines.Select(line => line.Count(c => c == delimiter)).ToArray();
+        var first = counts[0];
+        if (first == 0)
+        {
+            return 0;
+        }
+
+        var consistent = counts.All(c => c == first) ? first * 10 : first;
+        return consistent;
+    }
+
+    private static List<string> SplitDelimited(string line, char delimiter)
+    {
+        if (delimiter == ',')
+        {
+            return ParseSupport.SplitCsvLine(line);
+        }
+
+        return line.Split(delimiter).Select(v => v.Trim()).ToList();
     }
 }
 

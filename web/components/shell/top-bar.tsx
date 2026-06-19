@@ -1,76 +1,110 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/cn";
-import { navItems } from "@/components/shell/nav";
-import { BrandMark } from "@/components/shell/nav-rail";
+import Image from "next/image";
+import Link from "next/link";
+import { PanelLeft, Presentation, Search, Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
-import { InboundStatus } from "@/components/shell/inbound-status";
-import { Button } from "@/components/ui/primitives";
-import { IconHelp, IconSparkles } from "@/components/ui/icons";
 
-const MenuIcon = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" aria-hidden="true">
-    <path d="M3 6h18M3 12h18M3 18h18" />
-  </svg>
-);
-
-const activeItem = (pathname: string) =>
-  navItems.find((item) => (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))) ??
-  navItems[0];
+function BrandLogo() {
+  return (
+    <span className="relative grid size-7 shrink-0 place-items-center">
+      <Image
+        src="/reva-logo-dark.png"
+        alt=""
+        aria-hidden="true"
+        width={28}
+        height={28}
+        priority
+        className="size-7 object-contain dark:hidden"
+      />
+      <Image
+        src="/reva-logo-light.png"
+        alt=""
+        aria-hidden="true"
+        width={28}
+        height={28}
+        priority
+        className="hidden size-7 object-contain dark:block"
+      />
+    </span>
+  );
+}
 
 export function TopBar({
   onOpenNav,
   onToggleChat,
   chatOpen,
-  onStartTour,
+  onOpenShowcase,
+  onOpenPalette,
 }: {
   onOpenNav: () => void;
   onToggleChat: () => void;
   chatOpen: boolean;
   onStartTour: () => void;
+  onOpenShowcase: () => void;
+  onOpenPalette: () => void;
 }) {
-  const pathname = usePathname();
-  const current = activeItem(pathname);
-
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface/80 px-3 backdrop-blur-sm sm:px-4">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-3 sm:px-4">
       <button
         onClick={onOpenNav}
         aria-label="Open navigation"
-        className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-2 hover:text-foreground md:hidden"
+        className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-surface-2 hover:text-foreground md:hidden"
       >
-        <MenuIcon />
+        <PanelLeft className="size-4" />
       </button>
 
-      <div className="md:hidden">
-        <BrandMark collapsed />
-      </div>
+      <Link href="/" className="flex items-center gap-2 pr-2">
+        <BrandLogo />
+        <span className="text-[15px] font-semibold tracking-tight text-foreground">Reva</span>
+      </Link>
 
-      <div className="hidden min-w-0 flex-col md:flex">
-        <h1 className="truncate text-sm font-semibold leading-tight">{current.label}</h1>
-        <p className="truncate text-[11px] text-muted-foreground">{current.description}</p>
-      </div>
+      <button
+        type="button"
+        onClick={onOpenPalette}
+        className="group hidden h-9 w-full max-w-[360px] items-center gap-2 rounded-md border border-border bg-surface px-2.5 text-sm text-muted-foreground transition-colors hover:border-border-strong sm:flex"
+      >
+        <Search className="size-4 shrink-0" />
+        <span className="flex-1 text-left">Search Reva</span>
+        <kbd className="rounded border border-border bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] leading-none text-subtle-foreground">
+          ⌘K
+        </kbd>
+      </button>
 
-      <div className="ml-auto flex items-center gap-2">
-        <div className="hidden lg:block">
-          <InboundStatus />
-        </div>
+      <div className="ml-auto flex items-center gap-1">
+        <button
+          type="button"
+          onClick={onOpenPalette}
+          aria-label="Search"
+          className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-surface-2 hover:text-foreground sm:hidden"
+        >
+          <Search className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={onOpenShowcase}
+          aria-label="Open the guided showcase"
+          title="Guided showcase"
+          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary-border hover:bg-primary-soft hover:text-primary"
+        >
+          <Presentation className="size-4" />
+          <span className="hidden md:inline">Showcase</span>
+        </button>
         <ThemeToggle />
-        <Button variant="outline" size="sm" onClick={onStartTour} aria-label="Replay tour" className="gap-1.5">
-          <IconHelp width={15} height={15} />
-          <span className="hidden sm:inline">Tour</span>
-        </Button>
-        <Button
-          variant={chatOpen ? "primary" : "outline"}
-          size="sm"
+        <button
+          type="button"
           onClick={onToggleChat}
           aria-pressed={chatOpen}
-          className={cn("gap-1.5")}
+          aria-label="Toggle assistant"
+          className={
+            chatOpen
+              ? "inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-2.5 text-sm font-medium text-primary-foreground"
+              : "inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-sm font-medium text-foreground hover:border-border-strong"
+          }
         >
-          <IconSparkles width={15} height={15} />
-          <span className="hidden sm:inline">Assistant</span>
-        </Button>
+          <Sparkles className="size-4" />
+          <span className="hidden md:inline">Assistant</span>
+        </button>
       </div>
     </header>
   );

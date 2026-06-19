@@ -2,15 +2,21 @@ import { config } from "@/lib/config";
 import type {
   AppSettings,
   BdxReviewPayload,
+  DiscoverModelsRequest,
+  DiscoverModelsResponse,
   DocumentDetail,
   DocumentSummary,
   DocumentUploadResult,
   ExportTemplate,
   ExportTemplateDraft,
   InboundSourceStatus,
+  KnowledgeArticle,
+  KnowledgeArticleSummary,
+  LearnedSchemaMapping,
   ReconciliationCheck,
   ReviewDecision,
   SchemaMapping,
+  SchemaMappingOverrideDraft,
 } from "@/lib/api/types";
 
 export class ApiError extends Error {
@@ -77,11 +83,32 @@ export const api = {
       body: JSON.stringify(settings),
     }),
 
+  discoverModels: (req: DiscoverModelsRequest, signal?: AbortSignal) =>
+    request<DiscoverModelsResponse>("/api/models/discover", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req),
+      signal,
+    }),
+
   listSchemaMappings: (signal?: AbortSignal) =>
     request<SchemaMapping[]>("/api/schema-mappings", { signal }),
 
+  updateSchemaMapping: (draft: SchemaMappingOverrideDraft) =>
+    request<LearnedSchemaMapping>("/api/schema-mappings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(draft),
+    }),
+
   listInboundSources: (signal?: AbortSignal) =>
     request<InboundSourceStatus[]>("/api/inbound-sources", { signal }),
+
+  listKnowledge: (signal?: AbortSignal) =>
+    request<KnowledgeArticleSummary[]>("/api/knowledge", { signal }),
+
+  getKnowledge: (slug: string, signal?: AbortSignal) =>
+    request<KnowledgeArticle>(`/api/knowledge/${slug}`, { signal }),
 
   reseedDemo: () => request<{ seeded: boolean }>("/api/data/reseed", { method: "POST" }),
 
@@ -112,6 +139,9 @@ export const api = {
 
   pageImageUrl: (documentId: string, page: number) =>
     apiUrl(`/api/documents/${documentId}/pages/${page}.png`),
+
+  processStreamUrl: (documentId: string) =>
+    apiUrl(`/api/documents/${documentId}/process-stream`),
 
   exportUrl: (documentId: string, format: string, templateId?: string) => {
     const params = new URLSearchParams({ format });

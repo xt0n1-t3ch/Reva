@@ -13,6 +13,27 @@ export type ExceptionSeverity = "Info" | "Warning" | "Critical";
 export type ExportFormat = "Csv" | "Excel" | "Json";
 export type AppTheme = "Light" | "Dark" | "System";
 
+export interface LearnedSchemaMapping {
+  id: number;
+  senderKey: string;
+  sourceHeader: string;
+  normalizedSourceHeader: string;
+  canonicalField: string;
+  confidence: number | null;
+  isOverride: boolean;
+  useCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SchemaMappingOverrideDraft {
+  senderKey: string;
+  sourceHeader: string;
+  canonicalField: string;
+  confidence?: number | null;
+  isOverride?: boolean | null;
+}
+
 export interface DocumentUploadResult {
   id: string;
   fileName: string;
@@ -206,6 +227,18 @@ export interface InboundSourceStatus {
   detail: string;
 }
 
+export type ProcessingStage = "parsing" | "ocr" | "extracting" | "mapping" | "reconciling";
+
+export type ProcessingEvent =
+  | { type: "stage"; stage: ProcessingStage; status: "start" | "done"; detail: string; at: string }
+  | { type: "line"; page: number; text: string; at: string }
+  | { type: "field"; field: string; value: string; confidence: number; page: number | null; at: string }
+  | { type: "reconcile"; field: string; detected: string; expected: string; agreement: number; at: string }
+  | { type: "done"; documentId: string; at: string }
+  | { type: "error"; message: string; at: string };
+
+export type AiProvider = "Ollama" | "OpenAiCompatible" | "HuggingFace";
+
 export interface AppSettings {
   theme: AppTheme;
   accentColor: string;
@@ -215,6 +248,27 @@ export interface AppSettings {
   defaultTemplateId: string | null;
   reconciliationTolerance: number;
   useLlmAssist: boolean;
+  aiProvider: AiProvider;
+  aiBaseUrl: string;
+  aiApiKey: string | null;
+  aiModel: string;
+}
+
+export interface ModelOption {
+  id: string;
+  label: string;
+}
+
+export interface DiscoverModelsRequest {
+  provider: AiProvider;
+  baseUrl: string;
+  apiKey?: string | null;
+}
+
+export interface DiscoverModelsResponse {
+  models: ModelOption[];
+  source: "endpoint" | "curated" | "error";
+  message?: string;
 }
 
 export interface ExportColumn {
@@ -234,6 +288,17 @@ export interface ExportTemplateDraft {
   name: string;
   format: ExportFormat;
   columns: ExportColumn[];
+}
+
+export interface KnowledgeArticleSummary {
+  slug: string;
+  title: string;
+  category: string;
+  summary: string;
+}
+
+export interface KnowledgeArticle extends KnowledgeArticleSummary {
+  content: string;
 }
 
 export interface ExportRecord {

@@ -9,6 +9,7 @@ using Reva.Infrastructure;
 using Reva.Infrastructure.Agent;
 using Reva.Infrastructure.Persistence;
 using Reva.Infrastructure.Review;
+using Reva.Infrastructure.Settings;
 
 namespace Reva.Integration;
 
@@ -56,9 +57,9 @@ public sealed class AgentEndpointTests(RevaWebApplicationFactory factory) : ICla
 
     private sealed class StubAgentChatService : IAgentChatService
     {
-        public IReadOnlyList<AITool> BuildTools(IDocumentWorkflow workflow, RevaDbContext dbContext, IBdxReviewPayloadAssembler assembler, CancellationToken cancellationToken) => [];
+        public IReadOnlyList<AITool> BuildTools(IDocumentWorkflow workflow, RevaDbContext dbContext, IBdxReviewPayloadAssembler assembler, CancellationToken cancellationToken, IDataMaintenance? maintenance = null) => [];
 
-        public async IAsyncEnumerable<ChatResponseUpdate> StreamAsync(IReadOnlyList<ChatMessage> messages, IReadOnlyList<AITool> tools, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<ChatResponseUpdate> StreamAsync(IReadOnlyList<ChatMessage> messages, IReadOnlyList<AITool> tools, [EnumeratorCancellation] CancellationToken cancellationToken, AgentReasoningOptions? reasoning = null)
         {
             Assert.NotEmpty(messages);
             Assert.Empty(tools);

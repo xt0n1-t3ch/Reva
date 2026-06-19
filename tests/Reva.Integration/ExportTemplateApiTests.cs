@@ -64,7 +64,7 @@ public sealed class ExportTemplateApiTests(RevaWebApplicationFactory factory) : 
         using var client = factory.CreateClient();
 
         using var multipart = new MultipartFormDataContent();
-        multipart.Add(new ByteArrayContent(File.ReadAllBytes(SamplePath("bordereau.csv"))), "file", "bordereau.csv");
+        multipart.Add(new ByteArrayContent(File.ReadAllBytes(TestPaths.SamplePath("bordereau.csv"))), "file", "bordereau.csv");
         var upload = await (await client.PostAsync("/api/documents/", multipart))
             .Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
         Assert.NotNull(upload);
@@ -80,20 +80,31 @@ public sealed class ExportTemplateApiTests(RevaWebApplicationFactory factory) : 
         Assert.False(string.IsNullOrWhiteSpace(body));
     }
 
-    private static string SamplePath(string name)
+    [Theory]
+    [InlineData("Csv", "text/csv")]
+    [InlineData("Excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    [InlineData("Json", "application/json")]
+    public async Task ExportEndpointReturnsFilesForFrontendFormats(string format, string mediaType)
     {
-        var current = new DirectoryInfo(AppContext.BaseDirectory);
-        while (current is not null)
+        using var client = factory.CreateClient();
+
+        using var multipart = new MultipartFormDataContent();
+        multipart.Add(new ByteArrayContent(File.ReadAllBytes(TestPaths.SamplePath("bordereau.csv"))), "file", $"export-{format}.csv");
+        var upload = await (await client.PostAsync("/api/documents/", multipart))
+            .Content.ReadFromJsonAsync<DocumentUploadResult>(SerializerOptions);
+        Assert.NotNull(upload);
+
+        var response = await client.GetAsync($"/api/documents/{upload.Id}/export?format={format}");
+
+        response.EnsureSuccessStatusCode();
+        Assert.Equal(mediaType, response.Content.Headers.ContentType?.MediaType);
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotEmpty(bytes);
+        if (format == "Excel")
         {
-            var candidate = Path.Combine(current.FullName, "samples", name);
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-
-            current = current.Parent;
+            Assert.Equal((byte)'P', bytes[0]);
+            Assert.Equal((byte)'K', bytes[1]);
         }
-
-        throw new FileNotFoundException($"Sample file was not found: {name}.");
     }
+
 }

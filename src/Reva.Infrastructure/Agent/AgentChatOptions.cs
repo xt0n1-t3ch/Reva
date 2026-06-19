@@ -1,11 +1,15 @@
+using Reva.Core.Settings;
+
 namespace Reva.Infrastructure.Agent;
 
 public sealed record AgentChatOptions
 {
-    public const string DefaultModel = "qwen3-vl:8b";
-    public const string DefaultBaseUrl = "http://localhost:11434/v1";
+    public const string DefaultModel = AiSettingsDefaults.DefaultModel;
+    public const string DefaultBaseUrl = AiSettingsDefaults.OllamaBaseUrl;
     public const int DefaultNumCtx = 16384;
-    public const int DefaultMaxSteps = 6;
+    // Generous safety bound (runaway guard), not a flow limiter: the agent stops
+    // naturally when the task is done. Configurable via Reva:Agent:MaxSteps.
+    public const int DefaultMaxSteps = 48;
     public const double DefaultTemperature = 0;
     public const int DefaultMaxMessages = 50;
     public const int DefaultMaxRequestBytes = 1_000_000;

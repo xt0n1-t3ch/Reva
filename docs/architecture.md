@@ -1,155 +1,74 @@
 # Architecture
 
-Reva is a local-first document-intelligence application for reinsurance bordereaux ingestion and reconciliation. The production runtime is deliberately simple: one self-contained `Reva.exe` hosts the static cockpit, REST API, OCR, reconciliation engine, and assistant chat on `http://localhost:5187`.
-
-## System overview
+Reva is a web app backed by a .NET document-intelligence API. The frontend gives analysts a review workspace; the backend owns ingestion, OCR, extraction, reconciliation, persistence, export, Knowledge Hub, and agent tools.
 
 ```mermaid
 flowchart TB
-  subgraph Release["Windows release package"]
-    Exe["Reva.exe<br/>.NET 10 self-contained<br/>PublishSingleFile"]
-    Cmd["Start-Reva.cmd"]
-    RunReadme["README-RUN.txt"]
+  subgraph Client["web/"]
+    Shell["App shell"]
+    Review["Review workspace"]
+    Chat["Vercel AI SDK chat"]
+    Knowledge["Knowledge Hub"]
   end
 
-  subgraph Host["src/Reva.Web · Microsoft.NET.Sdk.Web"]
-    Static["Static UI serving<br/>wwwroot + SPA fallback"]
-    Rest["Minimal REST API<br/>OpenAPI + health"]
-    AgentEndpoint["/api/agent<br/>AI-SDK UI-message-stream SSE"]
+  subgraph Api["src/Reva.Web"]
+    Documents["Document endpoints"]
+    Streams["Processing SSE"]
+    Agent["Agent streaming endpoint"]
+    Settings["Settings endpoints"]
+    KnowledgeApi["Knowledge endpoints"]
   end
 
-  subgraph Web["web/ · build-time only"]
-    Next["Next.js 16.2.9 App Router<br/>React 19.2 · TypeScript · Tailwind 4<br/>output: export"]
-  end
-
-  subgraph Core["src/Reva.Core"]
-    Contracts["Contracts.cs"]
-    Fields["canonical reinsurance fields"]
-    Money["MoneyFormatter"]
-  end
-
-  subgraph Infra["src/Reva.Infrastructure"]
+  subgraph Domain["Core + Infrastructure"]
+    Core["Reinsurance contracts"]
     Workflow["DocumentWorkflow"]
-    Router["ParserRouter + typed parsers"]
-    OCR["Sdcb.PaddleOCR<br/>PP-OCR V5 bundled models"]
-    Extract["classifier + field extractor"]
-    Mapping["schema mapping<br/>alias → fuzzy → learned"]
-    Reconcile["reconciliation engine<br/>configurable tolerance"]
-    Agent["Agent/ native chat services<br/>FunctionInvokingChatClient"]
-    Persistence["EF Core persistence<br/>SQLite default / SQL Server switch"]
+    Parsers["Format parsers + OCR"]
+    Extract["Extraction + mapping"]
+    Recon["Reconciliation"]
+    Export["Export templates"]
+    Tools["Agent tools"]
   end
 
-  Browser["Analyst browser"] -->|localhost only| Exe
-  Cmd --> Exe
-  Exe --> Host
-  Next -->|package-time export| Static
-  Static --> Browser
-  Rest --> Workflow
-  AgentEndpoint --> Agent
-  Agent -->|tools over real workflow| Workflow
-  Workflow --> Router --> OCR
-  Workflow --> Extract --> Mapping --> Reconcile
-  Workflow --> Persistence
-  Workflow --> Core
-  Persistence --> Db[("SQLite database")]
-  Persistence -. config .-> SqlServer[("SQL Server")]
+  Store[("SQLite EF Core")]
+  Providers["Optional model providers"]
+
+  Client -->|HTTP| Api
+  Chat -->|streaming protocol| Agent
+  Streams --> Client
+  Api --> Domain
+  Domain --> Store
+  Domain -. configured .-> Providers
 ```
 
 ## Runtime shape
 
-Reva ships as one self-contained Windows executable:
+- `web/` is the product frontend: Next.js 16, React 19, Tailwind v4, Vercel AI SDK, and a Geist-style design system.
+- `src/Reva.Web` is the ASP.NET Core .NET 10 host. It maps feature endpoints once and serves the static export in production.
+- `src/Reva.Core` owns domain contracts, document states, canonical field names, and shared value formatting.
+- `src/Reva.Infrastructure` owns the workflow machinery: storage, EF Core, parser routing, PaddleOCR, field extraction, schema mapping, reconciliation, Knowledge Hub, export, settings, and agent tools.
+- SQLite is the default EF Core provider. SQL Server remains a provider option by configuration.
 
-- `win-x64`, .NET 10, self-contained publish.
-- `PublishSingleFile=true` with native libraries self-extracted by the .NET host.
-- One process serves the web UI, API, OCR engine, persistence workflow, and native chat endpoint.
-- One origin (`http://localhost:5187`) avoids cross-origin setup and keeps the release package easy to smoke-test.
-- The static UI is staged into `src/Reva.Web/wwwroot` during packaging; Node.js is not present at run time.
+## Request boundaries
 
-## Project boundaries
-
-| Project | Responsibility | Dependencies |
+| Boundary | Owner | Notes |
 |:---|:---|:---|
-| `src/Reva.Core` | Domain contracts, document states, canonical reinsurance field names, review payload types, and the single `MoneyFormatter`. | No web or infrastructure dependencies. |
-| `src/Reva.Infrastructure` | EF Core persistence, SQLite/SQL Server provider selection, file storage, SHA-256 hashing, parser routing, typed parsers, OCR, classification, extraction, schema mapping, reconciliation, export, settings, demo data, and `DocumentWorkflow`. | Depends on Core and runtime libraries. |
-| `src/Reva.Infrastructure/Agent` | Native assistant chat: AI-SDK request parsing, UI-message-stream SSE mapping, Ollama process management, tool-loop registration, and document/reconciliation/field-explanation tools. | Uses the real workflow and review payload assembler. |
-| `src/Reva.Web` | Minimal API host, `/api/agent`, `/api/agent/status`, OpenAPI, static file serving, SPA fallback, and package health. | Depends on Core and Infrastructure. |
-| `web/` | Next.js 16.2.9 static cockpit. Built with `pnpm` at package time and exported to `wwwroot`. | Build-time Node.js only. |
-
-## API surface
-
-| Route | Purpose |
-|:---|:---|
-| `POST /api/documents` | Upload a document and run ingestion. |
-| `GET /api/documents` | Return the work queue. |
-| `GET /api/documents/{id}` | Return document detail. |
-| `GET /api/documents/{id}/review-payload` | Return the schema-backed split-view review payload. |
-| `GET /api/documents/{id}/pages/{page}.png` | Return a page image for review and citation overlays. |
-| `POST /api/documents/{id}/review` | Save field edits and mapping corrections. |
-| `GET /api/documents/{id}/export` | Export the document with a selected format/template. |
-| `/api/templates` | Create, read, update, duplicate, and delete export templates. |
-| `POST /api/data/reseed` / `POST /api/data/clear` | Manage local demo/workspace data. |
-| `POST /api/agent` | Stream native assistant responses as AI-SDK UI-message-stream SSE. |
-| `GET /api/agent/status` | Report Ollama process/model availability. |
-| `GET /health` | Package and host health check. |
+| Frontend API client | `web/lib/api/client.ts` | Keep request/response shapes centralized here. |
+| HTTP endpoints | `src/Reva.Web/Endpoints` | Map each endpoint group once. |
+| Domain contracts | `src/Reva.Core` | Keep canonical field names and review payloads stable. |
+| Workflow operations | `src/Reva.Infrastructure` | Deterministic path first; optional providers only when enabled. |
+| Contract schemas | `contracts/` | Review payload schema and normalized geometry. |
 
 ## Data flow
 
-```mermaid
-sequenceDiagram
-  autonumber
-  actor Analyst
-  participant UI as Next.js cockpit
-  participant API as Reva.Web API
-  participant Flow as DocumentWorkflow
-  participant Parse as ParserRouter/OCR
-  participant Map as SchemaMappingService
-  participant Rec as Reconciliation engine
-  participant DB as EF Core store
+1. Analyst uploads a document from the web app.
+2. API stores the file, hashes it for deduplication, and starts the workflow.
+3. Parser routing reads the format; scanned images use PaddleOCR.
+4. Extraction finds canonical reinsurance fields and source spans.
+5. Schema mapping normalizes sender headers.
+6. Reconciliation compares stated totals to computed line-item values.
+7. Review payloads return fields, citations, issues, and export options.
+8. The agent can call backend tools over the same persisted state.
 
-  Analyst->>UI: Upload document
-  UI->>API: POST /api/documents
-  API->>Flow: IngestAsync(file)
-  Flow->>Parse: parse text, tables, pages, source spans
-  Parse-->>Flow: parsed content + normalized geometry
-  Flow->>Flow: classify and extract fields
-  Flow->>Map: alias/fuzzy/learned sender mapping
-  Map-->>Flow: mapped canonical fields + evidence
-  Flow->>Rec: compare stated figures with line-item totals
-  Rec-->>Flow: field exceptions + agreement scores
-  Flow->>DB: persist document, pages, spans, fields, mappings, issues
-  API-->>UI: document summary
-  UI->>API: GET /api/documents/{id}/review-payload
-  API-->>UI: pages + fields + citations + reconciliation
-  Analyst->>UI: Review, correct mapping/fields, export
-```
+## Provider model
 
-## Persistence and configuration
-
-SQLite is the offline default. SQL Server is selected by configuration when a shared database is needed:
-
-```json
-{
-  "Reva": {
-    "Database": {
-      "Provider": "SqlServer",
-      "ConnectionString": "Server=.;Database=Reva;Trusted_Connection=True;TrustServerCertificate=True"
-    }
-  }
-}
-```
-
-Settings stored in the app include theme/accent/branding, confidence thresholds, reconciliation tolerance, optional LLM-assisted extraction, default export template, and data-management actions.
-
-## Review payload and citations
-
-Review payloads follow [`contracts/bdx-review-payload.schema.json`](../contracts/bdx-review-payload.schema.json). Source geometry is normalized to `0..1` against the final rendered page size. OCR and rendered PDF pages can carry exact boxes and polygons; purely textual or fallback parses still include provenance even when geometry is unavailable.
-
-The split-view cockpit uses this contract to keep field panels, exception cards, and document highlights synchronized. A corrected field is marked **Reviewed** rather than having its confidence inflated.
-
-## Security posture
-
-- Localhost-only runtime; no external service is required for core extraction.
-- Uploads are stored under safe names and hashed with SHA-256.
-- Unknown files degrade to visible-text fallback instead of crashing the workflow.
-- Optional Docling and optional LLM-assisted extraction stay disabled unless configured.
-- Secrets come from environment or local configuration and are never part of the repository.
+Model providers are optional. The default path is deterministic. When configured, Reva can use local Ollama, OpenAI-compatible streaming endpoints, or HuggingFace cloud paths for chat and extraction assist.

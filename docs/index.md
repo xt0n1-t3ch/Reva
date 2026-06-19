@@ -1,45 +1,46 @@
-# Reva documentation
+# Reva docs
 
-<div align="center">
-  <img src="assets/reva-banner.png" alt="Reva cockpit banner" />
-  <p><strong>Production docs for Reva 1.3.0 — local-first document intelligence for reinsurance bordereaux.</strong></p>
-</div>
+Reva is a reinsurance document-intelligence web app. It ingests operational documents, extracts source-cited fields, reconciles totals, lets analysts review exceptions, and exports clean data.
 
 ## Start here
 
-| Guide | Scope |
+| Page | Use it for |
 |:---|:---|
-| [Architecture](architecture.md) | The single `Reva.exe`, .NET 10 host, static Next.js cockpit, API surface, persistence, and runtime boundaries. |
-| [AI pipeline](ai-pipeline.md) | Parser routing, offline OCR, extraction, confidence, learned mapping, reconciliation, assistant chat, and export. |
-| [Packaging](packaging.md) | Windows package contents, build command, release ZIP shape, and smoke-test checks. |
-| [Demo script](demo-script.md) | A short product walkthrough using the seeded corpus and real review/export flows. |
-| [Reinsurance landscape](research/reinsurance-landscape.md) | Domain grounding: document types, canonical fields, standards, reconciliation breaks, and competitive UX patterns. |
-| [Test suite](../tests/index.md) | Unit, integration, host smoke, package smoke, web Playwright, accessibility, and optional Docling-worker tests. |
+| [README](../README.md) | Product overview, stack, quick start, architecture diagram. |
+| [Architecture](architecture.md) | Web frontend, API, domain core, infrastructure, storage, and provider seams. |
+| [AI pipeline](ai-pipeline.md) | Deterministic path, optional model assist, agent tool loop, and provider choices. |
+| [Demo script](demo-script.md) | A short walkthrough for upload, review, copilot, Knowledge Hub, and export. |
+| [Packaging](packaging.md) | Build and run shape for the API-hosted static web app. |
 
-## Current product contract
+## Learn
 
-Reva is a local-first, offline-by-default AI document-intelligence application for reinsurance bordereaux ingestion and reconciliation. The product name is **Reva**; the in-app cockpit title is **Reve Intelligence**.
+| Page | Use it for |
+|:---|:---|
+| [Interview cheatsheet](learn/interview-cheatsheet.md) | Elevator pitch, Q&A, and demo script. |
+| [Code tour](learn/code-tour.md) | Where each project fits. |
+| [Tech stack](learn/tech-stack.md) | How to explain each technology choice. |
+| [Model landscape](learn/model-landscape.md) | Local and provider-backed model options. |
 
-At runtime, Reva is one localhost-only Windows process:
+## Research
+
+| Page | Use it for |
+|:---|:---|
+| [Reinsurance landscape](research/reinsurance-landscape.md) | Domain, document types, reconciliation breaks, and competitive patterns. |
 
 ```mermaid
 flowchart LR
-  Browser["Analyst browser"] --> Host["Reva.exe on http://localhost:5187"]
-  Host --> UI["Static Next.js UI from wwwroot"]
-  Host --> API["REST API + /api/agent SSE"]
-  API --> Workflow["DocumentWorkflow"]
-  Workflow --> OCR["PaddleOCR + native parsers"]
-  Workflow --> Map["learned schema mapping"]
-  Workflow --> Reconcile["reconciliation engine"]
-  Workflow --> Export["CSV / Excel / JSON templates"]
-  Workflow --> Store[("SQLite default")]
+  User["Analyst"] --> Web["Next.js web app"]
+  Web --> Api["ASP.NET Core API"]
+  Api --> Infra["Workflow + OCR + extraction + agent tools"]
+  Infra --> Core["Reinsurance domain contracts"]
+  Infra --> Db[("SQLite")]
+  Infra -. optional .-> Models["Local or compatible model providers"]
 ```
 
-## Non-goals and boundaries
+## Product constraints
 
-- Node.js is build-time only; no Node process is required in the release package.
-- Python and Docling are optional richer parsing paths, not core runtime requirements.
-- The inbound email seam is file-based `.eml`/`.msg`; live mailbox sync is not a shipped feature.
-- Extraction stays deterministic and keyless unless optional LLM-assisted extraction is explicitly enabled.
-- Bounding boxes are normalized to `0..1` against the final rendered page size.
-- Provenance is always present; citations may be empty only when geometry is unavailable.
+- The deterministic path must work without keys, network access, or model providers.
+- AI features are optional and settings-driven.
+- Every field carries provenance.
+- Geometry-backed citations use normalized coordinates.
+- The web app is the product surface; docs should not describe retired UI shells.

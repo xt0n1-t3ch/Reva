@@ -1,56 +1,38 @@
 # Demo script
 
-This script shows Reva as a product: one localhost app that ingests messy reinsurance documents, extracts and maps canonical fields, reconciles headline figures against line items, supports source-cited human review, and exports approved data.
+Use this when showing Reva in an interview.
 
-## Run locally
-
-```powershell
-dotnet run --project src/Reva.Web/Reva.Web.csproj -- --seed-demo
-```
-
-Open `http://localhost:5187`. The packaged executable follows the same product flow after launching `Reva.exe` or `Start-Reva.cmd`.
-
-## Demo corpus
-
-| Document | Type | What it demonstrates |
-|:---|:---|:---|
-| `orion-property-cat-xl-jan-2025.eml` | Premium bordereau email with attachment | Email intake, attachment parsing, extraction, learned schema mapping, source citations, and reconciliation breaks where stated cover-note totals differ from summed line items. |
-| `meridian-property-cat-xl-bordereau-2025-q1.png` | Scanned bordereau image | Offline PaddleOCR on a scanned page, field extraction with real page coordinates, and geometry-backed citation overlays in the split view. |
-| `technical-account-statement.txt` | Statement of account | Clean technical-account extraction, confidence, approval, and export. |
-| `operations-note.txt` | Unknown operational note | Never-hard-reject behavior: the file still becomes a low-confidence reviewable record. |
-
-Reva can also process Excel/CSV, digital PDFs, scanned PDFs and images, Word, PowerPoint, plain text, email bodies, email attachments, and best-effort visible text from unknown files.
-
-## Five-minute walkthrough
-
-1. **Workspace** — Start at the work queue. Point out status, confidence, exceptions, and real page thumbnails for image/PDF entries. Filter to items that need review.
-2. **Import** — Drop a document or use the seeded `.eml`. Reva stores it, hashes it, parses the email body and attachment, classifies it, extracts fields, maps headers, reconciles values, and opens review.
-3. **Review split view** — On the left, document pages render with source highlights. On the right, canonical fields show values, confidence, status, citations, and exceptions. Hover or focus a field to highlight the exact source region.
-4. **Schema mapping** — Show the source header → canonical target mapping evidence. Correct a mapping once; the sender-specific EF rule is learned and takes precedence for the next document from that sender/domain.
-5. **Reconciliation** — Open the exception cards. Explain **Detected** as the stated value, **Expected** as the computed line-item total, and the agreement score as a value in `[0,1]`. Money checks honor the configured tolerance.
-6. **Assistant** — Open the assistant. Ask for the document summary or why a field failed reconciliation. If Ollama/model is not installed, show the graceful local-model-unavailable message and continue the core flow.
-7. **Export** — Pick a saved template, preview the output, and download CSV, Excel, or JSON. The Lloyd's CRS template demonstrates downstream reporting shape.
-8. **Settings** — Show theme/accent/branding, reconciliation tolerance, optional LLM-assisted extraction, default export template, reseed, and clear-data controls.
-
-## Talking points
-
-- **Local-first:** native parsers, bundled OCR, SQLite, deterministic extraction, and exports all run without external services.
-- **Trustworthy:** every extracted field carries provenance; geometry-backed citations highlight source regions; analyst edits become **Reviewed** instead of artificial confidence.
-- **Adaptive:** schema mapping starts with aliases and fuzzy matching, then learns sender/domain rules from corrections.
-- **Operational:** reconciliation turns mismatches into actionable field-level exceptions instead of burying them in tables.
-- **Simple to deploy:** the release is one `Reva.exe` serving the UI, API, OCR, and assistant endpoint from one localhost origin.
-
-## Proof commands
+## Start
 
 ```powershell
-dotnet test Reva.slnx
+dotnet run --project src/Reva.Web/Reva.Web.csproj -- --no-open
 cd web
-npx playwright test
+$env:NEXT_PUBLIC_API_BASE_URL = "http://localhost:5158"
+pnpm dev
 ```
 
-Package proof:
+Open `http://localhost:3000`.
 
-```powershell
-./scripts/package-windows.ps1 -Version 1.3.0
-./tests/package-smoke.ps1
-```
+## Walkthrough
+
+1. **Upload.** Drop a bordereau, statement, PDF, spreadsheet, email, or image into the workspace.
+2. **Watch processing.** Point out the live stage stream: parse, OCR when needed, extract, map, reconcile.
+3. **Review fields.** Open the review view. Show canonical fields, confidence, provenance, source citations, and exceptions.
+4. **Explain reconciliation.** Pick Premium or Claims and compare Detected vs Expected.
+5. **Correct a mapping.** Change a sender header mapping and explain that learned mappings take precedence for the next document from the same sender.
+6. **Ask the copilot.** Ask which document needs attention, why a field was flagged, or what to export.
+7. **Knowledge Hub.** Search a reference note and show how the agent can use product knowledge without guessing.
+8. **Export.** Export CSV, Excel, or JSON and explain the template boundary.
+
+## Talk track
+
+"Reva is a reinsurance document-intelligence web app. It turns files operations teams already receive into structured, source-cited data. The default path is deterministic and keyless. Optional model providers improve chat and extraction, but the workflow never depends on them. The interesting part is the trust loop: every value has provenance, every control total is reconciled, and analyst corrections teach the mapping layer for future files."
+
+## Proof points to mention
+
+- Next.js frontend with a Geist-style analyst workspace.
+- ASP.NET Core API with feature endpoint groups and streaming surfaces.
+- EF Core persistence over SQLite by default.
+- Local PaddleOCR for scanned files.
+- Vercel AI SDK chat with OpenAI-compatible streaming and backend tools.
+- Optional local or hosted model providers.

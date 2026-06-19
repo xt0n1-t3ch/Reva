@@ -10,36 +10,36 @@
 */
 
 :root {
-  --accent-default: oklch(0.524 0.176 264);
+  --accent-default: oklch(0.595 0.196 256);
   --accent: var(--accent-default);
 
-  --background: oklch(0.985 0.003 255);
+  --background: oklch(1 0 0);
   --surface: oklch(1 0 0);
-  --surface-2: oklch(0.968 0.004 255);
-  --surface-3: oklch(0.948 0.005 255);
-  --foreground: oklch(0.235 0.02 264);
-  --muted: oklch(0.955 0.004 255);
-  --muted-foreground: oklch(0.475 0.02 262);
-  --subtle-foreground: oklch(0.5 0.02 262);
-  --border: oklch(0.908 0.006 258);
-  --border-strong: oklch(0.855 0.008 258);
-  --input: oklch(0.9 0.006 258);
+  --surface-2: oklch(0.985 0 0);
+  --surface-3: oklch(0.95 0 0);
+  --foreground: oklch(0.145 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --subtle-foreground: oklch(0.62 0 0);
+  --border: oklch(0.922 0 0);
+  --border-strong: oklch(0.86 0 0);
+  --input: oklch(0.9 0 0);
   --ring: var(--accent);
 
   --primary: var(--accent);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-soft: color-mix(in oklab, var(--accent) 12%, var(--surface));
-  --primary-border: color-mix(in oklab, var(--accent) 32%, var(--border));
+  --primary-foreground: oklch(1 0 0);
+  --primary-soft: color-mix(in oklab, var(--accent) 10%, var(--surface));
+  --primary-border: color-mix(in oklab, var(--accent) 30%, var(--border));
 
-  --success: oklch(0.52 0.15 157);
-  --success-foreground: oklch(0.99 0 0);
-  --success-soft: color-mix(in oklab, oklch(0.52 0.15 157) 14%, var(--surface));
-  --warning: oklch(0.72 0.15 71);
-  --warning-foreground: oklch(0.27 0.05 71);
-  --warning-soft: color-mix(in oklab, oklch(0.72 0.15 71) 18%, var(--surface));
-  --danger: oklch(0.575 0.2 24);
-  --danger-foreground: oklch(0.99 0 0);
-  --danger-soft: color-mix(in oklab, oklch(0.575 0.2 24) 12%, var(--surface));
+  --success: oklch(0.62 0.15 156);
+  --success-foreground: oklch(1 0 0);
+  --success-soft: color-mix(in oklab, oklch(0.62 0.15 156) 12%, var(--surface));
+  --warning: oklch(0.72 0.15 70);
+  --warning-foreground: oklch(0.27 0.05 70);
+  --warning-soft: color-mix(in oklab, oklch(0.72 0.15 70) 16%, var(--surface));
+  --danger: oklch(0.58 0.21 25);
+  --danger-foreground: oklch(1 0 0);
+  --danger-soft: color-mix(in oklab, oklch(0.58 0.21 25) 10%, var(--surface));
   --info: var(--accent);
   --info-soft: var(--primary-soft);
 
@@ -47,46 +47,46 @@
   --confidence-medium: var(--warning);
   --confidence-low: var(--danger);
 
-  --citation: color-mix(in oklab, var(--accent) 22%, transparent);
-  --citation-active: color-mix(in oklab, var(--accent) 42%, transparent);
+  --citation: color-mix(in oklab, var(--accent) 18%, transparent);
+  --citation-active: color-mix(in oklab, var(--accent) 38%, transparent);
   --citation-ring: var(--accent);
 
-  --radius: 0.55rem;
+  --radius: 0.5rem;
   --radius-sm: 0.375rem;
-  --radius-lg: 0.85rem;
+  --radius-lg: 0.75rem;
 
-  --shadow-soft: 0 1px 2px oklch(0.2 0.02 264 / 0.06), 0 1px 3px oklch(0.2 0.02 264 / 0.04);
-  --shadow-pop: 0 8px 28px oklch(0.2 0.02 264 / 0.14), 0 2px 6px oklch(0.2 0.02 264 / 0.08);
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.05), 0 1px 1px oklch(0 0 0 / 0.04);
+  --shadow-pop: 0 4px 20px oklch(0 0 0 / 0.1), 0 1px 4px oklch(0 0 0 / 0.06);
 }
 
 .dark {
-  --background: oklch(0.178 0.013 264);
-  --surface: oklch(0.212 0.015 264);
-  --surface-2: oklch(0.246 0.016 264);
-  --surface-3: oklch(0.285 0.017 264);
-  --foreground: oklch(0.94 0.008 255);
-  --muted: oklch(0.246 0.014 264);
-  --muted-foreground: oklch(0.7 0.014 258);
-  --subtle-foreground: oklch(0.6 0.014 258);
-  --border: oklch(0.31 0.015 264);
-  --border-strong: oklch(0.4 0.016 264);
-  --input: oklch(0.34 0.015 264);
+  --background: oklch(0 0 0);
+  --surface: oklch(0.082 0 0);
+  --surface-2: oklch(0.115 0 0);
+  --surface-3: oklch(0.16 0 0);
+  --foreground: oklch(0.93 0 0);
+  --muted: oklch(0.11 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --subtle-foreground: oklch(0.55 0 0);
+  --border: oklch(0.205 0 0);
+  --border-strong: oklch(0.3 0 0);
+  --input: oklch(0.24 0 0);
 
-  --accent-default: oklch(0.64 0.16 264);
-  --primary-foreground: oklch(0.16 0.012 264);
-  --primary-soft: color-mix(in oklab, var(--accent) 22%, var(--surface));
-  --primary-border: color-mix(in oklab, var(--accent) 40%, var(--border));
+  --accent-default: oklch(0.66 0.18 256);
+  --primary-foreground: oklch(1 0 0);
+  --primary-soft: color-mix(in oklab, var(--accent) 18%, var(--surface));
+  --primary-border: color-mix(in oklab, var(--accent) 38%, var(--border));
 
-  --success: oklch(0.68 0.14 159);
-  --success-soft: color-mix(in oklab, oklch(0.68 0.14 159) 20%, var(--surface));
-  --warning: oklch(0.78 0.14 74);
-  --warning-foreground: oklch(0.2 0.04 74);
-  --warning-soft: color-mix(in oklab, oklch(0.78 0.14 74) 20%, var(--surface));
-  --danger: oklch(0.65 0.18 24);
-  --danger-soft: color-mix(in oklab, oklch(0.65 0.18 24) 22%, var(--surface));
+  --success: oklch(0.72 0.15 158);
+  --success-soft: color-mix(in oklab, oklch(0.72 0.15 158) 18%, var(--surface));
+  --warning: oklch(0.79 0.15 72);
+  --warning-foreground: oklch(0.2 0.04 72);
+  --warning-soft: color-mix(in oklab, oklch(0.79 0.15 72) 18%, var(--surface));
+  --danger: oklch(0.64 0.2 25);
+  --danger-soft: color-mix(in oklab, oklch(0.64 0.2 25) 20%, var(--surface));
 
-  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.4), 0 1px 3px oklch(0 0 0 / 0.3);
-  --shadow-pop: 0 10px 34px oklch(0 0 0 / 0.55), 0 2px 8px oklch(0 0 0 / 0.4);
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.5), 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-pop: 0 8px 30px oklch(0 0 0 / 0.6), 0 2px 8px oklch(0 0 0 / 0.45);
 }
 
 @theme inline {
@@ -128,8 +128,8 @@
   --color-citation-active: var(--citation-active);
   --color-citation-ring: var(--citation-ring);
 
-  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius);
@@ -156,7 +156,6 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "cv05", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -235,4 +234,15 @@
 
 .animate-pulse-dot {
   animation: reva-pulse-dot 1.2s ease-in-out infinite;
+}
+
+/* Geist-style faint dot grid — fills empty space so it reads intentional, not void. */
+.bg-dotgrid {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--border) 65%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  background-position: -1px -1px;
 }

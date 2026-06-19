@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Reva.Core.Settings;
 using Reva.Infrastructure;
 using Reva.Infrastructure.Agent;
 using Reva.Infrastructure.Persistence;
@@ -30,7 +30,17 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RevaDbContext>();
-    await dbContext.Database.MigrateAsync();
+    try
+    {
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)
+    {
+#pragma warning disable CA1848
+        app.Logger.LogError(ex, "Database migration failed. If this is a local development database, delete the local SQLite database file and restart Reva.");
+#pragma warning restore CA1848
+        throw;
+    }
 
     await scope.ServiceProvider.GetRequiredService<Reva.Infrastructure.Settings.ISettingsStore>().GetAsync(CancellationToken.None);
 
@@ -58,17 +68,22 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "Reva" }));
-app.MapGet("/api/agent/status", async (IOptions<AgentChatOptions> options, CancellationToken cancellationToken) =>
+app.MapGet("/api/agent/status", async (ILlmModelDiscoveryService discovery, CancellationToken cancellationToken) =>
 {
-    var baseUrl = options.Value.BaseUrl;
-    var running = await OllamaProcessManager.IsRunningAsync(baseUrl, cancellationToken);
-    var modelAvailable = running && await OllamaProcessManager.HasModelAsync(baseUrl, options.Value.Model, cancellationToken);
-    return Results.Ok(new { ollamaRunning = running, modelAvailable, model = options.Value.Model });
+    var settings = RuntimeSettings.Current;
+    var provider = AiProviderNames.Normalize(settings.AiProvider);
+    var baseUrl = LlmChatClientFactory.NormalizeOpenAiBaseUrl(provider, settings.AiBaseUrl);
+    var model = AiSettingsDefaults.NormalizeModel(settings.AiModel);
+    var discovered = await discovery.DiscoverAsync(new ModelDiscoveryRequest(provider, baseUrl, settings.AiApiKey), cancellationToken);
+    var reachable = discovered.Source == LlmModelDiscoveryService.SourceEndpoint;
+    var modelAvailable = reachable && discovered.Models.Any(candidate => candidate.Id.Equals(model, StringComparison.OrdinalIgnoreCase));
+    return Results.Ok(new { provider, model, baseUrl, reachable, modelAvailable });
 }).WithTags("Agent");
 app.MapOpenApi();
 app.MapDocumentEndpoints();
 app.MapTemplateEndpoints();
 app.MapApiSurfaceEndpoints();
+app.MapKnowledgeEndpoints();
 app.MapAgentEndpoints();
 
 // SPA fallback: client routes (e.g. /review) resolve to their static HTML, otherwise to index.html.

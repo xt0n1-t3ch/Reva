@@ -1,11 +1,14 @@
 # Reva
 
-> Local-first reinsurance document intelligence MVP using .NET, Blazor, EF Core, SQLite, SQL Server-ready persistence, and a Python document parser worker.
+> Reinsurance document-intelligence web app: Next.js 16 + React 19 frontend, ASP.NET Core .NET 10 API, deterministic parsing/OCR, optional agentic model assist, source-cited review, reconciliation, Knowledge Hub, and export.
 
 ## Docs
 
-- [README](README.md) — overview and quick start
-- [Documentation](docs/index.md) — full docs index
+- [README](README.md) — product overview and quick start
+- [Documentation](docs/index.md) — docs index
+- [Architecture](docs/architecture.md) — web app architecture
+- [AI pipeline](docs/ai-pipeline.md) — deterministic and optional model-assisted paths
+- [Interview cheatsheet](docs/learn/interview-cheatsheet.md) — concise demo narrative
 - [Changelog](CHANGELOG.md) — release history
 
 ## Optional

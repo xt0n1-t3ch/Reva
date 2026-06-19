@@ -1,4 +1,5 @@
 import {
+  IconBook,
   IconDashboard,
   IconExport,
   IconMappings,
@@ -18,7 +19,7 @@ export const navItems: NavItem[] = [
   {
     href: "/",
     label: "Workspace",
-    description: "Ingest, extract, and triage bordereaux",
+    description: "Process, extract, and review reinsurance documents",
     Icon: IconDashboard,
   },
   {
@@ -38,6 +39,12 @@ export const navItems: NavItem[] = [
     label: "Mappings",
     description: "Per-sender schema learning",
     Icon: IconMappings,
+  },
+  {
+    href: "/knowledge",
+    label: "Knowledge",
+    description: "How to use Reva and the industry standards it applies",
+    Icon: IconBook,
   },
   {
     href: "/settings",
