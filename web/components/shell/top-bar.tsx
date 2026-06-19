@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { PanelLeft, Search, Sparkles } from "lucide-react";
+import { PanelLeft, Presentation, Search, Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 
 function BrandLogo() {
@@ -34,12 +34,14 @@ export function TopBar({
   onOpenNav,
   onToggleChat,
   chatOpen,
+  onOpenShowcase,
   onOpenPalette,
 }: {
   onOpenNav: () => void;
   onToggleChat: () => void;
   chatOpen: boolean;
   onStartTour: () => void;
+  onOpenShowcase: () => void;
   onOpenPalette: () => void;
 }) {
   return (
@@ -77,6 +79,16 @@ export function TopBar({
           className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-surface-2 hover:text-foreground sm:hidden"
         >
           <Search className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={onOpenShowcase}
+          aria-label="Open the guided showcase"
+          title="Guided showcase"
+          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary-border hover:bg-primary-soft hover:text-primary"
+        >
+          <Presentation className="size-4" />
+          <span className="hidden md:inline">Showcase</span>
         </button>
         <ThemeToggle />
         <button

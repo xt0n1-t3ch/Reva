@@ -76,7 +76,7 @@ export function UploadZone({ onUploaded }: { onUploaded: () => void }) {
         </span>
         <span className="flex min-w-0 flex-col">
           <span className="text-sm font-medium">
-            {busy ? "Ingesting…" : "Drop bordereaux or click to upload"}
+            {busy ? "Processing…" : "Drop documents or click to upload"}
           </span>
           <span className="truncate text-[11px] text-muted-foreground">
             PDF, scanned images, Excel/CSV, or .eml/.msg email
@@ -88,7 +88,7 @@ export function UploadZone({ onUploaded }: { onUploaded: () => void }) {
         type="file"
         multiple
         accept={ACCEPT}
-        aria-label="Upload bordereau documents"
+        aria-label="Upload reinsurance documents"
         className="sr-only"
         onChange={(event) => void upload(event.target.files)}
       />

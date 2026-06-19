@@ -36,7 +36,7 @@ export function Workspace() {
     <PageContainer fill>
       <PageHeader
         title="Workspace"
-        subtitle="Ingest, extract, and triage reinsurance bordereaux — local-first and source-cited."
+        subtitle="Process, extract, and review reinsurance documents — every value cited to its source."
         actions={
           <Button variant="outline" size="sm" onClick={refresh}>
             Refresh

@@ -19,7 +19,7 @@ export const navItems: NavItem[] = [
   {
     href: "/",
     label: "Workspace",
-    description: "Ingest, extract, and triage bordereaux",
+    description: "Process, extract, and review reinsurance documents",
     Icon: IconDashboard,
   },
   {

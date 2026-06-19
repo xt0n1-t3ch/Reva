@@ -28,9 +28,9 @@ const mono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: `${config.productName} — Bordereaux intelligence`,
+  title: `${config.productName} — Reinsurance document intelligence`,
   description:
-    "Local-first reinsurance bordereaux ingestion, extraction, reconciliation, and source-cited review.",
+    "Reinsurance document processing — extraction, reconciliation, and source-cited review.",
 };
 
 export const viewport: Viewport = {

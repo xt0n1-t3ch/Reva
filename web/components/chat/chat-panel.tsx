@@ -48,7 +48,7 @@ const identitySerialize = (value: ThinkingLevel): string => value;
 
 const suggestions = [
   "Which documents have reconciliation exceptions?",
-  "Summarize the latest bordereau and its confidence.",
+  "Summarize the latest document and its confidence.",
   "Explain where the gross premium total came from.",
 ];
 
@@ -497,7 +497,7 @@ export function ChatPanel({ onClose, onMinimize }: { onClose?: () => void; onMin
         {messages.length === 0 && (
           <div className="flex flex-col gap-3 pt-2">
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Ask about any ingested bordereau — fields, classification, exceptions, reconciliation,
+              Ask about any processed document — fields, classification, exceptions, reconciliation,
               or where a value came from. Answers are grounded in the deterministic engine.
             </p>
             <div className="flex flex-col gap-1.5">

@@ -9,6 +9,7 @@ import { TopBar } from "@/components/shell/top-bar";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { TourProvider, useTour } from "@/components/onboarding/tour-provider";
 import { ChatPanel } from "@/components/chat/chat-panel";
+import { Showcase } from "@/components/showcase/showcase";
 import { IconClose, IconSparkles } from "@/components/ui/icons";
 
 const CHAT_WIDTH_STORAGE_KEY = "reva-chat-width";
@@ -55,6 +56,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const [chatWidth, setChatWidth] = useState(CHAT_DEFAULT_WIDTH);
   const [resizing, setResizing] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [showcaseOpen, setShowcaseOpen] = useState(false);
   const { startTour } = useTour();
 
   useEffect(() => {
@@ -155,6 +157,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
         onToggleChat={toggleChat}
         chatOpen={chatOpen}
         onStartTour={startTour}
+        onOpenShowcase={() => setShowcaseOpen(true)}
         onOpenPalette={() => setPaletteOpen(true)}
       />
 
@@ -274,6 +277,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       </div>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onToggleChat={toggleChat} />
+      <Showcase open={showcaseOpen} onOpenChange={setShowcaseOpen} onOpenChat={openChat} />
     </div>
   );
 }
