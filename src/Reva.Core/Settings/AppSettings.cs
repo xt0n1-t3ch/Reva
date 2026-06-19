@@ -12,5 +12,5 @@ public sealed record AppSettings(
     double ReconciliationTolerance,
     bool UseLlmAssist)
 {
-    public static AppSettings Default => new(AppTheme.Light, string.Empty, "Reve Intelligence", 0.6, 0.85, null, 0.01, false);
+    public static AppSettings Default => new(AppTheme.Light, string.Empty, "Reva", 0.6, 0.85, null, 0.01, false);
 }

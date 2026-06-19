@@ -6,18 +6,24 @@
              x:DataType="vm:SettingsViewModel"
              x:CompileBindings="True">
 
-    <Grid>
+    <Grid Background="{DynamicResource BgBrush}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="22" Margin="36 32" MaxWidth="1080" HorizontalAlignment="Left">
+            <StackPanel Spacing="24" Margin="40 36 40 48" MaxWidth="1120" HorizontalAlignment="Left">
 
                 <Border Classes="hero">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <StackPanel Grid.Column="0" Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto">
+                        <StackPanel Grid.Column="0" Spacing="12" VerticalAlignment="Center">
                             <TextBlock Classes="eyebrow" Text="WORKSPACE" />
-                            <TextBlock Classes="pageTitle" Text="{Binding Title}" />
-                            <TextBlock Classes="muted" Text="{Binding Description}" />
+                            <TextBlock Classes="display" Text="{Binding Title}" />
+                            <TextBlock Classes="muted"
+                                       MaxWidth="560"
+                                       HorizontalAlignment="Left"
+                                       Text="{Binding Description}" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Top">
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    Spacing="12"
+                                    VerticalAlignment="Center">
                             <Button Classes="ghost"
                                     Content="Refresh"
                                     Command="{Binding RefreshCommand}"
@@ -29,14 +35,14 @@
                     </Grid>
                 </Border>
 
-                <Border Classes="glass"
-                        Padding="18 16"
+                <Border Classes="glassStrong"
+                        Padding="20 16"
                         IsVisible="{Binding HasStatusMessage}">
                     <Grid ColumnDefinitions="Auto,*,Auto">
                         <Border Grid.Column="0"
                                 Classes="statusDot"
                                 Background="{DynamicResource AccentBrush}"
-                                Margin="2 0 12 0" />
+                                Margin="2 0 14 0" />
                         <TextBlock Grid.Column="1"
                                    Text="{Binding StatusMessage}"
                                    Foreground="{DynamicResource ForegroundBrush}"
@@ -45,53 +51,65 @@
                         <Button Grid.Column="2"
                                 Classes="icon"
                                 Content="✕"
-                                Foreground="{DynamicResource MutedForegroundBrush}"
                                 Command="{Binding DismissStatusCommand}" />
                     </Grid>
                 </Border>
 
-                <Border Classes="card">
-                    <StackPanel Spacing="20">
+                <Border Classes="card" Padding="28">
+                    <StackPanel Spacing="24">
                         <Grid ColumnDefinitions="Auto,*,Auto">
-                            <Border Grid.Column="0" Classes="iconChip" Width="44" Height="44" VerticalAlignment="Top">
+                            <Border Grid.Column="0"
+                                    Classes="iconChip"
+                                    Width="52"
+                                    Height="52"
+                                    CornerRadius="{DynamicResource CornerRadiusLg}"
+                                    VerticalAlignment="Top">
                                 <TextBlock Text="AI"
                                            FontWeight="Bold"
-                                           FontSize="{DynamicResource FontSizeCaption}"
+                                           FontSize="{DynamicResource FontSizeSubheading}"
                                            Foreground="{DynamicResource AccentBrush}"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center" />
                             </Border>
-                            <StackPanel Grid.Column="1" Spacing="6" Margin="16 0 0 0">
+                            <StackPanel Grid.Column="1" Spacing="7" Margin="18 0 16 0" VerticalAlignment="Center">
                                 <TextBlock Classes="eyebrow" Text="AI MODEL" />
-                                <TextBlock Classes="subheading" Text="Extraction model" />
+                                <TextBlock Classes="heading" Text="Extraction model" />
                                 <TextBlock Classes="muted"
+                                           MaxWidth="600"
+                                           HorizontalAlignment="Left"
                                            Text="Choose the local vision-language model Reva uses to read scanned and image-based documents." />
                             </StackPanel>
-                            <Border Grid.Column="2" Classes="chip" VerticalAlignment="Top">
+                            <Border Grid.Column="2" Classes="chip" Padding="14 8" VerticalAlignment="Top">
                                 <StackPanel Orientation="Horizontal" Spacing="9">
                                     <Border Classes="statusDot"
                                             Background="{Binding IsOllamaOnline, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
-                                    <TextBlock Text="{Binding OllamaStatusText}" Classes="caption" VerticalAlignment="Center" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding OllamaStatusText}"
+                                               Classes="caption"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center" />
                                 </StackPanel>
                             </Border>
                         </Grid>
 
                         <Border Height="1" Background="{DynamicResource BorderBrush}" />
 
-                        <StackPanel Spacing="10">
+                        <StackPanel Spacing="12">
                             <TextBlock Classes="eyebrow" Text="ACTIVE MODEL" />
 
                             <ComboBox ItemsSource="{Binding Models}"
                                       SelectedItem="{Binding SelectedModel, Mode=TwoWay}"
                                       HorizontalAlignment="Stretch"
-                                      MinHeight="46"
+                                      MinHeight="52"
                                       IsVisible="{Binding HasModels}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ModelOption">
-                                        <Grid ColumnDefinitions="*,Auto" Margin="2 4">
+                                        <Grid ColumnDefinitions="*,Auto" Margin="2 5">
                                             <StackPanel Grid.Column="0" Spacing="3">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource ForegroundBrush}"
+                                                               VerticalAlignment="Center" />
                                                     <Border Classes="badge neutral" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Kind}" />
                                                     </Border>
@@ -118,8 +136,9 @@
                             </ComboBox>
 
                             <Border Classes="chip"
-                                    Padding="16 12"
+                                    Padding="18 14"
                                     HorizontalAlignment="Stretch"
+                                    CornerRadius="{DynamicResource CornerRadiusMd}"
                                     IsVisible="{Binding HasNoModels}">
                                 <TextBlock Text="{Binding NoModelsNote}"
                                            Classes="caption"
@@ -129,14 +148,15 @@
                             <TextBlock Text="{Binding DeterministicAlwaysOnNote}" Classes="caption" />
                         </StackPanel>
 
-                        <Border Classes="chip" Padding="18 14">
+                        <Border Classes="panel" Background="{DynamicResource Surface2Brush}" Padding="20 16">
                             <Grid ColumnDefinitions="*,Auto">
-                                <StackPanel Grid.Column="0" Spacing="3">
+                                <StackPanel Grid.Column="0" Spacing="4">
                                     <TextBlock Text="Use vision extraction" Classes="subheading" />
-                                    <TextBlock Text="{Binding VisionNote}" Classes="caption" />
+                                    <TextBlock Text="{Binding VisionNote}" Classes="caption" MaxWidth="640" HorizontalAlignment="Left" />
                                 </StackPanel>
                                 <ToggleSwitch Grid.Column="1"
                                               VerticalAlignment="Center"
+                                              Margin="16 0 0 0"
                                               IsChecked="{Binding UseVisionExtraction, Mode=TwoWay}"
                                               IsEnabled="{Binding IsVisionToggleEnabled}" />
                             </Grid>
@@ -145,11 +165,14 @@
                 </Border>
 
                 <Border Classes="card">
-                    <StackPanel Spacing="18">
-                        <StackPanel Spacing="6">
+                    <StackPanel Spacing="20">
+                        <StackPanel Spacing="7">
                             <TextBlock Classes="eyebrow" Text="APPEARANCE" />
-                            <TextBlock Classes="subheading" Text="Theme and branding" />
-                            <TextBlock Classes="muted" Text="Control the workspace theme and the product name shown across the app." />
+                            <TextBlock Classes="heading" Text="Theme and branding" />
+                            <TextBlock Classes="muted"
+                                       MaxWidth="600"
+                                       HorizontalAlignment="Left"
+                                       Text="Control the workspace theme and the product name shown across the app." />
                         </StackPanel>
 
                         <Border Height="1" Background="{DynamicResource BorderBrush}" />
@@ -160,10 +183,12 @@
                                 <ComboBox ItemsSource="{Binding Themes}"
                                           SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
                                           HorizontalAlignment="Stretch"
-                                          MinHeight="40">
+                                          MinHeight="44">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate x:DataType="vm:ThemeOption">
-                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Name}"
+                                                       Foreground="{DynamicResource ForegroundBrush}"
+                                                       VerticalAlignment="Center" />
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
@@ -173,8 +198,8 @@
                             <StackPanel Grid.Column="1" Spacing="10">
                                 <TextBlock Classes="eyebrow" Text="PRODUCT NAME" />
                                 <TextBox Text="{Binding ProductName, Mode=TwoWay}"
-                                         PlaceholderText="Reve Intelligence"
-                                         MinHeight="40" />
+                                         PlaceholderText="Reva"
+                                         MinHeight="44" />
                                 <TextBlock Text="Shown across the app. Leave blank to use the default."
                                            Classes="caption" />
                             </StackPanel>
@@ -183,16 +208,19 @@
                 </Border>
 
                 <Border Classes="card">
-                    <StackPanel Spacing="18">
-                        <StackPanel Spacing="6">
+                    <StackPanel Spacing="20">
+                        <StackPanel Spacing="7">
                             <TextBlock Classes="eyebrow" Text="PROCESSING" />
-                            <TextBlock Classes="subheading" Text="Reconciliation and confidence" />
-                            <TextBlock Classes="muted" Text="Tune how strictly Reva flags totals and how it tiers extraction confidence." />
+                            <TextBlock Classes="heading" Text="Reconciliation and confidence" />
+                            <TextBlock Classes="muted"
+                                       MaxWidth="600"
+                                       HorizontalAlignment="Left"
+                                       Text="Tune how strictly Reva flags totals and how it tiers extraction confidence." />
                         </StackPanel>
 
                         <Border Height="1" Background="{DynamicResource BorderBrush}" />
 
-                        <StackPanel Spacing="10">
+                        <StackPanel Spacing="12">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0" Classes="subheading" Text="Reconciliation tolerance" />
                                 <Border Grid.Column="1" Classes="badge info" VerticalAlignment="Center">
@@ -207,7 +235,7 @@
                         </StackPanel>
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
-                            <StackPanel Grid.Column="0" Spacing="10">
+                            <StackPanel Grid.Column="0" Spacing="12">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Grid.Column="0" Classes="subheading" Text="Low threshold" />
                                     <Border Grid.Column="1" Classes="badge warning" VerticalAlignment="Center">
@@ -220,7 +248,7 @@
                                         Foreground="{DynamicResource WarningBrush}" />
                             </StackPanel>
 
-                            <StackPanel Grid.Column="1" Spacing="10">
+                            <StackPanel Grid.Column="1" Spacing="12">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Grid.Column="0" Classes="subheading" Text="Medium threshold" />
                                     <Border Grid.Column="1" Classes="badge success" VerticalAlignment="Center">
@@ -236,15 +264,18 @@
 
                         <Border Height="1" Background="{DynamicResource BorderBrush}" />
 
-                        <Border Classes="chip" Padding="18 14">
+                        <Border Classes="panel" Background="{DynamicResource Surface2Brush}" Padding="20 16">
                             <Grid ColumnDefinitions="*,Auto">
-                                <StackPanel Grid.Column="0" Spacing="3">
+                                <StackPanel Grid.Column="0" Spacing="4">
                                     <TextBlock Text="Docling OCR conversion" Classes="subheading" />
                                     <TextBlock Text="{Binding DoclingNote}"
-                                               Classes="caption" />
+                                               Classes="caption"
+                                               MaxWidth="640"
+                                               HorizontalAlignment="Left" />
                                 </StackPanel>
                                 <ToggleSwitch Grid.Column="1"
                                               VerticalAlignment="Center"
+                                              Margin="16 0 0 0"
                                               IsChecked="{Binding EnableDocling, Mode=TwoWay}" />
                             </Grid>
                         </Border>
@@ -254,10 +285,12 @@
                             <ComboBox ItemsSource="{Binding Templates}"
                                       SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}"
                                       HorizontalAlignment="Stretch"
-                                      MinHeight="40">
+                                      MinHeight="44">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:TemplateOption">
-                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}"
+                                                   Foreground="{DynamicResource ForegroundBrush}"
+                                                   VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
@@ -267,27 +300,58 @@
                     </StackPanel>
                 </Border>
 
-                <Border Classes="card" BorderBrush="{DynamicResource DangerBrush}">
-                    <StackPanel Spacing="18">
-                        <StackPanel Spacing="6">
-                            <TextBlock Classes="eyebrow" Text="DATA" Foreground="{DynamicResource DangerBrush}" />
-                            <TextBlock Classes="subheading" Text="Data maintenance" Foreground="{DynamicResource DangerBrush}" />
-                            <TextBlock Classes="muted" Text="Reset the workspace to demo data or remove everything. These actions are irreversible." />
-                        </StackPanel>
+                <Border Classes="card" BorderBrush="{DynamicResource AccentBorderBrush}">
+                    <StackPanel Spacing="20">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Grid.Column="0"
+                                    Classes="iconChip"
+                                    Width="44"
+                                    Height="44"
+                                    Background="{DynamicResource DangerSoftBrush}"
+                                    BorderBrush="{DynamicResource DangerBrush}"
+                                    BoxShadow="{DynamicResource ShadowNone}"
+                                    VerticalAlignment="Top">
+                                <TextBlock Text="!"
+                                           FontWeight="Bold"
+                                           FontSize="{DynamicResource FontSizeSubheading}"
+                                           Foreground="{DynamicResource DangerBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="7" Margin="16 0 0 0" VerticalAlignment="Center">
+                                <TextBlock Classes="eyebrow"
+                                           Text="DATA"
+                                           Foreground="{DynamicResource DangerBrush}" />
+                                <TextBlock Classes="heading"
+                                           Text="Data maintenance"
+                                           Foreground="{DynamicResource DangerBrush}" />
+                                <TextBlock Classes="muted"
+                                           MaxWidth="620"
+                                           HorizontalAlignment="Left"
+                                           Text="Reset the workspace to demo data or remove everything. These actions are irreversible." />
+                            </StackPanel>
+                        </Grid>
 
                         <Border Height="1" Background="{DynamicResource BorderBrush}" />
 
                         <TextBlock Text="{Binding MaintenanceNote}" Classes="caption" />
 
-                        <StackPanel Orientation="Horizontal" Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                             <Button Classes="secondary"
                                     Content="Reseed demo data"
                                     Command="{Binding RequestReseedCommand}" />
                             <Button Classes="secondary"
-                                    Content="Clear workspace"
-                                    Foreground="{DynamicResource DangerBrush}"
-                                    BorderBrush="{DynamicResource DangerBrush}"
-                                    Command="{Binding RequestClearWorkspaceCommand}" />
+                                    Command="{Binding RequestClearWorkspaceCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="9">
+                                    <TextBlock Text="Clear workspace"
+                                               Foreground="{DynamicResource DangerBrush}"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center" />
+                                    <Border Classes="badge danger" VerticalAlignment="Center">
+                                        <TextBlock Text="IRREVERSIBLE" />
+                                    </Border>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -300,12 +364,12 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
             <Border Classes="glassStrong"
-                    Width="440"
+                    Width="460"
                     Padding="{DynamicResource SpacingCard}"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
-                <StackPanel Spacing="16">
-                    <TextBlock Classes="subheading" Text="{Binding ConfirmTitle}" />
+                <StackPanel Spacing="18">
+                    <TextBlock Classes="heading" Text="{Binding ConfirmTitle}" />
                     <TextBlock Classes="muted" Text="{Binding ConfirmMessage}" />
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
                         <Button Classes="secondary" Content="Cancel" Command="{Binding CancelConfirmCommand}" />

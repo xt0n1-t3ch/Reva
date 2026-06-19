@@ -37,7 +37,7 @@
                     Background="Transparent"
                     BorderThickness="2"
                     BorderBrush="{DynamicResource AccentBrush}"
-                    BoxShadow="{DynamicResource ShadowGlass}"
+                    BoxShadow="{DynamicResource AccentGlow}"
                     IsHitTestVisible="False" />
         </Canvas>
 
@@ -45,64 +45,76 @@
                 Background="{DynamicResource ScrimBrush}" />
 
         <Border Classes="glassStrong"
-                Padding="{DynamicResource SpacingCard}"
+                Padding="0"
                 Width="{Binding CardWidthValue}"
+                BoxShadow="{DynamicResource AccentGlow}"
                 VerticalAlignment="{Binding CardCentered, Converter={x:Static onb:TourCenteredVerticalAlignmentConverter.Instance}}"
                 HorizontalAlignment="{Binding CardCentered, Converter={x:Static onb:TourCenteredHorizontalAlignmentConverter.Instance}}"
                 Margin="{Binding CardMargin}">
-            <StackPanel Spacing="20">
+            <Border CornerRadius="{DynamicResource CornerRadiusXl}"
+                    Background="{DynamicResource GlassStrongBrush}"
+                    BorderBrush="{DynamicResource GlassBorderBrush}"
+                    BorderThickness="1"
+                    Padding="24"
+                    ClipToBounds="True">
+                <StackPanel Spacing="18">
 
-                <StackPanel Spacing="10">
-                    <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Border Classes="logoChip" Width="22" Height="22">
-                            <TextBlock Text="R"
-                                       FontWeight="Bold"
-                                       FontSize="{DynamicResource FontSizeCaption}"
-                                       Foreground="{DynamicResource AccentForegroundBrush}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
-                        </Border>
-                        <TextBlock Text="{Binding Counter}"
-                                   Classes="eyebrow"
-                                   VerticalAlignment="Center"
-                                   Foreground="{DynamicResource AccentBrush}" />
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
+                            <Border Classes="logoChip" Width="30" Height="30">
+                                <TextBlock Text="R"
+                                           FontWeight="Bold"
+                                           FontSize="{DynamicResource FontSizeBody}"
+                                           Foreground="{DynamicResource AccentForegroundBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                            <Border Classes="badge info"
+                                    IsVisible="{Binding HasStepProgress}">
+                                <TextBlock Text="{Binding Counter}" />
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding Title}"
+                                   Classes="heading"
+                                   FontSize="{DynamicResource FontSizeSubheading}"
+                                   TextWrapping="Wrap" />
+
+                        <TextBlock Text="{Binding Body}"
+                                   Classes="muted"
+                                   LineHeight="21"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
-                    <TextBlock Text="{Binding Title}"
-                               Classes="subheading"
-                               TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding Body}"
-                               Classes="muted"
-                               LineHeight="21"
-                               TextWrapping="Wrap" />
+
+                    <StackPanel Spacing="8" IsVisible="{Binding HasStepProgress}">
+                        <ProgressBar Minimum="0"
+                                     Maximum="{Binding StepTotal}"
+                                     Value="{Binding StepProgress}"
+                                     Height="5"
+                                     CornerRadius="{DynamicResource CornerRadiusPill}"
+                                     Background="{DynamicResource Surface3Brush}"
+                                     Foreground="{DynamicResource AccentBrush}" />
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Button Grid.Column="0"
+                                Classes="ghost"
+                                Content="Skip"
+                                Command="{Binding SkipCommand}" />
+                        <Button Grid.Column="2"
+                                Classes="secondary"
+                                Content="Back"
+                                Margin="0 0 10 0"
+                                IsEnabled="{Binding CanGoBack}"
+                                Command="{Binding BackCommand}" />
+                        <Button Grid.Column="3"
+                                Classes="primary"
+                                Content="{Binding PrimaryActionText}"
+                                Command="{Binding NextCommand}" />
+                    </Grid>
+
                 </StackPanel>
-
-                <ProgressBar Minimum="0"
-                             Maximum="{Binding StepTotal}"
-                             Value="{Binding StepProgress}"
-                             Height="4"
-                             CornerRadius="{DynamicResource CornerRadiusPill}"
-                             Background="{DynamicResource Surface3Brush}"
-                             Foreground="{DynamicResource AccentBrush}"
-                             IsVisible="{Binding HasStepProgress}" />
-
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                    <Button Grid.Column="0"
-                            Classes="ghost"
-                            Content="Skip"
-                            Command="{Binding SkipCommand}" />
-                    <Button Grid.Column="2"
-                            Classes="secondary"
-                            Content="Back"
-                            Margin="0 0 10 0"
-                            IsEnabled="{Binding CanGoBack}"
-                            Command="{Binding BackCommand}" />
-                    <Button Grid.Column="3"
-                            Classes="primary"
-                            Content="{Binding PrimaryActionText}"
-                            Command="{Binding NextCommand}" />
-                </Grid>
-
-            </StackPanel>
+            </Border>
         </Border>
 
     </Grid>

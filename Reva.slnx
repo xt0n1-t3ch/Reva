@@ -7,6 +7,7 @@
     <Project Path="src/Reva.Web/Reva.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Reva.App.Tests/Reva.App.Tests.csproj" />
     <Project Path="tests/Reva.Integration/Reva.Integration.csproj" />
     <Project Path="tests/Reva.Unit/Reva.Unit.csproj" />
   </Folder>

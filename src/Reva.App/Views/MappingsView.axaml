@@ -11,62 +11,74 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="GridLinesVisibility" Value="Horizontal" />
-            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Surface3Brush}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="RowBackground" Value="Transparent" />
             <Setter Property="HeadersVisibility" Value="Column" />
             <Setter Property="CanUserReorderColumns" Value="False" />
             <Setter Property="CanUserResizeColumns" Value="True" />
             <Setter Property="IsReadOnly" Value="True" />
-            <Setter Property="RowHeight" Value="64" />
+            <Setter Property="RowHeight" Value="68" />
             <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
         </Style>
         <Style Selector="DataGrid.reva DataGridColumnHeader">
-            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
             <Setter Property="FontSize" Value="{DynamicResource FontSizeEyebrow}" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="LetterSpacing" Value="1.2" />
-            <Setter Property="Padding" Value="18 14" />
+            <Setter Property="LetterSpacing" Value="1.4" />
+            <Setter Property="Padding" Value="22 16" />
             <Setter Property="SeparatorBrush" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
         </Style>
         <Style Selector="DataGrid.reva DataGridCell">
-            <Setter Property="Padding" Value="18 0" />
+            <Setter Property="Padding" Value="22 0" />
             <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
         </Style>
-        <Style Selector="DataGrid.reva DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
-            <Setter Property="Fill" Value="{DynamicResource Surface2Brush}" />
-            <Setter Property="Opacity" Value="0.55" />
+        <Style Selector="DataGrid.reva DataGridRow:pointerover /template/ DataGridCellsPresenter">
+            <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
+        </Style>
+        <Style Selector="DataGrid.reva DataGridRow:selected /template/ DataGridCellsPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
         <Style Selector="ComboBox.cell">
-            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="MinHeight" Value="38" />
             <Setter Property="Padding" Value="12 6" />
             <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
-            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
         </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*" Margin="32 28">
 
-        <StackPanel Grid.Row="0" Spacing="20" Margin="0 0 0 22">
+        <StackPanel Grid.Row="0" Spacing="24" Margin="0 0 0 24">
 
-            <Border Classes="glass" Padding="22 18">
+            <Border Classes="hero">
                 <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center">
-                        <TextBlock Classes="eyebrow" Text="WORKSPACE" />
-                        <TextBlock Classes="pageTitle" Text="{Binding Title}" />
-                        <TextBlock Classes="muted" Text="{Binding Description}" MaxWidth="560" />
+                    <StackPanel Grid.Column="0" Spacing="12" VerticalAlignment="Center" Margin="2 0 0 0">
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <Border Classes="logoChip" VerticalAlignment="Center">
+                                <TextBlock Text="⇄" FontSize="17" FontWeight="Bold"
+                                           Foreground="{DynamicResource AccentForegroundBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Classes="eyebrow" Text="WORKSPACE · FIELD INTELLIGENCE"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Classes="display" Text="{Binding Title}" />
+                        <TextBlock Classes="muted" Text="{Binding Description}" MaxWidth="600" />
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12"
+                                VerticalAlignment="Center">
                         <ComboBox Classes="cell"
-                                  MinWidth="190"
+                                  MinWidth="200"
                                   ItemsSource="{Binding SenderFilters}"
                                   SelectedItem="{Binding SenderFilter, Mode=TwoWay}"
                                   IsEnabled="{Binding HasMappings}" />
-                        <Button Classes="secondary"
+                        <Button Classes="primary"
                                 Content="Refresh"
                                 Command="{Binding RefreshCommand}"
                                 IsEnabled="{Binding !IsBusy}" />
@@ -74,148 +86,170 @@
                 </Grid>
             </Border>
 
-            <StackPanel Orientation="Horizontal" Spacing="14">
-                <Border Classes="kpi" MinWidth="168">
-                    <StackPanel Spacing="10">
-                        <Border Classes="iconChip" HorizontalAlignment="Left">
-                            <TextBlock Text="⇄" FontSize="16"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource AccentBrush}" />
-                        </Border>
-                        <TextBlock Classes="eyebrow" Text="LEARNED MAPPINGS" />
+            <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="24">
+                <Border Grid.Column="0" Classes="kpi">
+                    <StackPanel Spacing="14">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Classes="eyebrow" Text="LEARNED MAPPINGS"
+                                       VerticalAlignment="Center" />
+                            <Border Grid.Column="1" Classes="iconChip">
+                                <TextBlock Text="⇄" FontSize="17"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AccentBrush}" />
+                            </Border>
+                        </Grid>
                         <TextBlock Classes="kpiValue" Text="{Binding MappingCount}" />
                         <TextBlock Classes="caption" Text="source headers resolved" />
                     </StackPanel>
                 </Border>
-                <Border Classes="kpi" MinWidth="168">
-                    <StackPanel Spacing="10">
-                        <Border Classes="iconChip" HorizontalAlignment="Left">
-                            <TextBlock Text="◧" FontSize="16"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource AccentBrush}" />
-                        </Border>
-                        <TextBlock Classes="eyebrow" Text="SENDERS" />
+                <Border Grid.Column="1" Classes="kpi">
+                    <StackPanel Spacing="14">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Classes="eyebrow" Text="SENDERS"
+                                       VerticalAlignment="Center" />
+                            <Border Grid.Column="1" Classes="iconChip">
+                                <TextBlock Text="◧" FontSize="17"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AccentBrush}" />
+                            </Border>
+                        </Grid>
                         <TextBlock Classes="kpiValue" Text="{Binding SenderCount}" />
                         <TextBlock Classes="caption" Text="distinct counterparties" />
                     </StackPanel>
                 </Border>
-                <Border Classes="badge danger"
+                <Border Grid.Column="2" Classes="badge danger"
                         VerticalAlignment="Center"
-                        Padding="14 8"
+                        Padding="16 10"
+                        MaxWidth="240"
                         IsVisible="{Binding HasError}">
                     <TextBlock Text="{Binding StatusMessage}" />
                 </Border>
-            </StackPanel>
+            </Grid>
         </StackPanel>
 
         <Border Grid.Row="1" Classes="card" Padding="0" ClipToBounds="True">
             <Panel>
 
-                <DataGrid Classes="reva"
-                          ItemsSource="{Binding Mappings}"
-                          IsVisible="{Binding HasMappings}">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="SENDER" Width="1.2*">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="vm:MappingRowViewModel">
-                                    <StackPanel Spacing="3" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Sender}" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource ForegroundBrush}"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Classes="caption" Text="{Binding DocumentCount, StringFormat='{}{0} document(s)'}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                <Grid RowDefinitions="Auto,*" IsVisible="{Binding HasMappings}">
+                    <StackPanel Grid.Row="0" Spacing="3" Margin="24 22 24 18">
+                        <TextBlock Classes="subheading" Text="Learned field mappings" />
+                        <TextBlock Classes="caption"
+                                   Text="Override any canonical field — Reva remembers per sender." />
+                    </StackPanel>
 
-                        <DataGridTemplateColumn Header="SOURCE HEADER" Width="1.4*">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="vm:MappingRowViewModel">
-                                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding SourceHeader}"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Foreground="{DynamicResource BodyForegroundBrush}"
-                                                   FontFamily="{DynamicResource AppFontFamily}" />
-                                        <TextBlock Text="→"
-                                                   VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource MutedForegroundBrush}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                    <DataGrid Grid.Row="1"
+                              Classes="reva"
+                              ItemsSource="{Binding Mappings}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="SENDER" Width="1.2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:MappingRowViewModel">
+                                        <StackPanel Spacing="4" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Sender}" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource ForegroundBrush}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Classes="caption" Text="{Binding DocumentCount, StringFormat='{}{0} document(s)'}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="CANONICAL FIELD" Width="1.4*">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="vm:MappingRowViewModel">
-                                    <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-                                        <ComboBox Grid.Column="0"
-                                                  Classes="cell"
-                                                  HorizontalAlignment="Stretch"
-                                                  ItemsSource="{Binding CanonicalFields}"
-                                                  SelectedItem="{Binding CanonicalField, Mode=TwoWay}" />
-                                        <Border Grid.Column="1"
-                                                Classes="statusDot"
-                                                Margin="10 0 0 0"
-                                                Background="{DynamicResource WarningBrush}"
-                                                IsVisible="{Binding IsSaving}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="SOURCE HEADER" Width="1.4*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:MappingRowViewModel">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <Border Classes="chip" Padding="12 7">
+                                                <TextBlock Text="{Binding SourceHeader}"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource BodyForegroundBrush}"
+                                                           FontFamily="{DynamicResource AppFontFamily}" />
+                                            </Border>
+                                            <TextBlock Text="→"
+                                                       FontSize="16"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource AccentBrush}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="CONFIDENCE" Width="1.1*">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="vm:MappingRowViewModel">
-                                    <StackPanel Spacing="7" VerticalAlignment="Center">
-                                        <TextBlock Classes="caption"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource BodyForegroundBrush}"
-                                                   Text="{Binding ConfidenceDisplay}" />
-                                        <Border Width="120" Height="6" CornerRadius="3"
-                                                HorizontalAlignment="Left"
-                                                Background="{DynamicResource Surface3Brush}">
-                                            <Border Height="6"
-                                                    CornerRadius="3"
+                            <DataGridTemplateColumn Header="CANONICAL FIELD" Width="1.4*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:MappingRowViewModel">
+                                        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                            <ComboBox Grid.Column="0"
+                                                      Classes="cell"
+                                                      HorizontalAlignment="Stretch"
+                                                      ItemsSource="{Binding CanonicalFields}"
+                                                      SelectedItem="{Binding CanonicalField, Mode=TwoWay}" />
+                                            <Border Grid.Column="1"
+                                                    Classes="statusDot"
+                                                    Margin="12 0 0 0"
+                                                    Background="{DynamicResource WarningBrush}"
+                                                    IsVisible="{Binding IsSaving}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="CONFIDENCE" Width="1.1*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:MappingRowViewModel">
+                                        <StackPanel Spacing="8" VerticalAlignment="Center">
+                                            <TextBlock Classes="caption"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource ForegroundBrush}"
+                                                       Text="{Binding ConfidenceDisplay}" />
+                                            <Border Width="128" Height="7" CornerRadius="999"
                                                     HorizontalAlignment="Left"
-                                                    Background="{DynamicResource AccentBrush}"
-                                                    Width="{Binding ConfidencePercent}" />
-                                        </Border>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                                                    Background="{DynamicResource Surface3Brush}">
+                                                <Border Height="7"
+                                                        CornerRadius="999"
+                                                        HorizontalAlignment="Left"
+                                                        Background="{DynamicResource AccentGradientBrush}"
+                                                        BoxShadow="{DynamicResource AccentGlow}"
+                                                        Width="{Binding ConfidencePercent}" />
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="ORIGIN" Width="0.9*">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="vm:MappingRowViewModel">
-                                    <StackPanel VerticalAlignment="Center" Spacing="5">
-                                        <Border Classes="badge info" HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding OriginLabel}" />
-                                        </Border>
-                                        <TextBlock Classes="caption"
-                                                   Foreground="{DynamicResource DangerBrush}"
-                                                   Text="{Binding SaveError}"
-                                                   IsVisible="{Binding SaveError, Converter={x:Static conv:NonEmptyConverter.Instance}}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                            <DataGridTemplateColumn Header="ORIGIN" Width="0.9*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:MappingRowViewModel">
+                                        <StackPanel VerticalAlignment="Center" Spacing="6">
+                                            <Border Classes="badge info" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding OriginLabel}" />
+                                            </Border>
+                                            <TextBlock Classes="caption"
+                                                       Foreground="{DynamicResource DangerBrush}"
+                                                       Text="{Binding SaveError}"
+                                                       IsVisible="{Binding SaveError, Converter={x:Static conv:NonEmptyConverter.Instance}}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
 
                 <StackPanel IsVisible="{Binding IsEmpty}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Spacing="14"
-                            MaxWidth="380">
-                    <Border Width="64" Height="64" CornerRadius="{DynamicResource CornerRadiusLg}"
+                            Spacing="18"
+                            MaxWidth="400">
+                    <Border Width="72" Height="72" CornerRadius="{DynamicResource CornerRadiusXl}"
                             Background="{DynamicResource AccentSoftBrush}"
+                            BorderBrush="{DynamicResource AccentBorderBrush}"
+                            BorderThickness="1"
+                            BoxShadow="{DynamicResource AccentGlow}"
                             HorizontalAlignment="Center">
-                        <TextBlock Text="⇄" FontSize="28" Foreground="{DynamicResource AccentBrush}"
+                        <TextBlock Text="⇄" FontSize="30" Foreground="{DynamicResource AccentBrush}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <TextBlock Classes="subheading" Text="No mappings learned yet"
+                    <TextBlock Classes="heading" Text="No mappings learned yet"
                                HorizontalAlignment="Center" TextAlignment="Center" />
                     <TextBlock Classes="muted"
                                HorizontalAlignment="Center"
@@ -230,14 +264,17 @@
 
                 <Border IsVisible="{Binding IsBusy}"
                         Background="{DynamicResource GlassStrongBrush}">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="14">
-                        <Border Width="56" Height="56" CornerRadius="{DynamicResource CornerRadiusLg}"
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="18">
+                        <Border Width="64" Height="64" CornerRadius="{DynamicResource CornerRadiusXl}"
                                 Background="{DynamicResource AccentSoftBrush}"
+                                BorderBrush="{DynamicResource AccentBorderBrush}"
+                                BorderThickness="1"
+                                BoxShadow="{DynamicResource AccentGlow}"
                                 HorizontalAlignment="Center">
-                            <TextBlock Text="⇄" FontSize="24" Foreground="{DynamicResource AccentBrush}"
+                            <TextBlock Text="⇄" FontSize="26" Foreground="{DynamicResource AccentBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <TextBlock Classes="subheading" Text="Loading mappings…" HorizontalAlignment="Center" />
+                        <TextBlock Classes="heading" Text="Loading mappings…" HorizontalAlignment="Center" />
                         <TextBlock Classes="muted" Text="Aggregating learned headers across documents."
                                    HorizontalAlignment="Center" TextAlignment="Center" />
                     </StackPanel>

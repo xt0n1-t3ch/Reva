@@ -7,64 +7,105 @@
              x:CompileBindings="True">
 
     <UserControl.Resources>
-        <x:Double x:Key="CopilotBubbleMaxWidth">320</x:Double>
+        <x:Double x:Key="CopilotBubbleMaxWidth">340</x:Double>
     </UserControl.Resources>
 
     <UserControl.Styles>
+
         <Style Selector="Border.bubble">
             <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusLg}" />
-            <Setter Property="Padding" Value="14 11" />
+            <Setter Property="Padding" Value="16 13" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="MaxWidth" Value="{StaticResource CopilotBubbleMaxWidth}" />
         </Style>
+
         <Style Selector="Border.bubble.user">
-            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
             <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
         </Style>
-        <Style Selector="Border.bubble.user TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        <Style Selector="Border.bubble.user SelectableTextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
         </Style>
+
         <Style Selector="Border.bubble.assistant">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
             <Setter Property="HorizontalAlignment" Value="Left" />
-            <Setter Property="BoxShadow" Value="{DynamicResource ShadowSoft}" />
+            <Setter Property="BoxShadow" Value="{DynamicResource ShadowGlass}" />
+        </Style>
+        <Style Selector="Border.bubble.assistant SelectableTextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        </Style>
+
+        <Style Selector="Border.avatar">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
+            <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}" />
+            <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        <Style Selector="Border.avatar TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style Selector="Border.stepChip">
             <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
-            <Setter Property="Padding" Value="11 8" />
+            <Setter Property="Padding" Value="12 10" />
             <Setter Property="HorizontalAlignment" Value="Left" />
             <Setter Property="MaxWidth" Value="{StaticResource CopilotBubbleMaxWidth}" />
             <Setter Property="BoxShadow" Value="{DynamicResource ShadowSoft}" />
         </Style>
 
+        <Style Selector="Border.stepIcon">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusSm}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        <Style Selector="Border.stepIcon TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
         <Style Selector="Ellipse.thinkingDot">
-            <Setter Property="Width" Value="6" />
-            <Setter Property="Height" Value="6" />
-            <Setter Property="Fill" Value="{DynamicResource MutedForegroundBrush}" />
+            <Setter Property="Width" Value="7" />
+            <Setter Property="Height" Value="7" />
+            <Setter Property="Fill" Value="{DynamicResource AccentBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style Selector="Button.suggestion">
-            <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource BodyForegroundBrush}" />
             <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
-            <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}" />
-            <Setter Property="Padding" Value="14 11" />
-            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="Button.suggestion /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
+            <Setter Property="Padding" Value="15 13" />
             <Setter Property="BoxShadow" Value="{DynamicResource ShadowSoft}" />
             <Setter Property="Transitions">
                 <Transitions>
@@ -74,6 +115,7 @@
         </Style>
         <Style Selector="Button.suggestion:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
             <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
 
@@ -82,67 +124,141 @@
             <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
             <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
             <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
-            <Setter Property="Padding" Value="13 11" />
-            <Setter Property="MaxHeight" Value="120" />
+            <Setter Property="Padding" Value="15 13" />
+            <Setter Property="MinHeight" Value="52" />
+            <Setter Property="MaxHeight" Value="140" />
         </Style>
+        <Style Selector="TextBox.composer /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
+        </Style>
+        <Style Selector="TextBox.composer:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
+        </Style>
+
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto" Background="Transparent">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Background="Transparent">
 
         <Border Grid.Row="0"
                 Classes="glass"
                 CornerRadius="0"
                 BorderThickness="0 0 0 1"
                 BorderBrush="{DynamicResource GlassBorderBrush}"
-                Padding="20 16">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <Border Classes="iconChip" VerticalAlignment="Center">
-                    <TextBlock Text="✦"
-                               FontSize="16"
-                               Foreground="{DynamicResource AccentBrush}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
-                </Border>
-                <StackPanel Spacing="2" VerticalAlignment="Center">
-                    <TextBlock Classes="subheading" Text="Copilot" />
-                    <StackPanel Orientation="Horizontal" Spacing="7">
-                        <Border Classes="statusDot"
-                                Background="{Binding IsOnline, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
-                        <TextBlock Classes="caption" Text="{Binding ModelStatus}" VerticalAlignment="Center" />
+                Padding="24 18">
+            <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+                    <Border Classes="logoChip" VerticalAlignment="Center">
+                        <TextBlock Text="✦"
+                                   FontSize="17"
+                                   Foreground="{DynamicResource AccentForegroundBrush}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Spacing="3" VerticalAlignment="Center">
+                        <TextBlock Classes="eyebrow" Text="REVA ASSISTANT" />
+                        <TextBlock Classes="heading"
+                                   FontSize="{DynamicResource FontSizeSubheading}"
+                                   Text="Copilot" />
                     </StackPanel>
                 </StackPanel>
-            </StackPanel>
+
+                <Border Grid.Column="2"
+                        Classes="chip"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Border Classes="statusDot"
+                                Background="{Binding IsOnline, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
+                        <TextBlock Classes="caption"
+                                   Foreground="{DynamicResource BodyForegroundBrush}"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding ModelStatus}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+            </Grid>
         </Border>
 
         <ScrollViewer Grid.Row="1"
                       x:Name="MessageScroll"
-                      Padding="20 18"
+                      Padding="24 22"
                       LayoutUpdated="OnScrollLayoutUpdated"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="14">
+            <StackPanel Spacing="18">
 
-                <StackPanel Spacing="12"
-                            IsVisible="{Binding !HasMessages}">
-                    <TextBlock Classes="eyebrow" Text="GET STARTED" />
-                    <TextBlock Classes="muted"
-                               FontSize="{DynamicResource FontSizeBody}"
-                               Text="{Binding Description}" />
+                <StackPanel Spacing="22" IsVisible="{Binding !HasMessages}">
+
+                    <StackPanel Spacing="14">
+                        <Border Classes="iconChip" HorizontalAlignment="Left">
+                            <TextBlock Text="✦"
+                                       FontSize="17"
+                                       Foreground="{DynamicResource AccentBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="eyebrow" Text="GET STARTED" />
+                            <TextBlock Classes="display"
+                                       FontSize="{DynamicResource FontSizeHeading}"
+                                       LineHeight="30"
+                                       Text="How can I help today?" />
+                            <TextBlock Classes="muted"
+                                       MaxWidth="460"
+                                       HorizontalAlignment="Left"
+                                       LineHeight="21"
+                                       Text="{Binding Description}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="eyebrow" Text="TRY ASKING" />
+                        <ItemsControl ItemsSource="{Binding Suggestions}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="10" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Button Classes="suggestion"
+                                            Command="{Binding $parent[ItemsControl].((vm:CopilotViewModel)DataContext).UseSuggestionCommand}"
+                                            CommandParameter="{Binding}">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <TextBlock Text="✦"
+                                                       FontSize="13"
+                                                       Foreground="{DynamicResource AccentBrush}"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding}"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
                 </StackPanel>
 
                 <Border Classes="glass"
                         IsVisible="{Binding IsOffline}"
-                        Padding="14 12">
-                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        Padding="16 14">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="statusDot"
                                 Background="{DynamicResource WarningBrush}"
                                 VerticalAlignment="Top"
                                 Margin="0 5 0 0" />
                         <TextBlock Classes="caption"
                                    Foreground="{DynamicResource BodyForegroundBrush}"
+                                   LineHeight="19"
                                    Text="{x:Static vm:CopilotViewModel.OfflineNotice}"
                                    TextWrapping="Wrap" />
                     </StackPanel>
@@ -151,72 +267,96 @@
                 <ItemsControl ItemsSource="{Binding Messages}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Spacing="14" />
+                            <StackPanel Spacing="18" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:CopilotMessageViewModel">
-                            <StackPanel Spacing="8">
+                            <StackPanel Spacing="9">
 
                                 <ItemsControl ItemsSource="{Binding Steps}" IsVisible="{Binding HasSteps}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <StackPanel Spacing="7" />
+                                            <StackPanel Spacing="8" />
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:CopilotStepViewModel">
                                             <Border Classes="stepChip">
-                                                <StackPanel Spacing="5">
-                                                    <StackPanel Orientation="Horizontal" Spacing="9">
-                                                        <Border Classes="statusDot"
-                                                                Background="{Binding IsComplete, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="11">
+                                                    <Border Grid.Column="0" Classes="stepIcon">
+                                                        <TextBlock Text="⚙" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" Spacing="5">
+                                                        <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                                                            <TextBlock Classes="caption"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource ForegroundBrush}"
+                                                                       Text="{Binding DisplayName}"
+                                                                       VerticalAlignment="Center" />
+                                                            <Border Classes="statusDot"
+                                                                    Background="{Binding IsComplete, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
+                                                            <TextBlock Classes="caption"
+                                                                       Text="{Binding StatusText}"
+                                                                       VerticalAlignment="Center" />
+                                                        </StackPanel>
                                                         <TextBlock Classes="caption"
-                                                                   FontWeight="SemiBold"
-                                                                   Foreground="{DynamicResource ForegroundBrush}"
-                                                                   Text="{Binding DisplayName}"
-                                                                   VerticalAlignment="Center" />
+                                                                   IsVisible="{Binding HasArguments}"
+                                                                   Foreground="{DynamicResource BodyForegroundBrush}"
+                                                                   Text="{Binding Arguments}"
+                                                                   TextWrapping="Wrap" />
                                                         <TextBlock Classes="caption"
-                                                                   Text="{Binding StatusText}"
-                                                                   VerticalAlignment="Center" />
+                                                                   IsVisible="{Binding HasResult}"
+                                                                   Foreground="{DynamicResource MutedForegroundBrush}"
+                                                                   Text="{Binding Result}"
+                                                                   TextWrapping="Wrap" />
                                                     </StackPanel>
-                                                    <TextBlock Classes="caption"
-                                                               IsVisible="{Binding HasArguments}"
-                                                               Foreground="{DynamicResource BodyForegroundBrush}"
-                                                               Text="{Binding Arguments}"
-                                                               TextWrapping="Wrap" />
-                                                    <TextBlock Classes="caption"
-                                                               IsVisible="{Binding HasResult}"
-                                                               Foreground="{DynamicResource MutedForegroundBrush}"
-                                                               Text="{Binding Result}"
-                                                               TextWrapping="Wrap" />
-                                                </StackPanel>
+                                                </Grid>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
-                                <Border Classes="bubble assistant"
-                                        IsVisible="{Binding IsThinking}"
-                                        Padding="14 12">
-                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                        <Ellipse Classes="thinkingDot" />
-                                        <Ellipse Classes="thinkingDot" Opacity="0.6" />
-                                        <Ellipse Classes="thinkingDot" Opacity="0.3" />
-                                    </StackPanel>
-                                </Border>
+                                <Grid ColumnDefinitions="Auto,*"
+                                      ColumnSpacing="12"
+                                      IsVisible="{Binding IsThinking}">
+                                    <Border Grid.Column="0" Classes="avatar">
+                                        <TextBlock Text="✦" />
+                                    </Border>
+                                    <Border Grid.Column="1"
+                                            Classes="bubble assistant"
+                                            Padding="16 14"
+                                            HorizontalAlignment="Left">
+                                        <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                                            <Ellipse Classes="thinkingDot" />
+                                            <Ellipse Classes="thinkingDot" Opacity="0.55" />
+                                            <Ellipse Classes="thinkingDot" Opacity="0.3" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
 
-                                <Border Classes="bubble"
-                                        Classes.user="{Binding IsUser}"
-                                        Classes.assistant="{Binding IsAssistant}"
-                                        IsVisible="{Binding Text, Converter={x:Static conv:NonEmptyConverter.Instance}}">
-                                    <SelectableTextBlock Text="{Binding Text}"
-                                                         TextWrapping="Wrap"
-                                                         FontFamily="{DynamicResource AppFontFamily}"
-                                                         Foreground="{DynamicResource ForegroundBrush}"
-                                                         FontSize="{DynamicResource FontSizeBody}"
-                                                         LineHeight="20" />
-                                </Border>
+                                <Grid ColumnDefinitions="Auto,*"
+                                      ColumnSpacing="12"
+                                      IsVisible="{Binding Text, Converter={x:Static conv:NonEmptyConverter.Instance}}">
+
+                                    <Border Grid.Column="0"
+                                            Classes="avatar"
+                                            IsVisible="{Binding IsAssistant}">
+                                        <TextBlock Text="✦" />
+                                    </Border>
+
+                                    <Border Grid.Column="1"
+                                            Classes="bubble"
+                                            Classes.user="{Binding IsUser}"
+                                            Classes.assistant="{Binding IsAssistant}">
+                                        <SelectableTextBlock Text="{Binding Text}"
+                                                             TextWrapping="Wrap"
+                                                             FontFamily="{DynamicResource AppFontFamily}"
+                                                             FontSize="{DynamicResource FontSizeBody}"
+                                                             LineHeight="21" />
+                                    </Border>
+
+                                </Grid>
 
                             </StackPanel>
                         </DataTemplate>
@@ -232,7 +372,7 @@
                 CornerRadius="0"
                 BorderThickness="0 1 0 0"
                 BorderBrush="{DynamicResource GlassBorderBrush}"
-                Padding="20 11">
+                Padding="24 12">
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                 <Border Classes="statusDot" Background="{DynamicResource AccentBrush}" />
                 <TextBlock Classes="caption"
@@ -243,47 +383,24 @@
             </StackPanel>
         </Border>
 
-        <StackPanel Grid.Row="3"
-                    IsVisible="{Binding !HasMessages}"
-                    Spacing="8"
-                    Margin="20 8 20 0">
-            <TextBlock Classes="eyebrow" Text="TRY ASKING" Margin="2 0 0 0" />
-            <ItemsControl ItemsSource="{Binding Suggestions}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Spacing="8" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="x:String">
-                        <Button Classes="suggestion"
-                                Command="{Binding $parent[ItemsControl].((vm:CopilotViewModel)DataContext).UseSuggestionCommand}"
-                                CommandParameter="{Binding}">
-                            <TextBlock Text="{Binding}" TextWrapping="Wrap" />
-                        </Button>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </StackPanel>
-
-        <Border Grid.Row="4"
+        <Border Grid.Row="3"
                 Classes="glassStrong"
                 CornerRadius="0"
                 BorderThickness="0 1 0 0"
                 BorderBrush="{DynamicResource GlassBorderBrush}"
-                Padding="20 16">
-            <Grid RowDefinitions="Auto,Auto" RowSpacing="11">
+                Padding="24 18">
+            <StackPanel Spacing="13">
 
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                     <TextBox Grid.Column="0"
                              Classes="composer"
                              Text="{Binding Input, Mode=TwoWay}"
-                             PlaceholderText="Ask the copilot…"
+                             PlaceholderText="Ask the copilot anything…"
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
                              VerticalAlignment="Stretch" />
-                    <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="8">
-                        <Button Classes="accent"
+                    <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="9">
+                        <Button Classes="primary"
                                 Content="Send"
                                 IsVisible="{Binding !IsBusy}"
                                 Command="{Binding SendCommand}" />
@@ -294,7 +411,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
                         <Border Classes="statusDot"
                                 Background="{Binding IsOnline, Converter={x:Static conv:OnlineBrushConverter.Instance}}" />
@@ -310,7 +427,7 @@
                             Command="{Binding ClearCommand}" />
                 </Grid>
 
-            </Grid>
+            </StackPanel>
         </Border>
 
     </Grid>

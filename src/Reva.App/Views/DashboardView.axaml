@@ -11,7 +11,7 @@
         <Style Selector="ProgressBar.pipeline">
             <Setter Property="Minimum" Value="0" />
             <Setter Property="Maximum" Value="1" />
-            <Setter Property="Height" Value="8" />
+            <Setter Property="Height" Value="10" />
             <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
             <Setter Property="Background" Value="{DynamicResource Surface3Brush}" />
         </Style>
@@ -19,7 +19,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="GridLinesVisibility" Value="Horizontal" />
-            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Surface3Brush}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="RowBackground" Value="Transparent" />
             <Setter Property="HeadersVisibility" Value="Column" />
             <Setter Property="IsReadOnly" Value="True" />
@@ -27,7 +27,7 @@
             <Setter Property="CanUserResizeColumns" Value="True" />
             <Setter Property="CanUserReorderColumns" Value="False" />
             <Setter Property="CanUserSortColumns" Value="False" />
-            <Setter Property="RowHeight" Value="48" />
+            <Setter Property="RowHeight" Value="52" />
         </Style>
         <Style Selector="DataGrid.queue DataGridColumnHeader">
             <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
@@ -35,29 +35,32 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="SeparatorBrush" Value="Transparent" />
-            <Setter Property="Padding" Value="12 8" />
+            <Setter Property="Padding" Value="14 10" />
         </Style>
         <Style Selector="DataGrid.queue DataGridCell">
-            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource BodyForegroundBrush}" />
             <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
-            <Setter Property="Padding" Value="12 0" />
+            <Setter Property="Padding" Value="14 0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="DataGrid.queue DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
-            <Setter Property="Fill" Value="{DynamicResource Surface2Brush}" />
+            <Setter Property="Fill" Value="{DynamicResource GlassBrush}" />
             <Setter Property="Opacity" Value="1" />
         </Style>
     </UserControl.Styles>
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <Grid Margin="32" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+        <Grid Margin="40 36" RowDefinitions="Auto,Auto,Auto,Auto,Auto" MaxWidth="1320" HorizontalAlignment="Stretch">
 
-            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0 0 0 26">
-                <StackPanel Grid.Column="0" Spacing="8" VerticalAlignment="Center">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0 0 0 32">
+                <StackPanel Grid.Column="0" Spacing="10" VerticalAlignment="Center">
                     <TextBlock Classes="eyebrow" Text="WORKSPACE OVERVIEW" />
                     <TextBlock Classes="pageTitle" Text="{Binding Title}" />
-                    <TextBlock Classes="muted" Text="{Binding Description}" />
+                    <TextBlock Classes="muted"
+                               MaxWidth="640"
+                               HorizontalAlignment="Left"
+                               Text="{Binding Description}" />
                 </StackPanel>
                 <Button Grid.Column="1"
                         Classes="secondary"
@@ -67,46 +70,64 @@
                         Content="Refresh" />
             </Grid>
 
-            <Border Grid.Row="1" Classes="hero" Margin="0 0 0 18">
+            <Border Grid.Row="1" Classes="glassStrong" Padding="28" Margin="0 0 0 24">
                 <Grid ColumnDefinitions="Auto,*">
-                    <StackPanel Grid.Column="0" Spacing="6" Width="220" Margin="0 0 28 0" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="0"
+                                Spacing="10"
+                                Width="236"
+                                Margin="0 0 32 0"
+                                VerticalAlignment="Center">
+                        <Border Classes="iconChip" HorizontalAlignment="Left">
+                            <TextBlock Text="&#x21A7;" FontSize="18"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AccentBrush}" />
+                        </Border>
                         <TextBlock Classes="eyebrow" Text="INGEST" />
-                        <TextBlock Classes="subheading" Text="Add documents" />
-                        <TextBlock Classes="caption"
-                                   Text="Drop files or browse to start extraction." />
+                        <TextBlock Classes="heading" Text="Add documents" />
+                        <TextBlock Classes="muted"
+                                   Text="Drop files or browse to kick off automated extraction." />
                     </StackPanel>
-                    <views:UploadControl Grid.Column="1" />
+                    <views:UploadControl Grid.Column="1" VerticalAlignment="Center" />
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" Margin="0 0 0 18">
-                <Border Grid.Column="0" Classes="kpi" Margin="0 0 9 0">
-                    <StackPanel Spacing="10">
+            <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" Margin="0 0 0 24">
+                <Border Grid.Column="0" Classes="kpi" Margin="0 0 12 0">
+                    <StackPanel Spacing="14">
                         <Border Classes="iconChip" HorizontalAlignment="Left">
-                            <TextBlock Text="▤" FontSize="16"
+                            <TextBlock Text="&#x25A4;" FontSize="16"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Foreground="{DynamicResource AccentBrush}" />
                         </Border>
-                        <TextBlock Classes="eyebrow" Text="TOTAL DOCUMENTS" />
-                        <TextBlock Classes="kpiValue" Text="{Binding TotalDocuments}" />
+                        <StackPanel Spacing="2">
+                            <TextBlock Classes="eyebrow" Text="TOTAL DOCUMENTS" />
+                            <TextBlock Classes="kpiValue" Text="{Binding TotalDocuments}" />
+                        </StackPanel>
                         <TextBlock Classes="caption" Text="Across the workspace" />
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="1" Classes="kpi" Margin="9 0">
-                    <StackPanel Spacing="10">
-                        <Border Classes="iconChip" HorizontalAlignment="Left">
-                            <TextBlock Text="◷" FontSize="16"
+                <Border Grid.Column="1" Classes="kpi" Margin="12 0">
+                    <StackPanel Spacing="14">
+                        <Border Width="36" Height="36"
+                                CornerRadius="{DynamicResource CornerRadiusMd}"
+                                Background="{DynamicResource WarningSoftBrush}"
+                                HorizontalAlignment="Left">
+                            <TextBlock Text="&#x25F7;" FontSize="16"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource AccentBrush}" />
+                                       Foreground="{DynamicResource WarningBrush}" />
                         </Border>
-                        <TextBlock Classes="eyebrow" Text="NEEDS REVIEW" />
-                        <TextBlock Classes="kpiValue" Text="{Binding NeedsReviewCount}" />
+                        <StackPanel Spacing="2">
+                            <TextBlock Classes="eyebrow" Text="NEEDS REVIEW" />
+                            <TextBlock Classes="kpiValue"
+                                       Foreground="{DynamicResource WarningBrush}"
+                                       Text="{Binding NeedsReviewCount}" />
+                        </StackPanel>
                         <TextBlock Classes="caption" Text="Pending or correction" />
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="2" Classes="kpi" Margin="9 0">
-                    <StackPanel Spacing="10">
-                        <Border Width="34" Height="34"
+                <Border Grid.Column="2" Classes="kpi" Margin="12 0">
+                    <StackPanel Spacing="14">
+                        <Border Width="36" Height="36"
                                 CornerRadius="{DynamicResource CornerRadiusMd}"
                                 Background="{DynamicResource DangerSoftBrush}"
                                 HorizontalAlignment="Left">
@@ -114,44 +135,48 @@
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Foreground="{DynamicResource DangerBrush}" />
                         </Border>
-                        <TextBlock Classes="eyebrow" Text="EXCEPTIONS" />
-                        <TextBlock Classes="kpiValue"
-                                   Foreground="{DynamicResource DangerBrush}"
-                                   Text="{Binding ExceptionCount}" />
+                        <StackPanel Spacing="2">
+                            <TextBlock Classes="eyebrow" Text="EXCEPTIONS" />
+                            <TextBlock Classes="kpiValue"
+                                       Foreground="{DynamicResource DangerBrush}"
+                                       Text="{Binding ExceptionCount}" />
+                        </StackPanel>
                         <TextBlock Classes="caption" Text="Open findings" />
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="3" Classes="kpi" Margin="9 0 0 0">
-                    <StackPanel Spacing="10">
-                        <Border Width="34" Height="34"
+                <Border Grid.Column="3" Classes="kpi" Margin="12 0 0 0">
+                    <StackPanel Spacing="14">
+                        <Border Width="36" Height="36"
                                 CornerRadius="{DynamicResource CornerRadiusMd}"
                                 Background="{DynamicResource SuccessSoftBrush}"
                                 HorizontalAlignment="Left">
-                            <TextBlock Text="✓" FontSize="16" FontWeight="Bold"
+                            <TextBlock Text="&#x2713;" FontSize="16" FontWeight="Bold"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SuccessBrush}" />
                         </Border>
-                        <TextBlock Classes="eyebrow" Text="AVG CONFIDENCE" />
-                        <TextBlock Classes="kpiValue"
-                                   Foreground="{DynamicResource SuccessBrush}"
-                                   Text="{Binding AverageConfidence}" />
+                        <StackPanel Spacing="2">
+                            <TextBlock Classes="eyebrow" Text="AVG CONFIDENCE" />
+                            <TextBlock Classes="kpiValue"
+                                       Foreground="{DynamicResource SuccessBrush}"
+                                       Text="{Binding AverageConfidence}" />
+                        </StackPanel>
                         <TextBlock Classes="caption" Text="Extraction certainty" />
                     </StackPanel>
                 </Border>
             </Grid>
 
-            <Border Grid.Row="3" Classes="card" Margin="0 0 0 18">
-                <StackPanel Spacing="20">
-                    <StackPanel Spacing="4">
-                        <TextBlock Classes="eyebrow" Text="PIPELINE" />
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0" Classes="subheading" Text="Processing flow" />
-                            <TextBlock Grid.Column="1"
-                                       Classes="caption"
-                                       VerticalAlignment="Center"
-                                       Text="Uploaded → Extracted → Reviewed → Exported" />
-                        </Grid>
-                    </StackPanel>
+            <Border Grid.Row="3" Classes="card" Margin="0 0 0 24">
+                <StackPanel Spacing="24">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Classes="eyebrow" Text="PIPELINE" />
+                            <TextBlock Classes="subheading" Text="Processing flow" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1"
+                                   Classes="caption"
+                                   VerticalAlignment="Center"
+                                   Text="Uploaded &#x2192; Extracted &#x2192; Reviewed &#x2192; Exported" />
+                    </Grid>
                     <ItemsControl ItemsSource="{Binding PipelineStages}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -160,14 +185,14 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:PipelineStage">
-                                <StackPanel Spacing="10" Margin="0 0 16 0">
+                                <StackPanel Spacing="12" Margin="0 0 20 0">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBlock Grid.Column="0" Classes="eyebrow"
                                                    VerticalAlignment="Center"
                                                    Text="{Binding Label}" />
                                         <TextBlock Grid.Column="1"
                                                    FontWeight="Bold"
-                                                   FontSize="{DynamicResource FontSizeSubheading}"
+                                                   FontSize="{DynamicResource FontSizeHeading}"
                                                    Foreground="{DynamicResource ForegroundBrush}"
                                                    FontFeatures="tnum=1"
                                                    Text="{Binding Count}" />
@@ -184,26 +209,28 @@
 
             <Grid Grid.Row="4" RowDefinitions="Auto,Auto">
 
-                <Grid Grid.Row="0" ColumnDefinitions="*,*" Margin="0 0 0 18">
-                    <Border Grid.Column="0" Classes="card" Margin="0 0 9 0">
+                <Grid Grid.Row="0" ColumnDefinitions="*,*" Margin="0 0 0 24">
+                    <Border Grid.Column="0" Classes="card" Margin="0 0 12 0">
                         <Grid RowDefinitions="Auto,*">
-                            <StackPanel Grid.Row="0" Spacing="4" Margin="0 0 0 18">
+                            <StackPanel Grid.Row="0" Spacing="4" Margin="0 0 0 22">
                                 <TextBlock Classes="eyebrow" Text="THROUGHPUT" />
                                 <TextBlock Classes="subheading" Text="Documents ingested" />
                                 <TextBlock Classes="caption" Text="Last 7 days" />
                             </StackPanel>
-                            <Panel Grid.Row="1" MinHeight="220">
+                            <Panel Grid.Row="1" MinHeight="240">
                                 <lvc:CartesianChart Series="{Binding ThroughputSeries}"
                                                     XAxes="{Binding ThroughputXAxes}"
                                                     YAxes="{Binding ThroughputYAxes}"
                                                     TooltipPosition="Top"
                                                     IsVisible="{Binding HasThroughput}" />
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                                            Spacing="10" IsVisible="{Binding !HasThroughput}">
-                                    <Border Width="48" Height="48"
-                                            CornerRadius="{DynamicResource CornerRadiusMd}"
-                                            Background="{DynamicResource Surface2Brush}">
-                                        <TextBlock Text="◔" FontSize="22"
+                                            Spacing="12" IsVisible="{Binding !HasThroughput}">
+                                    <Border Width="52" Height="52"
+                                            CornerRadius="{DynamicResource CornerRadiusLg}"
+                                            Background="{DynamicResource GlassBrush}"
+                                            BorderBrush="{DynamicResource GlassBorderBrush}"
+                                            BorderThickness="1">
+                                        <TextBlock Text="&#x25D4;" FontSize="22"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                                    Foreground="{DynamicResource MutedForegroundBrush}" />
                                     </Border>
@@ -214,14 +241,14 @@
                             </Panel>
                         </Grid>
                     </Border>
-                    <Border Grid.Column="1" Classes="card" Margin="9 0 0 0">
+                    <Border Grid.Column="1" Classes="card" Margin="12 0 0 0">
                         <Grid RowDefinitions="Auto,*">
-                            <StackPanel Grid.Row="0" Spacing="4" Margin="0 0 0 18">
+                            <StackPanel Grid.Row="0" Spacing="4" Margin="0 0 0 22">
                                 <TextBlock Classes="eyebrow" Text="EXCEPTIONS" />
                                 <TextBlock Classes="subheading" Text="By type" />
                                 <TextBlock Classes="caption" Text="Open queue, grouped by reason" />
                             </StackPanel>
-                            <Panel Grid.Row="1" MinHeight="220">
+                            <Panel Grid.Row="1" MinHeight="240">
                                 <lvc:CartesianChart Series="{Binding ExceptionSeries}"
                                                     XAxes="{Binding ExceptionXAxes}"
                                                     YAxes="{Binding ExceptionYAxes}"
@@ -229,11 +256,11 @@
                                                     LegendPosition="Hidden"
                                                     IsVisible="{Binding HasExceptionBreakdown}" />
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                                            Spacing="10" IsVisible="{Binding !HasExceptionBreakdown}">
-                                    <Border Width="48" Height="48"
-                                            CornerRadius="{DynamicResource CornerRadiusMd}"
+                                            Spacing="12" IsVisible="{Binding !HasExceptionBreakdown}">
+                                    <Border Width="52" Height="52"
+                                            CornerRadius="{DynamicResource CornerRadiusLg}"
                                             Background="{DynamicResource SuccessSoftBrush}">
-                                        <TextBlock Text="✓" FontSize="22"
+                                        <TextBlock Text="&#x2713;" FontSize="22"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                                    Foreground="{DynamicResource SuccessBrush}" />
                                     </Border>
@@ -248,15 +275,14 @@
 
                 <Border Grid.Row="1" Classes="card">
                     <Grid RowDefinitions="Auto,*">
-                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0 0 0 14">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0 0 0 18">
                             <StackPanel Grid.Column="0" Spacing="4">
                                 <TextBlock Classes="eyebrow" Text="RECENT DOCUMENTS" />
                                 <TextBlock Classes="subheading" Text="Work queue" />
                             </StackPanel>
-                            <TextBlock Grid.Column="1"
-                                       Classes="caption"
-                                       VerticalAlignment="Center"
-                                       Text="Most recently updated" />
+                            <Border Grid.Column="1" Classes="badge neutral" VerticalAlignment="Center">
+                                <TextBlock Text="Most recently updated" />
+                            </Border>
                         </Grid>
 
                         <DataGrid Grid.Row="1"
@@ -264,12 +290,14 @@
                                   ItemsSource="{Binding RecentDocuments}"
                                   IsVisible="{Binding HasDocuments}"
                                   SelectionChanged="OnRowSelectionChanged"
-                                  MaxHeight="420">
+                                  MaxHeight="440">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="DOCUMENT" Width="2.4*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="vm:DashboardRow">
                                             <TextBlock Text="{Binding FileName}"
+                                                       FontWeight="Medium"
+                                                       Foreground="{DynamicResource ForegroundBrush}"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center" />
                                         </DataTemplate>
@@ -284,15 +312,18 @@
                         </DataGrid>
 
                         <Border Grid.Row="1"
-                                MinHeight="180"
+                                MinHeight="200"
                                 IsVisible="{Binding !HasDocuments}">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
-                                <Border Width="48" Height="48"
-                                        CornerRadius="{DynamicResource CornerRadiusMd}"
-                                        Background="{DynamicResource Surface2Brush}">
-                                    <TextBlock Text="↧" FontSize="22"
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="14">
+                                <Border Width="56" Height="56"
+                                        CornerRadius="{DynamicResource CornerRadiusLg}"
+                                        Background="{DynamicResource AccentSoftBrush}"
+                                        BorderBrush="{DynamicResource AccentBorderBrush}"
+                                        BorderThickness="1"
+                                        BoxShadow="{DynamicResource AccentGlow}">
+                                    <TextBlock Text="&#x21A7;" FontSize="24"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource MutedForegroundBrush}" />
+                                               Foreground="{DynamicResource AccentBrush}" />
                                 </Border>
                                 <TextBlock Classes="muted"
                                            HorizontalAlignment="Center"

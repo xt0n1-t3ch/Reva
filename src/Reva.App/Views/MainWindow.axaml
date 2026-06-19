@@ -11,7 +11,7 @@
         Width="1280" Height="800"
         MinWidth="1024" MinHeight="680"
         TransparencyLevelHint="Mica, AcrylicBlur, Blur"
-        Background="{DynamicResource CanvasBrush}"
+        Background="{DynamicResource BgBrush}"
         Title="Reva">
 
     <ContentControl Content="{Binding}" />

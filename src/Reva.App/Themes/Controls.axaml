@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Style Selector="Window">
-        <Setter Property="Background" Value="{DynamicResource CanvasBrush}" />
+        <Setter Property="Background" Value="{DynamicResource BgBrush}" />
         <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
         <Setter Property="TransparencyLevelHint" Value="Mica, AcrylicBlur, Blur" />
     </Style>
@@ -15,22 +15,25 @@
     </Style>
 
     <Style Selector="TextBlock.pageTitle">
-        <Setter Property="FontSize" Value="{DynamicResource FontSizeHeading}" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeDisplay}" />
+        <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
-        <Setter Property="LineHeight" Value="32" />
+        <Setter Property="LineHeight" Value="40" />
+        <Setter Property="LetterSpacing" Value="-0.5" />
     </Style>
 
     <Style Selector="TextBlock.display">
         <Setter Property="FontSize" Value="{DynamicResource FontSizeDisplay}" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="LetterSpacing" Value="-0.5" />
     </Style>
 
     <Style Selector="TextBlock.heading">
         <Setter Property="FontSize" Value="{DynamicResource FontSizeHeading}" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="LetterSpacing" Value="-0.2" />
     </Style>
 
     <Style Selector="TextBlock.subheading">
@@ -43,7 +46,7 @@
         <Setter Property="FontSize" Value="{DynamicResource FontSizeEyebrow}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
-        <Setter Property="LetterSpacing" Value="1.2" />
+        <Setter Property="LetterSpacing" Value="1.4" />
     </Style>
 
     <Style Selector="TextBlock.muted">
@@ -61,6 +64,7 @@
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
         <Setter Property="FontFeatures" Value="tnum=1" />
+        <Setter Property="LetterSpacing" Value="-1" />
     </Style>
 
     <Style Selector="Border.glass">
@@ -85,7 +89,7 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusXl}" />
         <Setter Property="Padding" Value="{DynamicResource SpacingCard}" />
-        <Setter Property="BoxShadow" Value="{DynamicResource ShadowCard}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
     </Style>
 
     <Style Selector="Border.scrim">
@@ -94,7 +98,7 @@
 
     <Style Selector="Border.card">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusLg}" />
         <Setter Property="Padding" Value="{DynamicResource SpacingCard}" />
@@ -111,7 +115,7 @@
 
     <Style Selector="Border.kpi">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusLg}" />
         <Setter Property="Padding" Value="22" />
@@ -128,14 +132,14 @@
 
     <Style Selector="Border.panel">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusLg}" />
     </Style>
 
     <Style Selector="Border.chip">
-        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
         <Setter Property="Padding" Value="12 6" />
@@ -143,48 +147,55 @@
 
     <Style Selector="Border.iconChip">
         <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
-        <Setter Property="Width" Value="34" />
-        <Setter Property="Height" Value="34" />
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
     </Style>
 
     <Style Selector="Border.logoChip">
-        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
-        <Setter Property="Width" Value="32" />
-        <Setter Property="Height" Value="32" />
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="34" />
+        <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
     </Style>
 
     <Style Selector="Button.primary">
-        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
         <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
         <Setter Property="Height" Value="38" />
-        <Setter Property="Padding" Value="18 0" />
+        <Setter Property="Padding" Value="20 0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
     </Style>
     <Style Selector="Button.primary /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
         <Setter Property="Transitions">
             <Transitions>
-                <BrushTransition Property="Background" Duration="0:0:0.15" />
-                <BrushTransition Property="Foreground" Duration="0:0:0.15" />
+                <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
             </Transitions>
         </Setter>
     </Style>
     <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+        <Setter Property="Opacity" Value="0.9" />
     </Style>
     <Style Selector="Button.primary:pressed /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+        <Setter Property="Opacity" Value="0.82" />
     </Style>
 
     <Style Selector="Button.accent">
@@ -203,20 +214,20 @@
     <Style Selector="Button.accent /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
         <Setter Property="Transitions">
             <Transitions>
                 <BrushTransition Property="Background" Duration="0:0:0.15" />
-                <BrushTransition Property="Foreground" Duration="0:0:0.15" />
             </Transitions>
         </Setter>
     </Style>
     <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
     </Style>
 
     <Style Selector="Button.secondary">
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
         <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -225,13 +236,15 @@
         <Setter Property="Padding" Value="18 0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
     </Style>
     <Style Selector="Button.secondary /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
         <Setter Property="Transitions">
             <Transitions>
                 <BrushTransition Property="Background" Duration="0:0:0.15" />
@@ -239,7 +252,7 @@
         </Setter>
     </Style>
     <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource Surface3Brush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
     </Style>
 
@@ -258,6 +271,7 @@
     </Style>
     <Style Selector="Button.ghost /template/ ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
         <Setter Property="Transitions">
             <Transitions>
                 <BrushTransition Property="Background" Duration="0:0:0.15" />
@@ -266,19 +280,19 @@
         </Setter>
     </Style>
     <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource Surface3Brush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
     </Style>
 
     <Style Selector="Button.nav">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource BodyForegroundBrush}" />
         <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
         <Setter Property="FontWeight" Value="Medium" />
         <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
-        <Setter Property="Padding" Value="14 10" />
+        <Setter Property="Padding" Value="14 11" />
         <Setter Property="Margin" Value="0 2" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -286,6 +300,7 @@
     </Style>
     <Style Selector="Button.nav /template/ ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
         <Setter Property="Transitions">
             <Transitions>
                 <BrushTransition Property="Background" Duration="0:0:0.15" />
@@ -294,7 +309,7 @@
         </Setter>
     </Style>
     <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource Surface3Brush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
     </Style>
     <Style Selector="Button.nav.active">
@@ -304,8 +319,9 @@
     <Style Selector="Button.nav.active /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientBrush}" />
         <Setter Property="BorderThickness" Value="3 0 0 0" />
+        <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
     </Style>
     <Style Selector="Button.nav.active:pointerover /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
@@ -323,6 +339,7 @@
     </Style>
     <Style Selector="Button.icon /template/ ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
         <Setter Property="Transitions">
             <Transitions>
                 <BrushTransition Property="Background" Duration="0:0:0.15" />
@@ -331,7 +348,7 @@
         </Setter>
     </Style>
     <Style Selector="Button.icon:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource Surface3Brush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
     </Style>
 
@@ -340,6 +357,7 @@
         <Setter Property="Height" Value="8" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusPill}" />
         <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
     </Style>
 
     <Style Selector="Border.badge">
@@ -391,25 +409,26 @@
         <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
         <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
-        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
         <Setter Property="Padding" Value="12 9" />
         <Setter Property="MinHeight" Value="38" />
     </Style>
     <Style Selector="TextBox /template/ Border#PART_BorderElement">
-        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
     </Style>
     <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
     </Style>
     <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource AccentGlow}" />
     </Style>
     <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
         <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
@@ -419,21 +438,21 @@
         <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
         <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
-        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
         <Setter Property="Padding" Value="12 8" />
         <Setter Property="MinHeight" Value="38" />
     </Style>
     <Style Selector="ComboBox /template/ Border#Background">
-        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
         <Setter Property="CornerRadius" Value="{DynamicResource CornerRadiusMd}" />
     </Style>
     <Style Selector="ComboBox:pointerover /template/ Border#Background">
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
-        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassStrongBrush}" />
     </Style>
     <Style Selector="ComboBox:focus /template/ Border#Background">
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
@@ -455,17 +474,17 @@
     <Style Selector="DataGrid">
         <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
         <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource BodyForegroundBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="GridLinesVisibility" Value="None" />
-        <Setter Property="RowBackground" Value="{DynamicResource SurfaceBrush}" />
-        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Surface3Brush}" />
+        <Setter Property="RowBackground" Value="Transparent" />
+        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
         <Setter Property="RowHeight" Value="48" />
     </Style>
     <Style Selector="DataGridColumnHeader">
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
         <Setter Property="FontSize" Value="{DynamicResource FontSizeEyebrow}" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -475,17 +494,17 @@
         <Setter Property="BorderThickness" Value="0 0 0 1" />
     </Style>
     <Style Selector="DataGridRow">
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Background" Value="Transparent" />
     </Style>
     <Style Selector="DataGridRow:pointerover /template/ DataGridCellsPresenter">
-        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}" />
     </Style>
     <Style Selector="DataGridRow:selected /template/ DataGridCellsPresenter">
         <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
     </Style>
     <Style Selector="DataGridCell">
         <Setter Property="Foreground" Value="{DynamicResource BodyForegroundBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Surface3Brush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="0 0 0 1" />
         <Setter Property="Padding" Value="14 0" />
         <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />

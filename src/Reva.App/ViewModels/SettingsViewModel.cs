@@ -192,7 +192,7 @@ public partial class SettingsViewModel : ViewModelBase
             new ThemeOption(AppTheme.Dark, "Dark"),
             new ThemeOption(AppTheme.System, "System")
         ];
-        SelectedTheme = Themes[0];
+        SelectedTheme = Themes.FirstOrDefault(theme => theme.Value == CurrentTheme()) ?? Themes[0];
     }
 
     public ObservableCollection<ModelOption> Models { get; }
@@ -476,7 +476,7 @@ public partial class SettingsViewModel : ViewModelBase
         ReconciliationTolerance = settings.ReconciliationTolerance;
         ConfidenceLowMax = settings.ConfidenceLowMax;
         ConfidenceMediumMax = settings.ConfidenceMediumMax;
-        SelectedTheme = Themes.FirstOrDefault(theme => theme.Value == settings.Theme) ?? Themes[0];
+        SelectedTheme = Themes.FirstOrDefault(theme => theme.Value == CurrentTheme()) ?? Themes[0];
         SelectedTemplate = ResolveTemplate(settings.DefaultTemplateId);
         UseVisionExtraction = settings.UseLlmAssist && IsOllamaOnline;
     }
@@ -562,6 +562,9 @@ public partial class SettingsViewModel : ViewModelBase
             _ => ThemeVariant.Default
         };
     }
+
+    private static AppTheme CurrentTheme() =>
+        Application.Current?.ActualThemeVariant == ThemeVariant.Dark ? AppTheme.Dark : AppTheme.Light;
 
     private void SetStatus(string message)
     {
