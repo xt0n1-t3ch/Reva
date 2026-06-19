@@ -11,25 +11,21 @@ internal static class DocumentProcessingStream
     private const int LineDelayMs = 16;
     private const int StageDelayMs = 110;
 
-    public static async Task WriteAsync(HttpResponse response, string fileName, BdxReviewPayload payload, CancellationToken cancellationToken)
+    public static async Task WriteAsync(HttpResponse response, string fileName, string parsedText, BdxReviewPayload payload, CancellationToken cancellationToken)
     {
         try
         {
+            var scanLines = BuildScanLines(parsedText, payload);
+
             await StageAsync(response, "parsing", "start", $"Reading {fileName}", cancellationToken);
             await Task.Delay(StageDelayMs, cancellationToken);
-            await StageAsync(response, "parsing", "done", $"Parsed {payload.SourceSpans.Count} text blocks", cancellationToken);
+            await StageAsync(response, "parsing", "done", $"Read {scanLines.Count} lines of source text", cancellationToken);
 
-            await StageAsync(response, "ocr", "start", "Scanning page text line by line", cancellationToken);
+            await StageAsync(response, "ocr", "start", "Scanning the document line by line", cancellationToken);
             var streamed = 0;
-            foreach (var span in payload.SourceSpans)
+            foreach (var line in scanLines)
             {
-                var text = span.Text?.Trim();
-                if (string.IsNullOrEmpty(text))
-                {
-                    continue;
-                }
-
-                await SendAsync(response, new { type = "line", page = span.Page, text, at = Now() }, cancellationToken);
+                await SendAsync(response, new { type = "line", page = line.Page, text = line.Text, at = Now() }, cancellationToken);
                 if (++streamed >= MaxLines)
                 {
                     break;
@@ -123,6 +119,48 @@ internal static class DocumentProcessingStream
         {
             // best-effort terminal frame
         }
+    }
+
+    private readonly record struct ScanLine(int Page, string Text);
+
+    private static List<ScanLine> BuildScanLines(string parsedText, BdxReviewPayload payload)
+    {
+        var lines = new List<ScanLine>();
+        foreach (var span in payload.SourceSpans)
+        {
+            var text = span.Text?.Trim();
+            if (!string.IsNullOrEmpty(text))
+            {
+                lines.Add(new ScanLine(span.Page, text));
+            }
+        }
+
+        if (lines.Count == 0 && !string.IsNullOrWhiteSpace(parsedText))
+        {
+            foreach (var raw in parsedText.Split('\n'))
+            {
+                var text = raw.Trim();
+                if (!string.IsNullOrEmpty(text) && !IsSeparatorLine(text))
+                {
+                    lines.Add(new ScanLine(1, text));
+                }
+            }
+        }
+
+        return lines;
+    }
+
+    private static bool IsSeparatorLine(string text)
+    {
+        foreach (var character in text)
+        {
+            if (character is not ('|' or '-' or ':' or ' '))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static double Agreement(string status) => status switch

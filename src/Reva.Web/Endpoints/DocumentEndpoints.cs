@@ -88,7 +88,7 @@ public static class DocumentEndpoints
             http.Response.Headers.CacheControl = "no-cache, no-transform";
             http.Response.Headers["X-Accel-Buffering"] = "no";
 
-            await DocumentProcessingStream.WriteAsync(http.Response, document.FileName, payload, http.RequestAborted);
+            await DocumentProcessingStream.WriteAsync(http.Response, document.FileName, document.ParsedMarkdown, payload, http.RequestAborted);
         });
 
         group.MapGet("/{id:guid}/pages/{page:int}.png", async (Guid id, int page, RevaDbContext dbContext, IPdfPageImageRenderer renderer, CancellationToken cancellationToken) =>
